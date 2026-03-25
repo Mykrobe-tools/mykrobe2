@@ -162,11 +162,14 @@ func runPredict(opts *predictOptions) error {
 		}
 	}
 
-	graph, err := mccortex.BuildGraphFromPaths(k, []string{opts.seqPath})
+	counter, err := mccortex.NewCounter(k)
 	if err != nil {
 		return err
 	}
-	summaries, err := summarizePanels(graph, inputs.PanelPaths)
+	if err := counter.AddPath(opts.seqPath); err != nil {
+		return err
+	}
+	summaries, err := summarizePanels(counter, inputs.PanelPaths)
 	if err != nil {
 		return err
 	}
@@ -352,10 +355,14 @@ func resolvePredictInputs(panelArg, mapPath, lineagePath, panelsDir, species str
 	}, nil
 }
 
-func summarizePanels(graph *mccortex.Graph, paths []string) ([]mccortex.CoverageSummary, error) {
+type panelSummarizer interface {
+	SummarizePanelPath(path string) ([]mccortex.CoverageSummary, error)
+}
+
+func summarizePanels(s panelSummarizer, paths []string) ([]mccortex.CoverageSummary, error) {
 	out := make([]mccortex.CoverageSummary, 0)
 	for _, path := range paths {
-		summaries, err := graph.SummarizePanelPath(path)
+		summaries, err := s.SummarizePanelPath(path)
 		if err != nil {
 			return nil, err
 		}
