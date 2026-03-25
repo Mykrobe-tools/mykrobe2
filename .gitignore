@@ -1,0 +1,5 @@
+.gocache/
+.gomodcache/
+.DS_Store
+*.test
+*.out
