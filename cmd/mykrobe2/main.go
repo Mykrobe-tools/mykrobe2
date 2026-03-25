@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -173,21 +174,25 @@ func runPredict(opts *predictOptions) error {
 	if err != nil {
 		return err
 	}
-	tmp, err := os.CreateTemp("", "mykrobe2-*.covgs")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(tmp.Name())
-	defer tmp.Close()
-	if err := mccortex.WriteCoverageTSV(tmp, summaries); err != nil {
-		return err
-	}
-	if _, err := tmp.Seek(0, 0); err != nil {
-		return err
-	}
+	pr, pw := io.Pipe()
+	writeErr := make(chan error, 1)
+	go func() {
+		err := mccortex.WriteCoverageTSV(pw, summaries)
+		if err != nil {
+			_ = pw.CloseWithError(err)
+			writeErr <- err
+			return
+		}
+		writeErr <- pw.Close()
+	}()
 
-	coverageSet, err := mykrobe.ParseCoverageReader(tmp)
+	coverageSet, err := mykrobe.ParseCoverageReader(pr)
 	if err != nil {
+		_ = pr.Close()
+		<-writeErr
+		return err
+	}
+	if err := <-writeErr; err != nil {
 		return err
 	}
 	phylo, depths, err := mykrobe.DetectSpeciesAndGetDepths(coverageSet, inputs.HierarchyPath, inputs.SpeciesPhyloGroup)
