@@ -285,7 +285,7 @@ func aggregateTaxonCoverage(groups map[string]*TaxonCoverage, expectedDepth, thr
 	for name, cov := range groups {
 		totalPercentCovered := 0.0
 		if cov.TotalBases > 0 {
-			totalPercentCovered = round2(basesCovered(cov.PercentCoverage, cov.Length) / float64(cov.TotalBases))
+			totalPercentCovered = round3(basesCovered(cov.PercentCoverage, cov.Length) / float64(cov.TotalBases))
 		}
 		medianDepth := medianFloat(cov.Median)
 		minRequired := PercentCoverageFromExpectedCoverage(expectedDepth) * TaxonThresholds[name]
@@ -307,7 +307,7 @@ func aggregateTaxonCoverage(groups map[string]*TaxonCoverage, expectedDepth, thr
 			}
 			medianDepth = medianFloat(filteredMedian)
 			if cov.TotalBases > 0 {
-				totalPercentCovered = round2(basesCovered(filteredPC, filteredLen) / float64(cov.TotalBases))
+				totalPercentCovered = round3(basesCovered(filteredPC, filteredLen) / float64(cov.TotalBases))
 			}
 		}
 		if totalPercentCovered > threshold {

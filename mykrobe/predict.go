@@ -192,6 +192,16 @@ func (p *TBPredictor) updateResistancePrediction(alleleName string, call Call) {
 					p.ResistancePredictions[drug]["predict"] = pred
 				}
 			}
+			if pred == "r" || pred == "R" {
+				stored := call
+				stored.Variant = nil
+				calledBy, ok := p.ResistancePredictions[drug]["called_by"].(map[string]Call)
+				if !ok {
+					calledBy = map[string]Call{}
+				}
+				calledBy[alleleName] = stored
+				p.ResistancePredictions[drug]["called_by"] = calledBy
+			}
 		}
 	}
 }
@@ -202,11 +212,9 @@ func (p *TBPredictor) namesForAllele(alleleName string) []string {
 	if params["mut"] != "" {
 		names = append(names, params["gene"]+"_"+params["mut"])
 	}
-	split := strings.Split(strings.Split(alleleName, "?")[0], "-")
-	if len(split) > 1 {
-		names = append(names, split[1])
-	} else {
-		names = append(names, split[0])
+	base := strings.Split(strings.Split(alleleName, "?")[0], "-")[0]
+	if base != "" {
+		names = append(names, base)
 	}
 	return names
 }

@@ -347,6 +347,18 @@ func (p *LineagePredictor) applyReportNames(result map[string]any) {
 	result["calls_summary"] = newSummary
 }
 
+func (p *LineagePredictor) ApplyReportNamesToLineageCalls(d map[string]map[string]Call) map[string]map[string]Call {
+	out := map[string]map[string]Call{}
+	for k, v := range d {
+		if name, ok := p.ReportNames[k]; ok {
+			out[name] = v
+		} else {
+			out[k] = v
+		}
+	}
+	return out
+}
+
 func (p *LineagePredictor) replaceNestedCallKeys(d map[string]map[string]Call) map[string]map[string]Call {
 	out := map[string]map[string]Call{}
 	for k, v := range d {

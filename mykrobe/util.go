@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -65,4 +66,118 @@ func LoadJSON(path string, dst any) error {
 		}
 	}
 	return json.NewDecoder(r).Decode(dst)
+}
+
+var xVariantPattern = regexp.MustCompile(`^(?P<prefix>.*_)(?P<aa1>[A-Z])(?P<pos1>[0-9]+)(?P<aa2>[A-Z])-(?P<codon1>[ACGT]{3})(?P<pos2>[0-9]+)(?P<codon2>[ACGT]{3})$`)
+
+func XMutationFixedVarName(varName string) (string, bool) {
+	m := xVariantPattern.FindStringSubmatch(varName)
+	if m == nil {
+		return "", false
+	}
+	g := map[string]string{}
+	for i, name := range xVariantPattern.SubexpNames() {
+		if i > 0 && name != "" {
+			g[name] = m[i]
+		}
+	}
+	if g["aa2"] != "X" {
+		return "", false
+	}
+	codon1AA, ok1 := translateCodon(g["codon1"])
+	codon1RevAA, ok1r := translateCodon(revcompDNA(g["codon1"]))
+	if !ok1 || !ok1r {
+		return "", false
+	}
+	var newAA string
+	switch {
+	case codon1AA == g["aa1"]:
+		x, ok := translateCodon(g["codon2"])
+		if !ok {
+			return "", false
+		}
+		newAA = x
+	case codon1RevAA == g["aa1"]:
+		x, ok := translateCodon(revcompDNA(g["codon2"]))
+		if !ok {
+			return "", false
+		}
+		newAA = x
+	default:
+		return "", false
+	}
+	return g["prefix"] + g["aa1"] + g["pos1"] + newAA + "-" + g["codon1"] + g["pos2"] + g["codon2"], true
+}
+
+func FixAminoAcidXVariantKeys(calls map[string]Call) map[string]Call {
+	keysToReplace := map[string]string{}
+	keysToRemove := map[string]struct{}{}
+	for key := range calls {
+		newKey, ok := XMutationFixedVarName(key)
+		if !ok {
+			continue
+		}
+		if _, exists := keysToReplace[newKey]; exists {
+			keysToRemove[key] = struct{}{}
+		} else if _, exists := calls[newKey]; exists {
+			keysToRemove[key] = struct{}{}
+		} else {
+			keysToReplace[key] = newKey
+		}
+	}
+	for key := range keysToRemove {
+		delete(calls, key)
+	}
+	for key, newKey := range keysToReplace {
+		calls[newKey] = calls[key]
+		delete(calls, key)
+	}
+	return calls
+}
+
+func revcompDNA(seq string) string {
+	out := make([]byte, len(seq))
+	for i := range seq {
+		out[len(seq)-1-i] = complementBase(seq[i])
+	}
+	return string(out)
+}
+
+func complementBase(b byte) byte {
+	switch b {
+	case 'A':
+		return 'T'
+	case 'C':
+		return 'G'
+	case 'G':
+		return 'C'
+	case 'T':
+		return 'A'
+	default:
+		return 'N'
+	}
+}
+
+func translateCodon(codon string) (string, bool) {
+	aa, ok := codonTable[codon]
+	return aa, ok
+}
+
+var codonTable = map[string]string{
+	"TTT": "F", "TTC": "F", "TTA": "L", "TTG": "L",
+	"TCT": "S", "TCC": "S", "TCA": "S", "TCG": "S",
+	"TAT": "Y", "TAC": "Y", "TAA": "*", "TAG": "*",
+	"TGT": "C", "TGC": "C", "TGA": "*", "TGG": "W",
+	"CTT": "L", "CTC": "L", "CTA": "L", "CTG": "L",
+	"CCT": "P", "CCC": "P", "CCA": "P", "CCG": "P",
+	"CAT": "H", "CAC": "H", "CAA": "Q", "CAG": "Q",
+	"CGT": "R", "CGC": "R", "CGA": "R", "CGG": "R",
+	"ATT": "I", "ATC": "I", "ATA": "I", "ATG": "M",
+	"ACT": "T", "ACC": "T", "ACA": "T", "ACG": "T",
+	"AAT": "N", "AAC": "N", "AAA": "K", "AAG": "K",
+	"AGT": "S", "AGC": "S", "AGA": "R", "AGG": "R",
+	"GTT": "V", "GTC": "V", "GTA": "V", "GTG": "V",
+	"GCT": "A", "GCC": "A", "GCA": "A", "GCG": "A",
+	"GAT": "D", "GAC": "D", "GAA": "E", "GAG": "E",
+	"GGT": "G", "GGC": "G", "GGA": "G", "GGG": "G",
 }

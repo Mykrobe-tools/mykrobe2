@@ -270,3 +270,7 @@ func parseVariantRow(set *CoverageSet, row []string, probe string, medianDepth, 
 func round2(v float64) float64 {
 	return math.Round(v*100) / 100
 }
+
+func round3(v float64) float64 {
+	return math.Round(v*1000) / 1000
+}

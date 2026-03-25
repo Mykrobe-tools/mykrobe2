@@ -98,8 +98,8 @@ func newPredictCmd() *cobra.Command {
 	cmd.Flags().Float64Var(&opts.errorRate, "expected_error_rate", mykrobe.DefaultErrorRate, "")
 	cmd.Flags().Float64Var(&opts.minorFreq, "minor_freq", mykrobe.DefaultMinorFreq, "")
 	cmd.Flags().Float64Var(&opts.minPropExpectedDepth, "min_proportion_expected_depth", 0.3, "")
-	cmd.Flags().IntVar(&opts.minVariantConf, "min_variant_conf", 3, "")
-	cmd.Flags().IntVar(&opts.minGeneConf, "min_gene_conf", 0, "")
+	cmd.Flags().IntVar(&opts.minVariantConf, "min_variant_conf", 150, "")
+	cmd.Flags().IntVar(&opts.minGeneConf, "min_gene_conf", 1, "")
 	cmd.Flags().BoolVar(&opts.reportAllCalls, "report_all_calls", false, "")
 	cmd.Flags().BoolVar(&opts.ignoreMinorCalls, "ignore_minor_calls", false, "")
 	cmd.Flags().BoolVar(&opts.ncbiNames, "ncbi_names", false, "")
@@ -191,14 +191,12 @@ func runPredict(opts *predictOptions) error {
 	if err != nil {
 		return err
 	}
-	if inputs.NCBINamesPath != "" {
+	if opts.ncbiNames && inputs.NCBINamesPath != "" {
 		namesMap := map[string]string{}
 		if err := mykrobe.LoadJSON(inputs.NCBINamesPath, &namesMap); err != nil {
 			return err
 		}
-		if opts.ncbiNames {
-			mykrobe.AddNCBINamesToPhylo(phylo, namesMap)
-		}
+		mykrobe.AddNCBINamesToPhylo(phylo, namesMap)
 	}
 	expectedDepth := opts.expectedDepth
 	if expectedDepth == 0 {
@@ -243,7 +241,7 @@ func runPredict(opts *predictOptions) error {
 		"genotype_model": opts.model,
 	}
 	if opts.reportAllCalls {
-		sampleOut["variant_calls"] = result.VariantCalls
+		sampleOut["variant_calls"] = mykrobe.FixAminoAcidXVariantKeys(result.VariantCalls)
 		sampleOut["sequence_calls"] = result.GeneCalls
 		sampleOut["lineage_calls"] = result.LineageCalls
 	}

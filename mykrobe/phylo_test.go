@@ -108,3 +108,28 @@ func TestDetectSpeciesAndGetDepths(t *testing.T) {
 		t.Fatalf("missing inferred phylo group: %v", phylo)
 	}
 }
+
+func TestAggregateTaxonCoverageRoundsToThreeDecimals(t *testing.T) {
+	groups := map[string]*TaxonCoverage{
+		"Mycobacterium_tuberculosis_complex": {
+			TotalBases:      1000,
+			PercentCoverage: []float64{95.887},
+			Length:          []int{1000},
+			Median:          []float64{4},
+		},
+	}
+	got := aggregateTaxonCoverage(groups, 4, 5)
+	if got["Mycobacterium_tuberculosis_complex"]["percent_coverage"] != 95.887 {
+		t.Fatalf("unexpected percent coverage: %v", got)
+	}
+}
+
+func TestFixAminoAcidXVariantKeys(t *testing.T) {
+	calls := map[string]Call{
+		"gid_Q125X-CTG4407828AGC": {},
+	}
+	got := FixAminoAcidXVariantKeys(calls)
+	if _, ok := got["gid_Q125A-CTG4407828AGC"]; !ok {
+		t.Fatalf("expected X variant key to be fixed, got %v", got)
+	}
+}

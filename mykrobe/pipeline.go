@@ -1,5 +1,9 @@
 package mykrobe
 
+import "strings"
+
+var DefaultVariantFilters = []string{"MISSING_WT", "LOW_PERCENT_COVERAGE", "LOW_GT_CONF", "LOW_TOTAL_DEPTH"}
+
 type AnalysisResult struct {
 	VariantCalls map[string]Call
 	GeneCalls    map[string][]Call
@@ -22,6 +26,7 @@ type AnalysisOptions struct {
 	Ploidy                      string
 	IgnoreMinorCalls            bool
 	MinDepth                    float64
+	Filters                     []string
 }
 
 func AnalyzeCoverageSetTB(set *CoverageSet, expectedDepth float64, variantToResistancePath string, lineagePath string) (*AnalysisResult, error) {
@@ -31,20 +36,25 @@ func AnalyzeCoverageSetTB(set *CoverageSet, expectedDepth float64, variantToResi
 		LineagePath:                 lineagePath,
 		ErrorRate:                   DefaultErrorRate,
 		MinorFreq:                   DefaultMinorFreq,
-		VariantConfidenceThreshold:  3,
-		SequenceConfidenceThreshold: 0,
+		VariantConfidenceThreshold:  150,
+		SequenceConfidenceThreshold: 1,
 		Model:                       "kmer_count",
 		KmerSize:                    DefaultKmerSize,
 		MinProportionExpectedDepth:  0.3,
 		Ploidy:                      "diploid",
 		IgnoreMinorCalls:            false,
 		MinDepth:                    3,
+		Filters:                     DefaultVariantFilters,
 	})
 }
 
 func AnalyzeCoverageSetTBWithOptions(set *CoverageSet, opts AnalysisOptions) (*AnalysisResult, error) {
-	vt := NewVariantTyper([]float64{opts.ExpectedDepth}, nil, opts.ErrorRate, opts.MinorFreq, false, nil, opts.VariantConfidenceThreshold, opts.Model, opts.KmerSize, opts.MinProportionExpectedDepth, opts.Ploidy)
-	gt := NewGeneCollectionTyper([]float64{opts.ExpectedDepth}, nil, opts.SequenceConfidenceThreshold)
+	filters := opts.Filters
+	if filters == nil {
+		filters = DefaultVariantFilters
+	}
+	vt := NewVariantTyper([]float64{opts.ExpectedDepth}, []float64{}, opts.ErrorRate, opts.MinorFreq, false, filters, opts.VariantConfidenceThreshold, opts.Model, opts.KmerSize, opts.MinProportionExpectedDepth, opts.Ploidy)
+	gt := NewGeneCollectionTyper([]float64{opts.ExpectedDepth}, []float64{}, opts.SequenceConfidenceThreshold)
 
 	variantCalls := make(map[string]Call, len(set.Variant))
 	geneCalls := make(map[string][]Call, len(set.Presence))
@@ -76,16 +86,33 @@ func AnalyzeCoverageSetTBWithOptions(set *CoverageSet, opts AnalysisOptions) (*A
 			return nil, err
 		}
 		for varName, call := range variantCalls {
-			if lineage, ok := variantToLineage[varName]; ok {
+			for _, key := range lineageLookupKeys(varName) {
+				lineage, ok := variantToLineage[key]
+				if !ok {
+					continue
+				}
 				if lineageCalls[lineage.Name] == nil {
 					lineageCalls[lineage.Name] = map[string]Call{}
 				}
-				lineageCalls[lineage.Name][varName] = call
+				lineageCalls[lineage.Name][key] = call
+				break
 			}
 		}
-		if len(lineageCalls) > 0 {
-			lineageResult = NewLineagePredictor(variantToLineage).CallLineage(lineageCalls, 0.5)
+		for geneName, call := range flatGeneCalls {
+			lineage, ok := variantToLineage[geneName]
+			if !ok {
+				continue
+			}
+			if lineageCalls[lineage.Name] == nil {
+				lineageCalls[lineage.Name] = map[string]Call{}
+			}
+			lineageCalls[lineage.Name][geneName] = call
 		}
+		predictor := NewLineagePredictor(variantToLineage)
+		if len(lineageCalls) > 0 {
+			lineageResult = predictor.CallLineage(lineageCalls, 0.5)
+		}
+		lineageCalls = predictor.ApplyReportNamesToLineageCalls(lineageCalls)
 	}
 	return &AnalysisResult{
 		VariantCalls: variantCalls,
@@ -94,4 +121,15 @@ func AnalyzeCoverageSetTBWithOptions(set *CoverageSet, opts AnalysisOptions) (*A
 		Lineage:      lineageResult,
 		LineageCalls: lineageCalls,
 	}, nil
+}
+
+func lineageLookupKeys(varName string) []string {
+	keys := []string{varName}
+	if i := len("NA_"); strings.HasPrefix(varName, "NA_") && len(varName) > i {
+		keys = append(keys, varName[i:])
+	}
+	if i := strings.IndexByte(varName, '-'); i >= 0 && i+1 < len(varName) {
+		keys = append(keys, varName[i+1:])
+	}
+	return Unique(keys)
 }

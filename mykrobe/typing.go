@@ -1,16 +1,33 @@
 package mykrobe
 
 import (
+	"encoding/json"
 	"math"
 	"slices"
 	"sort"
 )
 
 type Call struct {
+	Class               string         `json:"_cls,omitempty"`
 	Variant             any            `json:"variant,omitempty"`
 	Genotype            []int          `json:"genotype"`
 	GenotypeLikelihoods []float64      `json:"genotype_likelihoods"`
 	Info                map[string]any `json:"info"`
+}
+
+func (c Call) MarshalJSON() ([]byte, error) {
+	out := map[string]any{
+		"genotype":             c.Genotype,
+		"genotype_likelihoods": c.GenotypeLikelihoods,
+		"info":                 c.Info,
+	}
+	if c.Class != "" {
+		out["_cls"] = c.Class
+	}
+	if c.Variant != nil || c.Class == "Call.VariantCall" {
+		out["variant"] = c.Variant
+	}
+	return json.Marshal(out)
 }
 
 type Typer struct {
@@ -104,6 +121,7 @@ func (p PresenceTyper) Type(s SequenceProbeCoverage) Call {
 		info["length"] = s.Length
 	}
 	return Call{
+		Class:               "Call.SequenceCall",
 		Genotype:            parseGT(gt),
 		GenotypeLikelihoods: likelihoods,
 		Info:                info,
@@ -267,7 +285,7 @@ func (v VariantTyper) typeOne(cov *VariantProbeCoverage, variant any) Call {
 	if !v.diploid() {
 		gl = []float64{likelihoods[0], likelihoods[2]}
 	}
-	return Call{Variant: variant, Genotype: parseGT(gt), GenotypeLikelihoods: gl, Info: info}
+	return Call{Class: "Call.VariantCall", Variant: variant, Genotype: parseGT(gt), GenotypeLikelihoods: gl, Info: info}
 }
 
 func (v VariantTyper) depthToExpectedKmerCount(depth float64, alleleLength int) float64 {
