@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -337,7 +338,8 @@ func (d *DataDir) AddOrReplaceSpeciesData(tarballName string, force bool) error 
 	fromFile := !regexp.MustCompile(`^https?://`).MatchString(tarballName)
 	toExtract := tarballName
 	if !fromFile {
-		resp, err := http.Get(tarballName)
+		downloadURL := resolveDownloadURL(tarballName)
+		resp, err := http.Get(downloadURL)
 		if err != nil {
 			return err
 		}
@@ -464,6 +466,18 @@ func (d *DataDir) GetSpeciesDir(species string) (*SpeciesDir, error) {
 		return nil, nil
 	}
 	return NewSpeciesDir(filepath.Join(d.RootDir, species))
+}
+
+func resolveDownloadURL(rawURL string) string {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
+	if parsed.Host == "figshare.com" && strings.HasPrefix(parsed.Path, "/ndownloader/files/") {
+		fileID := parsed.Path[strings.LastIndex(parsed.Path, "/")+1:]
+		return "https://ndownloader.figshare.com/files/" + fileID
+	}
+	return rawURL
 }
 
 func (d *DataDir) UpdateSpecies(species string) error {

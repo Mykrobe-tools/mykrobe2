@@ -285,6 +285,21 @@ func TestDataDir(t *testing.T) {
 	}
 }
 
+func TestResolveDownloadURLForFigshare(t *testing.T) {
+	oldURL := "https://figshare.com/ndownloader/files/42494211"
+	newURL := "https://ndownloader.figshare.com/files/42494211"
+	if got := resolveDownloadURL(oldURL); got != newURL {
+		t.Fatalf("unexpected rewritten url: %s", got)
+	}
+	if got := resolveDownloadURL(newURL); got != newURL {
+		t.Fatalf("unexpected direct url rewrite: %s", got)
+	}
+	other := "https://example.com/file.tar.gz"
+	if got := resolveDownloadURL(other); got != other {
+		t.Fatalf("unexpected rewrite of non-figshare url: %s", got)
+	}
+}
+
 func makeSpeciesTarball(t *testing.T, species, version, panel string) string {
 	t.Helper()
 	base := filepath.Join(t.TempDir(), species+"_data")
