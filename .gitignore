@@ -1,5 +1,8 @@
 .gocache/
 .gomodcache/
+.cache/
+build/
+dist/
 .DS_Store
 *.test
 *.out
