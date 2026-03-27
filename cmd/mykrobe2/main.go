@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"bufio"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -76,11 +77,12 @@ type panelsUpdateSpeciesOptions struct {
 type makeProbesOptions struct {
 	referencePath string
 	vcfPath       string
+	backgroundVCF []string
+	backgroundList string
 	variants      []string
 	textFile      string
 	genbankPath   string
 	kmer          int
-	noBackgrounds bool
 	lineagePath   string
 }
 
@@ -181,11 +183,12 @@ func newMakeProbesCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&opts.vcfPath, "vcf", "f", "", "Use variants defined in a VCF file")
+	cmd.Flags().StringSliceVar(&opts.backgroundVCF, "background-vcf", nil, "VCF file(s) containing background variants")
+	cmd.Flags().StringVar(&opts.backgroundList, "background-vcf-list", "", "File containing background VCF filenames, one per line")
 	cmd.Flags().StringSliceVarP(&opts.variants, "variants", "v", nil, "Variant in DNA positions e.g. A1234T")
 	cmd.Flags().StringVarP(&opts.textFile, "text_file", "t", "", "Tab-delimited file containing DNA variants")
 	cmd.Flags().StringVarP(&opts.genbankPath, "genbank", "g", "", "Genbank file containing genes as features")
 	cmd.Flags().IntVarP(&opts.kmer, "kmer", "k", mykrobe.DefaultKmerSize, "kmer length")
-	cmd.Flags().BoolVar(&opts.noBackgrounds, "no-backgrounds", false, "Ignore nearby variants when building probes")
 	cmd.Flags().StringVar(&opts.lineagePath, "lineage", "", "Write lineage JSON to file")
 	return cmd
 }
@@ -461,12 +464,43 @@ func runMakeProbes(opts *makeProbesOptions, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+	var parsed []probes.Variant
 	for _, mut := range mutations {
 		v, err := mut.Variant()
 		if err != nil {
 			return err
 		}
-		panel, err := ag.Create(v, nil)
+		parsed = append(parsed, v)
+	}
+	var backgroundVars []probes.Variant
+	backgroundPaths, err := collectBackgroundVCFPaths(opts.backgroundVCF, opts.backgroundList)
+	if err != nil {
+		return err
+	}
+	for _, path := range backgroundPaths {
+		bgMuts, err := probes.LoadVCFMutations(path, reference)
+		if err != nil {
+			return err
+		}
+		for _, mut := range bgMuts {
+			v, err := mut.Variant()
+			if err != nil {
+				return err
+			}
+			backgroundVars = append(backgroundVars, v)
+		}
+	}
+	var contextIndex *probes.ContextIndex
+	if len(backgroundVars) > 0 {
+		contextIndex = probes.NewContextIndex(backgroundVars)
+	}
+	for i, mut := range mutations {
+		v := parsed[i]
+		var context []probes.Variant
+		if contextIndex != nil {
+			context = contextIndex.Nearby(v, -1, opts.kmer)
+		}
+		panel, err := ag.Create(v, context)
 		if err != nil {
 			return err
 		}
@@ -487,6 +521,30 @@ func runMakeProbes(opts *makeProbesOptions, out io.Writer) error {
 		}
 	}
 	return nil
+}
+
+func collectBackgroundVCFPaths(direct []string, listFile string) ([]string, error) {
+	out := append([]string(nil), direct...)
+	if listFile == "" {
+		return out, nil
+	}
+	f, err := os.Open(listFile)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		out = append(out, line)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 type genbankMutationRow struct {
