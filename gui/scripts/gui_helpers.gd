@@ -117,6 +117,7 @@ func _load_species_entries_from_panels_dir(panels_dir: String) -> Array:
 						var panels_dict: Dictionary = panels_variant
 						var panel_names := panels_dict.keys()
 						panel_names.sort()
+						panel_names.reverse()
 						var panels: Array = []
 						for panel_name_variant in panel_names:
 							var panel_name := str(panel_name_variant)

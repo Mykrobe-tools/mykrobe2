@@ -203,3 +203,73 @@ func TestPanelsDescribeText(t *testing.T) {
 		t.Fatalf("unexpected describe text output:\n%s", text)
 	}
 }
+
+func TestPanelsDescribePanelsNewestFirst(t *testing.T) {
+	dir := t.TempDir()
+	panelsDir := filepath.Join(dir, "panels")
+	speciesDir := filepath.Join(dir, "species-src")
+	if err := os.MkdirAll(panelsDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(speciesDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeJSONFile(t, filepath.Join(speciesDir, "manifest.json"), map[string]any{
+		"species_name":  "tb",
+		"version":       "20240214",
+		"default_panel": "202309",
+		"panels": map[string]any{
+			"202001": map[string]any{
+				"description":         "older",
+				"reference_genome":    "ref-old",
+				"species_phylo_group": "mtbc",
+				"fasta_files":         []string{"probes1.fa.gz"},
+				"kmer":                21,
+				"json_files":          map[string]any{"amr": "amr1.json.gz"},
+			},
+			"202309": map[string]any{
+				"description":         "newer",
+				"reference_genome":    "ref-new",
+				"species_phylo_group": "mtbc",
+				"fasta_files":         []string{"probes2.fa.gz"},
+				"kmer":                21,
+				"json_files":          map[string]any{"amr": "amr2.json.gz"},
+			},
+		},
+	})
+	writeJSONFile(t, filepath.Join(panelsDir, "manifest.json"), map[string]any{
+		"tb": map[string]any{
+			"installed": map[string]string{"version": "20240214", "url": "file:///tmp/tb.tar.gz"},
+			"latest":    map[string]string{"version": "20240214", "url": "file:///tmp/tb.tar.gz"},
+		},
+	})
+	if err := os.Rename(speciesDir, filepath.Join(panelsDir, "tb")); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := newRootCmd()
+	var output strings.Builder
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
+	cmd.SetArgs([]string{"panels", "describe", "--panels_dir", panelsDir, "--format", "json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+
+	var got struct {
+		Species []struct {
+			Panels []struct {
+				Name string `json:"name"`
+			} `json:"panels"`
+		} `json:"species"`
+	}
+	if err := json.Unmarshal([]byte(output.String()), &got); err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Species) != 1 || len(got.Species[0].Panels) != 2 {
+		t.Fatalf("unexpected panel output: %+v", got)
+	}
+	if got.Species[0].Panels[0].Name != "202309" || got.Species[0].Panels[1].Name != "202001" {
+		t.Fatalf("expected newest first, got %+v", got.Species[0].Panels)
+	}
+}

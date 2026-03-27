@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/martinghunt/mykrobe2/mykrobe/speciesdata"
@@ -84,8 +85,10 @@ func buildPanelsDescribeOutput(ddir *speciesdata.DataDir) (*describeOutput, erro
 			}
 			if sdir != nil {
 				item.DefaultPanel = sdir.DefaultPanel()
-				item.Panels = make([]panelDescription, 0, len(sdir.PanelNames()))
-				for _, panelName := range sdir.PanelNames() {
+				panelNames := sdir.PanelNames()
+				sort.Sort(sort.Reverse(sort.StringSlice(panelNames)))
+				item.Panels = make([]panelDescription, 0, len(panelNames))
+				for _, panelName := range panelNames {
 					if err := sdir.SetPanel(panelName); err != nil {
 						return nil, err
 					}
