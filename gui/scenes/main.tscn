@@ -78,6 +78,37 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.403922, 0.396078, 0.380392, 1)
 text = "Drop a reads file or result JSON onto the window, or browse below."
 
+[node name="BootstrapPanel" type="PanelContainer" parent="RootMargin/RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="BootstrapMargin" type="MarginContainer" parent="RootMargin/RootVBox/BootstrapPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 26
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 26
+
+[node name="BootstrapVBox" type="VBoxContainer" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="BootstrapTitle" type="Label" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Preparing Mykrobe data"
+
+[node name="BootstrapStatus" type="Label" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Downloading panel metadata and species data."
+
+[node name="BootstrapLog" type="TextEdit" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+editable = false
+line_wrapping_mode = 1
+
 [node name="BodySplit" type="HSplitContainer" parent="RootMargin/RootVBox"]
 layout_mode = 2
 size_flags_vertical = 3

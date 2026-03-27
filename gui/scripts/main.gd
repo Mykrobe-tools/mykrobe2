@@ -8,6 +8,10 @@ const BACKGROUND_IMAGE_PATH = "res://assets/background.png"
 const LOGO_IMAGE_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
 
 @onready var background_texture: TextureRect = $Background
+@onready var bootstrap_panel: PanelContainer = $RootMargin/RootVBox/BootstrapPanel
+@onready var bootstrap_status_label: Label = $RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox/BootstrapStatus
+@onready var bootstrap_log_text: TextEdit = $RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox/BootstrapLog
+@onready var body_split: HSplitContainer = $RootMargin/RootVBox/BodySplit
 @onready var sample_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SampleRow/SampleEdit
 @onready var reads_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker/ReadsEdit
 @onready var panels_dir_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker/PanelsDirEdit
@@ -60,11 +64,13 @@ func _process(_delta: float) -> void:
 	var result: Dictionary = _panels_setup.poll()
 	if result.get("running", false):
 		setup_log_text.text = str(result.get("log", ""))
+		bootstrap_log_text.text = str(result.get("log", ""))
 		return
 	if not result.get("finished", false):
 		return
 	_set_setup_busy(false)
 	setup_log_text.text = str(result.get("log", ""))
+	bootstrap_log_text.text = str(result.get("log", ""))
 	if result.get("success", false):
 		_set_status(str(result.get("status", "Panel setup complete.")))
 		_refresh_species_options()
@@ -274,8 +280,10 @@ func _start_panels_task(commands: Array, status_prefix: String, success_status: 
 		return
 	_set_status(status_prefix)
 	_set_setup_status(status_prefix)
+	bootstrap_status_label.text = status_prefix
 	_set_setup_busy(true)
 	setup_log_text.text = ""
+	bootstrap_log_text.text = ""
 	var start_result: Dictionary = _panels_setup.start(binary_path, commands, success_status)
 	if not start_result.get("started", false):
 		_set_setup_busy(false)
@@ -287,17 +295,24 @@ func _refresh_setup_state() -> void:
 	var species := _selected_species()
 	var manifest_exists := FileAccess.file_exists(panels_dir.path_join("manifest.json"))
 	var species_installed: bool = _helpers.species_installed_marker_exists(panels_dir, species)
+	var bootstrap_mode := _should_show_bootstrap(manifest_exists)
 
+	bootstrap_panel.visible = bootstrap_mode
+	body_split.visible = not bootstrap_mode
 	setup_panel.visible = (not manifest_exists) or (species != "" and not species_installed)
 	if not manifest_exists:
 		if _panels_setup.is_running():
 			_set_setup_status("Initial panel download is running in the background.")
+			bootstrap_status_label.text = "Downloading panel metadata and species data. This can take a little while."
 		else:
 			_set_setup_status("Panel metadata is missing. Initial setup will download all species into the shared panels directory.")
+			bootstrap_status_label.text = "Panel metadata is missing. Initial setup will download all species into the shared panels directory."
 	elif species != "" and not species_installed:
 		_set_setup_status("Species '%s' is not installed in the shared panels directory." % species)
+		bootstrap_status_label.text = "Species panels are still being prepared."
 	else:
 		_set_setup_status("Shared panels directory is ready.")
+		bootstrap_status_label.text = "Shared panels directory is ready."
 	install_species_button.disabled = (species == "")
 
 func _set_setup_busy(busy: bool) -> void:
@@ -362,6 +377,9 @@ func _refresh_species_options() -> void:
 			break
 	species_option.select(preferred_index)
 	_on_species_option_item_selected(preferred_index)
+
+func _should_show_bootstrap(manifest_exists: bool) -> bool:
+	return (not manifest_exists) or _panels_setup.is_running()
 
 func _on_files_dropped(files: PackedStringArray) -> void:
 	if files.is_empty():
