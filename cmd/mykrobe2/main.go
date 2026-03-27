@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -154,13 +155,29 @@ func newPanelsUpdateSpeciesCmd() *cobra.Command {
 }
 
 func defaultPanelsDir() string {
-	if dir, err := os.UserConfigDir(); err == nil && dir != "" {
+	if dir := userDataDir(); dir != "" {
 		return filepath.Join(dir, "mykrobe2", "panels")
 	}
 	if dir, err := os.UserHomeDir(); err == nil && dir != "" {
 		return filepath.Join(dir, ".mykrobe2", "panels")
 	}
 	return filepath.Join(".", "panels")
+}
+
+func userDataDir() string {
+	if runtime.GOOS == "windows" {
+		if dir, err := os.UserConfigDir(); err == nil && dir != "" {
+			return dir
+		}
+		return ""
+	}
+	if dir := os.Getenv("MYKROBE_DATA_HOME"); dir != "" {
+		return dir
+	}
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		return filepath.Join(home, ".local", "share")
+	}
+	return ""
 }
 
 func runPredict(opts *predictOptions) error {
