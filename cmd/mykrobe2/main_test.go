@@ -531,6 +531,44 @@ func TestMakeProbesCommandWithTextFileWritesLineage(t *testing.T) {
 	}
 }
 
+func TestMakeProbesCommandWithGenbankVariant(t *testing.T) {
+	dir := t.TempDir()
+	out := filepath.Join(dir, "probes.fa")
+	oldStdout := os.Stdout
+	f, err := os.Create(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	os.Stdout = f
+	defer func() { os.Stdout = oldStdout }()
+
+	err = run([]string{
+		"make-probes",
+		filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "NC_000962.3.fasta"),
+		"--genbank", filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "NC_000962.3.gb"),
+		"--variants", "rpoB_S450L",
+		"--kmer", "31",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(data)
+	if !strings.Contains(text, ">ref-S450L?var_name=TCG761154TTA") {
+		t.Fatalf("missing expected genbank ref record: %s", text)
+	}
+	if !strings.Contains(text, ">alt-S450L?var_name=TCG761154TTA") {
+		t.Fatalf("missing expected genbank alt record: %s", text)
+	}
+}
+
 func writeJSONFile(t *testing.T, path string, v any) {
 	t.Helper()
 	data, err := json.MarshalIndent(v, "", "  ")

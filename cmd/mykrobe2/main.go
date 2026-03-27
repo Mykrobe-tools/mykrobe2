@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/martinghunt/mykrobe2/mccortex"
+	"github.com/martinghunt/mykrobe2/mykrobe/annotation"
 	"github.com/martinghunt/mykrobe2/mykrobe"
 	"github.com/martinghunt/mykrobe2/mykrobe/probes"
 	"github.com/martinghunt/mykrobe2/mykrobe/speciesdata"
@@ -375,16 +377,58 @@ func runMakeProbes(opts *makeProbesOptions, out io.Writer) error {
 	if opts.vcfPath != "" {
 		return fmt.Errorf("make-probes --vcf is not implemented yet")
 	}
-	if opts.genbankPath != "" {
-		return fmt.Errorf("make-probes --genbank is not implemented yet")
-	}
 	if len(opts.variants) == 0 && opts.textFile == "" {
 		return fmt.Errorf("make-probes requires --variants or --text_file")
 	}
 	reference := probes.DefaultReferenceName(opts.referencePath)
 	var mutations []probes.Mutation
 	lineages := map[string]probes.LineageInfo{}
-	if opts.textFile != "" {
+	if opts.genbankPath != "" {
+		aa2dna, err := annotation.NewGeneAminoAcidChangeToDNAVariants(opts.referencePath, opts.genbankPath)
+		if err != nil {
+			return err
+		}
+		if opts.textFile != "" {
+			rows, err := loadGenbankMutationRows(opts.textFile)
+			if err != nil {
+				return err
+			}
+			for _, row := range rows {
+				proteinCodingVar := row.alphabet != "DNA"
+				varNames, err := aa2dna.GetVariantNames(row.gene, row.mutation, proteinCodingVar)
+				if err != nil {
+					return err
+				}
+				for _, varName := range varNames {
+					mutations = append(mutations, probes.Mutation{
+						Reference:         reference,
+						VarName:           varName,
+						InputMutationName: row.mutation,
+						ProteinCodingVar:  proteinCodingVar,
+					})
+				}
+			}
+		} else {
+			for _, item := range opts.variants {
+				parts := strings.SplitN(item, "_", 2)
+				if len(parts) != 2 {
+					return fmt.Errorf("expected genbank variant in gene_mutation form, got %q", item)
+				}
+				varNames, err := aa2dna.GetVariantNames(parts[0], parts[1], true)
+				if err != nil {
+					return err
+				}
+				for _, varName := range varNames {
+					mutations = append(mutations, probes.Mutation{
+						Reference:         reference,
+						VarName:           varName,
+						InputMutationName: parts[1],
+						ProteinCodingVar:  true,
+					})
+				}
+			}
+		}
+	} else if opts.textFile != "" {
 		var err error
 		mutations, lineages, err = probes.LoadDNAVarsTextFile(opts.textFile, reference)
 		if err != nil {
@@ -418,22 +462,55 @@ func runMakeProbes(opts *makeProbesOptions, out io.Writer) error {
 		if err != nil {
 			return err
 		}
+		geneName := "NA"
 		for i, ref := range panel.Refs {
 			_, err := fmt.Fprintf(out, ">ref-%s?var_name=%s&num_alts=%d&ref=%s&enum=%d&gene=%s&mut=%s\n%s\n",
-				mut.MutationOutputName(), mut.VarName, len(panel.Alts), mut.Reference, i, "NA", mut.MutationOutputName(), ref)
+				mut.MutationOutputName(), mut.VarName, len(panel.Alts), mut.Reference, i, geneName, mut.MutationOutputName(), ref)
 			if err != nil {
 				return err
 			}
 		}
 		for i, alt := range panel.Alts {
 			_, err := fmt.Fprintf(out, ">alt-%s?var_name=%s&enum=%d&gene=%s&mut=%s\n%s\n",
-				mut.MutationOutputName(), mut.VarName, i, "NA", mut.MutationOutputName(), alt)
+				mut.MutationOutputName(), mut.VarName, i, geneName, mut.MutationOutputName(), alt)
 			if err != nil {
 				return err
 			}
 		}
 	}
 	return nil
+}
+
+type genbankMutationRow struct {
+	gene     string
+	mutation string
+	alphabet string
+}
+
+func loadGenbankMutationRows(path string) ([]genbankMutationRow, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	var rows []genbankMutationRow
+	r := csv.NewReader(f)
+	r.Comma = '\t'
+	r.FieldsPerRecord = -1
+	for {
+		row, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		if len(row) < 3 {
+			return nil, fmt.Errorf("expected 3 columns in %s", path)
+		}
+		rows = append(rows, genbankMutationRow{gene: row[0], mutation: row[1], alphabet: row[2]})
+	}
+	return rows, nil
 }
 
 func runPanelsUpdateMetadata(opts *panelsUpdateMetadataOptions) error {

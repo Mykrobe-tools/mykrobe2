@@ -104,10 +104,10 @@ func newPanel(variant Variant, refs [][]byte, start int, alts [][]byte) Panel {
 }
 
 type Mutation struct {
-	VarName             string
-	Reference           string
-	InputMutationName   string
-	ProteinCodingVar    bool
+	VarName           string
+	Reference         string
+	InputMutationName string
+	ProteinCodingVar  bool
 }
 
 func (m Mutation) MutationOutputName() string {

@@ -84,21 +84,21 @@ func XMutationFixedVarName(varName string) (string, bool) {
 	if g["aa2"] != "X" {
 		return "", false
 	}
-	codon1AA, ok1 := translateCodon(g["codon1"])
-	codon1RevAA, ok1r := translateCodon(revcompDNA(g["codon1"]))
+	codon1AA, ok1 := TranslateCodon(g["codon1"])
+	codon1RevAA, ok1r := TranslateCodon(RevcompDNA(g["codon1"]))
 	if !ok1 || !ok1r {
 		return "", false
 	}
 	var newAA string
 	switch {
 	case codon1AA == g["aa1"]:
-		x, ok := translateCodon(g["codon2"])
+		x, ok := TranslateCodon(g["codon2"])
 		if !ok {
 			return "", false
 		}
 		newAA = x
 	case codon1RevAA == g["aa1"]:
-		x, ok := translateCodon(revcompDNA(g["codon2"]))
+		x, ok := TranslateCodon(RevcompDNA(g["codon2"]))
 		if !ok {
 			return "", false
 		}
@@ -144,51 +144,4 @@ func FixAminoAcidXVariantKeysInSusceptibility(susc map[string]map[string]any) ma
 		drugDict["called_by"] = FixAminoAcidXVariantKeys(calledBy)
 	}
 	return susc
-}
-
-func revcompDNA(seq string) string {
-	out := make([]byte, len(seq))
-	for i := range seq {
-		out[len(seq)-1-i] = complementBase(seq[i])
-	}
-	return string(out)
-}
-
-func complementBase(b byte) byte {
-	switch b {
-	case 'A':
-		return 'T'
-	case 'C':
-		return 'G'
-	case 'G':
-		return 'C'
-	case 'T':
-		return 'A'
-	default:
-		return 'N'
-	}
-}
-
-func translateCodon(codon string) (string, bool) {
-	aa, ok := codonTable[codon]
-	return aa, ok
-}
-
-var codonTable = map[string]string{
-	"TTT": "F", "TTC": "F", "TTA": "L", "TTG": "L",
-	"TCT": "S", "TCC": "S", "TCA": "S", "TCG": "S",
-	"TAT": "Y", "TAC": "Y", "TAA": "*", "TAG": "*",
-	"TGT": "C", "TGC": "C", "TGA": "*", "TGG": "W",
-	"CTT": "L", "CTC": "L", "CTA": "L", "CTG": "L",
-	"CCT": "P", "CCC": "P", "CCA": "P", "CCG": "P",
-	"CAT": "H", "CAC": "H", "CAA": "Q", "CAG": "Q",
-	"CGT": "R", "CGC": "R", "CGA": "R", "CGG": "R",
-	"ATT": "I", "ATC": "I", "ATA": "I", "ATG": "M",
-	"ACT": "T", "ACC": "T", "ACA": "T", "ACG": "T",
-	"AAT": "N", "AAC": "N", "AAA": "K", "AAG": "K",
-	"AGT": "S", "AGC": "S", "AGA": "R", "AGG": "R",
-	"GTT": "V", "GTC": "V", "GTA": "V", "GTG": "V",
-	"GCT": "A", "GCC": "A", "GCA": "A", "GCG": "A",
-	"GAT": "D", "GAC": "D", "GAA": "E", "GAG": "E",
-	"GGT": "G", "GGC": "G", "GGA": "G", "GGG": "G",
 }
