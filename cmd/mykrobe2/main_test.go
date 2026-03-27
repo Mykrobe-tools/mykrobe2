@@ -17,6 +17,7 @@ func TestPredictCommand(t *testing.T) {
 	panel := filepath.Join(dir, "panel.fa")
 	reads := filepath.Join(dir, "reads.fa")
 	out := filepath.Join(dir, "out.json")
+	covgs := filepath.Join(dir, "out.covgs")
 	lineage := filepath.Join(dir, "lineage.json")
 
 	panelData := "" +
@@ -41,6 +42,7 @@ func TestPredictCommand(t *testing.T) {
 		"--variant_to_resistance_json", "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json",
 		"--lineage_json", lineage,
 		"--output", out,
+		"--write_covgs", covgs,
 		"--k", "5",
 		"--expected_depth", "100",
 		"--report_all_calls",
@@ -67,6 +69,16 @@ func TestPredictCommand(t *testing.T) {
 	}
 	if _, ok := s1["variant_calls"]; !ok {
 		t.Fatalf("missing variant_calls: %v", s1)
+	}
+	covgsData, err := os.ReadFile(covgs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(string(covgsData), "name\tcolour\tmedian_depth\tmin_depth\tpercent_coverage\tkmer_count\tkmer_length\n") {
+		t.Fatalf("missing covgs header: %s", string(covgsData))
+	}
+	if !strings.Contains(string(covgsData), "katG?name=katG&panel_type=presence&version=1\t0\t1\t1\t1.000000\t7\t6") {
+		t.Fatalf("unexpected covgs output: %s", string(covgsData))
 	}
 }
 

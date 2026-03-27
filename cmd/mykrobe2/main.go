@@ -62,6 +62,7 @@ type predictOptions struct {
 	ont                  bool
 	guessSequenceMethod  bool
 	confPercentCutoff    float64
+	writeCovgs           string
 }
 
 type panelsUpdateMetadataOptions struct {
@@ -129,6 +130,7 @@ func newPredictCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&opts.ont, "ont", false, "")
 	cmd.Flags().BoolVar(&opts.guessSequenceMethod, "guess_sequence_method", false, "")
 	cmd.Flags().Float64Var(&opts.confPercentCutoff, "conf_percent_cutoff", 100, "")
+	cmd.Flags().StringVar(&opts.writeCovgs, "write_covgs", "", "Write intermediate coverage summary TSV to file")
 	return cmd
 }
 
@@ -256,6 +258,19 @@ func runPredict(opts *predictOptions) error {
 	} else {
 		summaries, err = summarizePanels(counter, inputs.PanelPaths)
 		if err != nil {
+			return err
+		}
+	}
+	if opts.writeCovgs != "" {
+		f, err := os.Create(opts.writeCovgs)
+		if err != nil {
+			return err
+		}
+		if err := mccortex.WriteCoverageTSVWithHeader(f, summaries); err != nil {
+			_ = f.Close()
+			return err
+		}
+		if err := f.Close(); err != nil {
 			return err
 		}
 	}

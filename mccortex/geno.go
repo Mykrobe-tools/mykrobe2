@@ -198,6 +198,13 @@ func WriteCoverageTSV(w io.Writer, summaries []CoverageSummary) error {
 	return nil
 }
 
+func WriteCoverageTSVWithHeader(w io.Writer, summaries []CoverageSummary) error {
+	if _, err := fmt.Fprintln(w, "name\tcolour\tmedian_depth\tmin_depth\tpercent_coverage\tkmer_count\tkmer_length"); err != nil {
+		return err
+	}
+	return WriteCoverageTSV(w, summaries)
+}
+
 func canonicalKmerString(kmer string) (uint64, error) {
 	key, ok, err := canonicalKmer([]byte(strings.ToUpper(kmer)))
 	if err != nil {
