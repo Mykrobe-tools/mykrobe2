@@ -1,5 +1,7 @@
 extends Control
 
+const LocalMykrobe2ManagerScript = preload("res://scripts/local_mykrobe2_manager.gd")
+
 @onready var sample_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SampleRow/SampleEdit
 @onready var reads_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker/ReadsEdit
 @onready var panels_dir_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker/PanelsDirEdit
@@ -12,17 +14,24 @@ extends Control
 @onready var guess_method_check: CheckBox = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid/GuessMethodCheck
 @onready var run_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/RunButton
 @onready var status_label: Label = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/StatusLabel
-@onready var summary_text: RichTextLabel = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/SummaryTab/SummaryText
+@onready var overview_text: RichTextLabel = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/OverviewTab/OverviewText
+@onready var drugs_text: RichTextLabel = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/DrugsTab/DrugsText
+@onready var species_text: RichTextLabel = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/SpeciesTab/SpeciesText
+@onready var evidence_text: TextEdit = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/EvidenceTab/EvidenceText
 @onready var raw_json_text: TextEdit = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/RawJSONTab/RawJSONText
 @onready var reads_dialog: FileDialog = $ReadsDialog
 @onready var panels_dir_dialog: FileDialog = $PanelsDirDialog
 @onready var output_dialog: FileDialog = $OutputDialog
 
+var _local_mykrobe2_manager: RefCounted
+
 func _ready() -> void:
 	panels_dir_edit.text = _default_panels_dir()
 	status_label.text = "Ready."
-	summary_text.text = "Run a sample to see summary output here."
-	raw_json_text.text = ""
+	_clear_results()
+	_local_mykrobe2_manager = LocalMykrobe2ManagerScript.new()
+	_local_mykrobe2_manager.configure("bin")
+	get_viewport().files_dropped.connect(_on_files_dropped)
 
 func _on_reads_browse_pressed() -> void:
 	reads_dialog.popup_centered_ratio(0.7)
@@ -46,8 +55,7 @@ func _on_output_dialog_file_selected(path: String) -> void:
 
 func _on_clear_button_pressed() -> void:
 	status_label.text = "Ready."
-	summary_text.text = "Run a sample to see summary output here."
-	raw_json_text.text = ""
+	_clear_results()
 
 func _on_run_button_pressed() -> void:
 	var sample := sample_edit.text.strip_edges()
@@ -110,13 +118,17 @@ func _on_run_button_pressed() -> void:
 		_set_status("mykrobe2 failed with exit code %d.\n%s" % [exit_code, joined])
 		return
 
-	if not FileAccess.file_exists(output_path):
-		_set_status("Predict completed but no JSON output was found at %s." % output_path)
-		return
+	_load_json_result(output_path, sample)
+	if raw_json_text.text != "":
+		_set_status("Completed successfully using %s." % binary_path)
 
-	var file := FileAccess.open(output_path, FileAccess.READ)
+func _load_json_result(path: String, preferred_sample: String = "sample") -> void:
+	if not FileAccess.file_exists(path):
+		_set_status("Result JSON was not found at %s." % path)
+		return
+	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		_set_status("Could not read output JSON at %s." % output_path)
+		_set_status("Could not open JSON file: %s." % path)
 		return
 	var text := file.get_as_text()
 	file.close()
@@ -124,25 +136,42 @@ func _on_run_button_pressed() -> void:
 	var parsed = JSON.parse_string(text)
 	if parsed == null:
 		raw_json_text.text = text
-		_set_status("Predict completed, but JSON parsing failed.")
+		_set_status("JSON parsing failed for %s." % path)
 		return
 
+	_display_results(preferred_sample, parsed)
+
+func _display_results(sample: String, parsed: Variant) -> void:
 	raw_json_text.text = JSON.stringify(parsed, "\t")
-	summary_text.text = _format_summary(sample, parsed)
-	_set_status("Completed successfully using %s." % binary_path)
+	overview_text.text = _format_overview(sample, parsed)
+	drugs_text.text = _format_drugs(sample, parsed)
+	species_text.text = _format_species(sample, parsed)
+	evidence_text.text = _format_evidence(sample, parsed)
+
+func _clear_results() -> void:
+	overview_text.text = "Run a sample to see summary output here."
+	drugs_text.text = ""
+	species_text.text = ""
+	evidence_text.text = ""
+	raw_json_text.text = ""
 
 func _set_status(message: String) -> void:
 	status_label.text = message
 
-func _format_summary(sample: String, parsed: Variant) -> String:
+func _extract_sample(sample: String, parsed: Variant) -> Dictionary:
 	if typeof(parsed) != TYPE_DICTIONARY:
-		return "Unexpected JSON output."
+		return {}
 	var root: Dictionary = parsed
 	if not root.has(sample):
 		if root.keys().is_empty():
-			return "No sample output found."
+			return {}
 		sample = str(root.keys()[0])
-	var sample_data: Dictionary = root.get(sample, {})
+	return root.get(sample, {})
+
+func _format_overview(sample: String, parsed: Variant) -> String:
+	var sample_data := _extract_sample(sample, parsed)
+	if sample_data.is_empty():
+		return "No sample output found."
 
 	var lines: PackedStringArray = []
 	lines.append("Sample: %s" % sample)
@@ -152,17 +181,97 @@ func _format_summary(sample: String, parsed: Variant) -> String:
 	lines.append("Phylogenetics")
 	lines.append("Species: %s" % _best_phylo_name(phylo.get("species", {})))
 	lines.append("Lineage: %s" % _best_phylo_name(phylo.get("lineage", {})))
+	lines.append("Phylo group: %s" % _best_phylo_name(phylo.get("phylo_group", {})))
 
+	var susceptibility: Dictionary = sample_data.get("susceptibility", {})
+	var counts := {"R": 0, "S": 0, "N": 0}
+	for value in susceptibility.values():
+		var drug_data: Dictionary = value
+		var predict := str(drug_data.get("predict", "?"))
+		if counts.has(predict):
+			counts[predict] += 1
+
+	lines.append("")
+	lines.append("Susceptibility totals")
+	lines.append("Resistant: %d" % counts["R"])
+	lines.append("Susceptible: %d" % counts["S"])
+	lines.append("No call: %d" % counts["N"])
+	return "\n".join(lines)
+
+func _format_drugs(sample: String, parsed: Variant) -> String:
+	var sample_data := _extract_sample(sample, parsed)
+	if sample_data.is_empty():
+		return ""
 	var susceptibility: Dictionary = sample_data.get("susceptibility", {})
 	var drugs := susceptibility.keys()
 	drugs.sort()
-	lines.append("")
-	lines.append("Susceptibility")
+	var lines: PackedStringArray = []
 	for drug in drugs:
 		var drug_data: Dictionary = susceptibility.get(drug, {})
 		lines.append("%s: %s" % [str(drug), str(drug_data.get("predict", "?"))])
-
 	return "\n".join(lines)
+
+func _format_species(sample: String, parsed: Variant) -> String:
+	var sample_data := _extract_sample(sample, parsed)
+	if sample_data.is_empty():
+		return ""
+	var phylo: Dictionary = sample_data.get("phylogenetics", {})
+	var lines: PackedStringArray = []
+	lines.append("Phylo group")
+	lines.append_array(_format_phylo_section(phylo.get("phylo_group", {})))
+	lines.append("")
+	lines.append("Sub-complex")
+	lines.append_array(_format_phylo_section(phylo.get("sub_complex", {})))
+	lines.append("")
+	lines.append("Species")
+	lines.append_array(_format_phylo_section(phylo.get("species", {})))
+	lines.append("")
+	lines.append("Lineage")
+	lines.append_array(_format_phylo_section(phylo.get("lineage", {})))
+	return "\n".join(lines)
+
+func _format_evidence(sample: String, parsed: Variant) -> String:
+	var sample_data := _extract_sample(sample, parsed)
+	if sample_data.is_empty():
+		return ""
+	var lines: PackedStringArray = []
+	var variant_calls: Dictionary = sample_data.get("variant_calls", {})
+	var sequence_calls: Dictionary = sample_data.get("sequence_calls", {})
+	var lineage_calls: Dictionary = sample_data.get("lineage_calls", {})
+	lines.append("Variant calls: %d" % variant_calls.size())
+	lines.append("Sequence calls: %d" % sequence_calls.size())
+	lines.append("Lineage calls: %d" % lineage_calls.size())
+	lines.append("")
+	lines.append("Top lineage calls")
+	var lineage_keys: Array = lineage_calls.keys()
+	lineage_keys.sort()
+	var limit: int = min(10, lineage_keys.size())
+	for i in range(limit):
+		var key = lineage_keys[i]
+		var call: Dictionary = lineage_calls.get(key, {})
+		var info: Dictionary = call.get("info", {})
+		lines.append("%s: %s (conf=%s)" % [str(key), str(call.get("genotype", "?")), str(info.get("conf", "?"))])
+	return "\n".join(lines)
+
+func _format_phylo_section(section: Variant) -> PackedStringArray:
+	var lines: PackedStringArray = []
+	if typeof(section) != TYPE_DICTIONARY:
+		lines.append("Unknown")
+		return lines
+	var d: Dictionary = section
+	if d.is_empty():
+		lines.append("Unknown")
+		return lines
+	var keys := d.keys()
+	keys.sort()
+	for key in keys:
+		var item: Dictionary = d.get(key, {})
+		lines.append("%s: coverage=%s depth=%s" % [
+			str(key),
+			str(item.get("percent_coverage", "?")),
+			str(item.get("median_depth", "?")),
+		])
+	return lines
 
 func _best_phylo_name(section: Variant) -> String:
 	if typeof(section) != TYPE_DICTIONARY:
@@ -184,39 +293,9 @@ func _resolve_binary_path() -> String:
 	if from_env != "" and FileAccess.file_exists(from_env):
 		return from_env
 
-	var candidates: PackedStringArray = []
-	if OS.has_feature("editor"):
-		candidates.append(ProjectSettings.globalize_path("res://../build/%s" % _binary_name()))
-		candidates.append(ProjectSettings.globalize_path("res://../build/mykrobe2"))
-
-	var exec_dir := OS.get_executable_path().get_base_dir()
-	candidates.append(exec_dir.path_join("bin").path_join(_platform_triplet()).path_join(_binary_name()))
-	candidates.append(exec_dir.path_join(_binary_name()))
-
-	for candidate in candidates:
-		if FileAccess.file_exists(candidate):
-			return candidate
+	if _local_mykrobe2_manager != null and _local_mykrobe2_manager.ensure_local_binary_installed():
+		return _local_mykrobe2_manager.installed_binary_path()
 	return ""
-
-func _binary_name() -> String:
-	if OS.get_name() == "Windows":
-		return "mykrobe2.exe"
-	return "mykrobe2"
-
-func _platform_triplet() -> String:
-	var arch := "amd64"
-	if OS.has_feature("arm64"):
-		arch = "arm64"
-	elif OS.has_feature("x86_64"):
-		arch = "amd64"
-
-	match OS.get_name():
-		"macOS":
-			return "darwin-%s" % arch
-		"Windows":
-			return "windows-%s" % arch
-		_:
-			return "linux-%s" % arch
 
 func _default_panels_dir() -> String:
 	var data_home := OS.get_environment("MYKROBE_DATA_HOME").strip_edges()
@@ -233,3 +312,19 @@ func _default_panels_dir() -> String:
 			return OS.get_environment("USERPROFILE").path_join("AppData").path_join("Roaming").path_join("mykrobe2").path_join("panels")
 		_:
 			return OS.get_environment("HOME").path_join(".local").path_join("share").path_join("mykrobe2").path_join("panels")
+
+func _on_files_dropped(files: PackedStringArray) -> void:
+	if files.is_empty():
+		return
+	var path := files[0]
+	if path.to_lower().ends_with(".json"):
+		_load_json_result(path, sample_edit.text.strip_edges())
+		_set_status("Loaded result JSON from %s." % path)
+		return
+	reads_edit.text = path
+	if sample_edit.text.strip_edges() == "" or sample_edit.text == "sample":
+		sample_edit.text = path.get_file().get_basename()
+	if panels_dir_edit.text.strip_edges() != "" and species_edit.text.strip_edges() != "":
+		_on_run_button_pressed()
+	else:
+		_set_status("Loaded reads file from drag and drop. Fill remaining fields and run.")

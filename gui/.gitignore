@@ -1,2 +1,5 @@
 .godot/
 exports/
+bin/mykrobe2
+bin/mykrobe2.exe
+bin/targets/

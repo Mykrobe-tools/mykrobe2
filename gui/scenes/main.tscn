@@ -50,6 +50,10 @@ text = "mykrobe2"
 layout_mode = 2
 text = "Run mykrobe2 predict from a bundled or local CLI binary."
 
+[node name="DropHint" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox"]
+layout_mode = 2
+text = "Drop a reads file or result JSON onto the window, or browse below."
+
 [node name="BodySplit" type="HSplitContainer" parent="RootMargin/RootVBox"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -235,19 +239,60 @@ text = "Results"
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="SummaryTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
+[node name="OverviewTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="SummaryText" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/SummaryTab"]
+[node name="OverviewText" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/OverviewTab"]
 layout_mode = 2
 bbcode_enabled = false
 fit_content = true
 scroll_following = true
 selection_enabled = true
+
+[node name="DrugsTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="DrugsText" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/DrugsTab"]
+layout_mode = 2
+bbcode_enabled = false
+fit_content = true
+scroll_following = true
+selection_enabled = true
+
+[node name="SpeciesTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="SpeciesText" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/SpeciesTab"]
+layout_mode = 2
+bbcode_enabled = false
+fit_content = true
+scroll_following = true
+selection_enabled = true
+
+[node name="EvidenceTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="EvidenceText" type="TextEdit" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/EvidenceTab"]
+layout_mode = 2
+size_flags_vertical = 3
+editable = false
+line_wrapping_mode = 1
 
 [node name="RawJSONTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
 layout_mode = 2

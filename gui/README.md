@@ -8,28 +8,32 @@ The project is designed to work in two modes:
 
 1. In the editor / local development
    - it prefers `MYKROBE2_BINARY` if set
-   - otherwise it falls back to `../build/mykrobe2` relative to this repo
+   - otherwise it installs a local copy from `../build/mykrobe2`
 
 2. In an exported app
-   - it expects the bundled CLI binary at:
-     - `bin/darwin-amd64/mykrobe2`
-     - `bin/darwin-arm64/mykrobe2`
-     - `bin/linux-amd64/mykrobe2`
-     - `bin/linux-arm64/mykrobe2`
-     - `bin/windows-amd64/mykrobe2.exe`
-     - `bin/windows-arm64/mykrobe2.exe`
+   - it installs a local copy from the bundled `res://bin/mykrobe2` or `res://bin/mykrobe2.exe`
 
-The export pipeline can later copy the correct binary into the matching app bundle.
+At runtime the GUI executes the installed copy from Godot user data:
+- macOS/Linux: `user://bin/mykrobe2`
+- Windows: `user://bin/mykrobe2.exe`
+
+This matches the `seqhiker` pattern: bundled binary in the app, installed executable copy in Godot user data.
 
 ## Current scope
 
-The first GUI screen supports:
+The current GUI supports:
 
 - choosing reads input
 - choosing installed panel data directory
 - entering species and panel
 - toggling common predict flags
+- dragging a reads file or existing JSON result onto the window
 - running `mykrobe2 predict`
-- viewing a short summary plus raw JSON output
+- viewing split result sections:
+  - Overview
+  - Drugs
+  - Species
+  - Evidence
+  - Raw JSON
 
-It is intentionally scene-driven: layout and controls live in `scenes/main.tscn`, with logic kept in `scripts/main.gd`.
+It is intentionally scene-driven: layout and controls live in `scenes/main.tscn`, with logic kept in scripts.
