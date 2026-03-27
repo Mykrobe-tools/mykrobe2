@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -77,6 +78,7 @@ func newRootCmd() *cobra.Command {
 
 func newPredictCmd() *cobra.Command {
 	opts := &predictOptions{}
+	defaultPanels := defaultPanelsDir()
 	cmd := &cobra.Command{
 		Use:   "predict",
 		Short: "Run prediction",
@@ -89,7 +91,7 @@ func newPredictCmd() *cobra.Command {
 	cmd.Flags().StringVar(&opts.panelArg, "panel", "", "")
 	cmd.Flags().StringVar(&opts.mapPath, "variant_to_resistance_json", "", "")
 	cmd.Flags().StringVar(&opts.lineagePath, "lineage_json", "", "")
-	cmd.Flags().StringVar(&opts.panelsDir, "panels_dir", "", "")
+	cmd.Flags().StringVar(&opts.panelsDir, "panels_dir", defaultPanels, "Installed panels directory")
 	cmd.Flags().StringVar(&opts.species, "species", "", "")
 	cmd.Flags().StringVar(&opts.output, "output", "", "")
 	cmd.Flags().StringVar(&opts.outputFormat, "format", "json", "")
@@ -122,6 +124,7 @@ func newPanelsCmd() *cobra.Command {
 
 func newPanelsUpdateMetadataCmd() *cobra.Command {
 	opts := &panelsUpdateMetadataOptions{}
+	defaultPanels := defaultPanelsDir()
 	cmd := &cobra.Command{
 		Use:   "update_metadata",
 		Short: "Update available panel metadata",
@@ -129,15 +132,15 @@ func newPanelsUpdateMetadataCmd() *cobra.Command {
 			return runPanelsUpdateMetadata(opts)
 		},
 	}
-	cmd.Flags().StringVar(&opts.panelsDir, "panels_dir", "", "")
+	cmd.Flags().StringVar(&opts.panelsDir, "panels_dir", defaultPanels, "Installed panels directory")
 	cmd.Flags().StringVar(&opts.manifestURL, "manifest_url", speciesdata.DefaultManifestURL, "")
 	cmd.Flags().StringVar(&opts.manifestFile, "manifest_file", "", "")
-	_ = cmd.MarkFlagRequired("panels_dir")
 	return cmd
 }
 
 func newPanelsUpdateSpeciesCmd() *cobra.Command {
 	opts := &panelsUpdateSpeciesOptions{}
+	defaultPanels := defaultPanelsDir()
 	cmd := &cobra.Command{
 		Use:   "update_species <species|all>",
 		Short: "Install or update species panels",
@@ -146,9 +149,18 @@ func newPanelsUpdateSpeciesCmd() *cobra.Command {
 			return runPanelsUpdateSpecies(opts, args[0])
 		},
 	}
-	cmd.Flags().StringVar(&opts.panelsDir, "panels_dir", "", "")
-	_ = cmd.MarkFlagRequired("panels_dir")
+	cmd.Flags().StringVar(&opts.panelsDir, "panels_dir", defaultPanels, "Installed panels directory")
 	return cmd
+}
+
+func defaultPanelsDir() string {
+	if dir, err := os.UserConfigDir(); err == nil && dir != "" {
+		return filepath.Join(dir, "mykrobe2", "panels")
+	}
+	if dir, err := os.UserHomeDir(); err == nil && dir != "" {
+		return filepath.Join(dir, ".mykrobe2", "panels")
+	}
+	return filepath.Join(".", "panels")
 }
 
 func runPredict(opts *predictOptions) error {
@@ -175,9 +187,21 @@ func runPredict(opts *predictOptions) error {
 	if err := counter.AddPath(opts.seqPath); err != nil {
 		return err
 	}
-	summaries, err := summarizePanels(counter, inputs.PanelPaths)
-	if err != nil {
-		return err
+	var summaries []mccortex.CoverageSummary
+	if inputs.PanelIndexPath != "" {
+		idx, err := mccortex.LoadPanelIndex(inputs.PanelIndexPath)
+		if err != nil {
+			return err
+		}
+		summaries, err = counter.SummarizePanelIndex(idx)
+		if err != nil {
+			return err
+		}
+	} else {
+		summaries, err = summarizePanels(counter, inputs.PanelPaths)
+		if err != nil {
+			return err
+		}
 	}
 	pr, pw := io.Pipe()
 	writeErr := make(chan error, 1)
@@ -320,6 +344,7 @@ func runPanelsUpdateSpecies(opts *panelsUpdateSpeciesOptions, species string) er
 
 type predictInputs struct {
 	PanelPaths        []string
+	PanelIndexPath    string
 	K                 int
 	MapPath           string
 	LineagePath       string
@@ -358,6 +383,15 @@ func resolvePredictInputs(panelArg, mapPath, lineagePath, panelsDir, species str
 			return predictInputs{}, err
 		}
 	}
+	if _, err := os.Stat(sdir.PanelIndexFile()); err != nil {
+		if os.IsNotExist(err) {
+			if err := sdir.BuildPanelIndex(); err != nil {
+				return predictInputs{}, err
+			}
+		} else {
+			return predictInputs{}, err
+		}
+	}
 	if mapPath == "" {
 		mapPath = sdir.JSONFile("amr")
 	}
@@ -366,6 +400,7 @@ func resolvePredictInputs(panelArg, mapPath, lineagePath, panelsDir, species str
 	}
 	return predictInputs{
 		PanelPaths:        sdir.FASTAFiles(),
+		PanelIndexPath:    sdir.PanelIndexFile(),
 		K:                 sdir.Kmer(),
 		MapPath:           mapPath,
 		LineagePath:       lineagePath,

@@ -239,6 +239,9 @@ func TestDataDir(t *testing.T) {
 	if err != nil || sdir == nil {
 		t.Fatalf("expected installed species dir, got %v, %v", sdir, err)
 	}
+	if _, err := os.Stat(sdir.PanelIndexFile()); err != nil {
+		t.Fatalf("expected panel index to be built: %v", err)
+	}
 
 	species1TarV2 := makeSpeciesTarball(t, "species1", "20200801", "panel1")
 	writeJSON(t, manifestPath, map[string]manifestVersion{
@@ -270,6 +273,9 @@ func TestDataDir(t *testing.T) {
 	}
 	if sdir.Version() != "20200801" {
 		t.Fatalf("expected updated species version, got %s", sdir.Version())
+	}
+	if _, err := os.Stat(sdir.PanelIndexFile()); err != nil {
+		t.Fatalf("expected panel index after update: %v", err)
 	}
 	if err := ddir.RemoveSpecies("unknown species"); err == nil {
 		t.Fatal("expected unknown species removal error")

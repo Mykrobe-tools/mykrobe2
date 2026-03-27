@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,6 +14,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/martinghunt/mykrobe2/mccortex"
 )
 
 const DefaultManifestURL = "https://raw.githubusercontent.com/Mykrobe-tools/mykrobe-data/main/mykrobe_panels_manifest.json"
@@ -142,6 +145,46 @@ func (s *SpeciesDir) JSONFile(kind string) string {
 		return ""
 	}
 	return filepath.Join(s.RootDir, *name)
+}
+
+func (s *SpeciesDir) PanelIndexFile() string {
+	return filepath.Join(s.RootDir, s.PanelName+".panelidx.gob.gz")
+}
+
+func (s *SpeciesDir) BuildPanelIndex() error {
+	log.Printf("building panel index for species=%s panel=%s path=%s", s.SpeciesName(), s.PanelName, s.PanelIndexFile())
+	idx, err := mccortex.BuildPanelIndex(s.Kmer(), s.FASTAFiles())
+	if err != nil {
+		return err
+	}
+	if err := mccortex.SavePanelIndex(s.PanelIndexFile(), idx); err != nil {
+		return err
+	}
+	info, err := os.Stat(s.PanelIndexFile())
+	if err != nil {
+		return err
+	}
+	log.Printf("built panel index for species=%s panel=%s path=%s bytes=%d", s.SpeciesName(), s.PanelName, s.PanelIndexFile(), info.Size())
+	return nil
+}
+
+func (s *SpeciesDir) EnsurePanelIndices() error {
+	current := s.PanelName
+	defer func() {
+		_ = s.SetPanel(current)
+	}()
+	for _, panelName := range s.PanelNames() {
+		if err := s.SetPanel(panelName); err != nil {
+			return err
+		}
+		if _, err := os.Stat(s.PanelIndexFile()); err == nil {
+			continue
+		}
+		if err := s.BuildPanelIndex(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *SpeciesDir) SanityCheck() bool {
@@ -397,6 +440,10 @@ func (d *DataDir) AddOrReplaceSpeciesData(tarballName string, force bool) error 
 		return err
 	}
 	_ = os.RemoveAll(tmpDir)
+	spdir, err = NewSpeciesDir(newDir)
+	if err != nil {
+		return err
+	}
 
 	entry := d.Manifest[species]
 	entry.Installed = &manifestVersion{Version: spdir.Version(), URL: tarballName}
@@ -404,6 +451,9 @@ func (d *DataDir) AddOrReplaceSpeciesData(tarballName string, force bool) error 
 		entry.Latest = &manifestVersion{Version: spdir.Version(), URL: tarballName}
 	}
 	d.Manifest[species] = entry
+	if err := spdir.EnsurePanelIndices(); err != nil {
+		return err
+	}
 	if err := d.SaveManifest(); err != nil {
 		return err
 	}

@@ -205,6 +205,108 @@ func TestPredictCommandWithPanelsDir(t *testing.T) {
 	}
 }
 
+func TestPredictCommandWithPanelsDirUsesPanelIndex(t *testing.T) {
+	dir := t.TempDir()
+	reads := filepath.Join(dir, "reads.fa")
+	out := filepath.Join(dir, "out.json")
+	panelsDir := filepath.Join(dir, "panels")
+	if err := os.WriteFile(reads, []byte(">r1\nACGTGCACTA\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	tbDir := filepath.Join(panelsDir, "tb")
+	if err := os.MkdirAll(tbDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	panelData := "" +
+		">katG?name=katG&panel_type=presence&version=1\nACGTGCACTA\n" +
+		">ref-A123T?var_name=A123T&gene=katG&mut=A123T\nACGTGCACTA\n" +
+		">alt-A123T?var_name=A123T&gene=katG&mut=A123T\nTTTTTCACTA\n"
+	panelFile := filepath.Join(tbDir, "panel.fa")
+	if err := os.WriteFile(panelFile, []byte(panelData), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tbDir, "amr.json"), []byte(`{"katG_A123T-A123T":["Isoniazid"]}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tbDir, "lineage.json"), []byte(`{"katG_A123T-A123T":{"name":"lineage1","use_ref_allele":true}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	panelName := "202010"
+	manifest := speciesdata.SpeciesManifest{
+		SpeciesName:  "tb",
+		Version:      "20240214",
+		DefaultPanel: panelName,
+		Panels: map[string]speciesdata.PanelManifest{
+			panelName: {
+				Description:       "tb panel",
+				ReferenceGenome:   "NC_000962.3",
+				SpeciesPhyloGroup: "mtbc",
+				FASTAFiles:        []string{"panel.fa"},
+				Kmer:              5,
+				JSONFiles: map[string]*string{
+					"amr":       strPtr("amr.json"),
+					"lineage":   strPtr("lineage.json"),
+					"hierarchy": nil,
+				},
+			},
+		},
+	}
+	writeJSONFile(t, filepath.Join(tbDir, "manifest.json"), manifest)
+	writeJSONFile(t, filepath.Join(panelsDir, "manifest.json"), map[string]map[string]map[string]string{
+		"tb": {
+			"installed": {"version": "20240214", "url": "local"},
+			"latest":    {"version": "20240214", "url": "local"},
+		},
+	})
+
+	ddir, err := speciesdata.NewDataDir(panelsDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sdir, err := ddir.GetSpeciesDir("tb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if sdir == nil {
+		t.Fatal("expected installed species dir")
+	}
+	if err := sdir.BuildPanelIndex(); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(panelFile); err != nil {
+		t.Fatal(err)
+	}
+
+	err = run([]string{
+		"predict",
+		"--sample", "S1",
+		"--seq", reads,
+		"--species", "tb",
+		"--panel", panelName,
+		"--panels_dir", panelsDir,
+		"--output", out,
+		"--expected_depth", "100",
+		"--report_all_calls",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := map[string]map[string]any{}
+	f, err := os.Open(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	if err := json.NewDecoder(f).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := got["S1"]; !ok {
+		t.Fatalf("missing sample in output: %v", got)
+	}
+}
+
 func TestPanelsCommands(t *testing.T) {
 	dir := t.TempDir()
 	panelsDir := filepath.Join(dir, "panels")
@@ -242,6 +344,71 @@ func TestPanelsCommands(t *testing.T) {
 	}
 	if sdir == nil || sdir.DefaultPanel() != "202010" {
 		t.Fatalf("unexpected species dir after install: %#v", sdir)
+	}
+	if _, err := os.Stat(sdir.PanelIndexFile()); err != nil {
+		t.Fatalf("expected panel index to be built: %v", err)
+	}
+}
+
+func TestPanelsCommandsUseDefaultPanelsDir(t *testing.T) {
+	home := t.TempDir()
+	oldHome, hadHome := os.LookupEnv("HOME")
+	oldXDG, hadXDG := os.LookupEnv("XDG_CONFIG_HOME")
+	if err := os.Setenv("HOME", home); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Unsetenv("XDG_CONFIG_HOME"); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if hadHome {
+			_ = os.Setenv("HOME", oldHome)
+		} else {
+			_ = os.Unsetenv("HOME")
+		}
+		if hadXDG {
+			_ = os.Setenv("XDG_CONFIG_HOME", oldXDG)
+		} else {
+			_ = os.Unsetenv("XDG_CONFIG_HOME")
+		}
+	}()
+
+	panelsDir := defaultPanelsDir()
+	speciesTar := makeSpeciesTarball(t, "tb", "20240214", "202010")
+	manifestPath := filepath.Join(t.TempDir(), "manifest.json")
+	writeJSONFile(t, manifestPath, map[string]map[string]string{
+		"tb": {"version": "20240214", "url": speciesTar},
+	})
+
+	if err := run([]string{
+		"panels", "update_metadata",
+		"--manifest_file", manifestPath,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := run([]string{
+		"panels", "update_species",
+		"tb",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	ddir, err := speciesdata.NewDataDir(panelsDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ddir.SpeciesIsInstalled("tb") {
+		t.Fatalf("expected tb to be installed in default panels dir: %+v", ddir.Manifest)
+	}
+	sdir, err := ddir.GetSpeciesDir("tb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if sdir == nil {
+		t.Fatal("expected species dir in default panels dir")
+	}
+	if _, err := os.Stat(sdir.PanelIndexFile()); err != nil {
+		t.Fatalf("expected panel index in default panels dir: %v", err)
 	}
 }
 
