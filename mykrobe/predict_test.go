@@ -119,6 +119,14 @@ func TestTBPredictorAddsCalledByForResistanceCalls(t *testing.T) {
 	}
 }
 
+func TestTBPredictorNamesForAlleleKeepsMutationPrefixesWithHyphens(t *testing.T) {
+	p := &TBPredictor{}
+	got := p.namesForAllele("eis_G-10A-C2715342T")
+	if len(got) == 0 || got[len(got)-1] != "eis_G-10A" {
+		t.Fatalf("unexpected names: %v", got)
+	}
+}
+
 func TestVariantCallJSONKeepsNullVariant(t *testing.T) {
 	data, err := json.Marshal(Call{
 		Class:               "Call.VariantCall",
@@ -133,5 +141,27 @@ func TestVariantCallJSONKeepsNullVariant(t *testing.T) {
 	got := string(data)
 	if !strings.Contains(got, `"variant":null`) {
 		t.Fatalf("expected null variant in JSON, got %s", got)
+	}
+}
+
+func TestVariantCallJSONFormatsIntegralFloatsLikePython(t *testing.T) {
+	data, err := json.Marshal(Call{
+		Class:               "Call.VariantCall",
+		Variant:             "ref-A",
+		Genotype:            []int{0, 0},
+		GenotypeLikelihoods: []float64{-1.00000000000001, -2},
+		Info: map[string]any{
+			"expected_depths": []float64{7},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(data)
+	if !strings.Contains(got, `"expected_depths":[7.0]`) {
+		t.Fatalf("expected python-like float formatting, got %s", got)
+	}
+	if !strings.Contains(got, `"genotype_likelihoods":[-1.0,-2.0]`) {
+		t.Fatalf("expected rounded float formatting, got %s", got)
 	}
 }

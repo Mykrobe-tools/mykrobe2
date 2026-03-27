@@ -212,7 +212,10 @@ func (p *TBPredictor) namesForAllele(alleleName string) []string {
 	if params["mut"] != "" {
 		names = append(names, params["gene"]+"_"+params["mut"])
 	}
-	base := strings.Split(strings.Split(alleleName, "?")[0], "-")[0]
+	base := strings.Split(alleleName, "?")[0]
+	if i := strings.LastIndexByte(base, '-'); i >= 0 {
+		base = base[:i]
+	}
 	if base != "" {
 		names = append(names, base)
 	}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -53,6 +52,9 @@ type predictOptions struct {
 	reportAllCalls       bool
 	ignoreMinorCalls     bool
 	ncbiNames            bool
+	ont                  bool
+	guessSequenceMethod  bool
+	confPercentCutoff    float64
 }
 
 type panelsUpdateMetadataOptions struct {
@@ -104,6 +106,9 @@ func newPredictCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&opts.reportAllCalls, "report_all_calls", false, "")
 	cmd.Flags().BoolVar(&opts.ignoreMinorCalls, "ignore_minor_calls", false, "")
 	cmd.Flags().BoolVar(&opts.ncbiNames, "ncbi_names", false, "")
+	cmd.Flags().BoolVar(&opts.ont, "ont", false, "")
+	cmd.Flags().BoolVar(&opts.guessSequenceMethod, "guess_sequence_method", false, "")
+	cmd.Flags().Float64Var(&opts.confPercentCutoff, "conf_percent_cutoff", 100, "")
 	return cmd
 }
 
@@ -214,29 +219,44 @@ func runPredict(opts *predictOptions) error {
 			expectedDepth = 100
 		}
 	}
-	result, err := mykrobe.AnalyzeCoverageSetTBWithOptions(coverageSet, mykrobe.AnalysisOptions{
+	errorRate, ploidy := mykrobe.ApplyONTDefaults(opts.errorRate, opts.ploidy, opts.ont)
+	analysisOpts := mykrobe.AnalysisOptions{
 		ExpectedDepth:               expectedDepth,
 		VariantToResistancePath:     inputs.MapPath,
 		LineagePath:                 inputs.LineagePath,
-		ErrorRate:                   opts.errorRate,
+		ErrorRate:                   errorRate,
 		MinorFreq:                   opts.minorFreq,
 		VariantConfidenceThreshold:  opts.minVariantConf,
 		SequenceConfidenceThreshold: opts.minGeneConf,
 		Model:                       opts.model,
 		KmerSize:                    k,
 		MinProportionExpectedDepth:  opts.minPropExpectedDepth,
-		Ploidy:                      opts.ploidy,
+		Ploidy:                      ploidy,
 		IgnoreMinorCalls:            opts.ignoreMinorCalls,
 		MinDepth:                    opts.minDepth,
-	})
+	}
+	result, err := mykrobe.AnalyzeCoverageSetTBWithOptions(coverageSet, analysisOpts)
 	if err != nil {
 		return err
+	}
+	kmerCountErrorRate, incorrectKmerToPCCov := mykrobe.EstimateKmerCountErrorRateAndIncorrectKmerPercentCov(result.VariantCalls, analysisOpts.ErrorRate)
+	_, guessedPloidy, _ := mykrobe.GuessSequenceMethod(analysisOpts.ErrorRate, analysisOpts.Ploidy, opts.guessSequenceMethod, kmerCountErrorRate)
+	if opts.confPercentCutoff < 100 {
+		confThresholder := mykrobe.NewConfThresholder(kmerCountErrorRate, expectedDepth, k, incorrectKmerToPCCov, 10000)
+		analysisOpts.ErrorRate = kmerCountErrorRate
+		analysisOpts.Ploidy = guessedPloidy
+		analysisOpts.VariantConfidenceThreshold = confThresholder.GetConfThreshold(opts.confPercentCutoff)
+		result, err = mykrobe.AnalyzeCoverageSetTBWithOptions(coverageSet, analysisOpts)
+		if err != nil {
+			return err
+		}
 	}
 	if result.Lineage != nil {
 		phylo["lineage"] = result.Lineage
 	}
+	susceptibility := mykrobe.FixAminoAcidXVariantKeysInSusceptibility(result.Predictor.Susceptibility)
 	sampleOut := map[string]any{
-		"susceptibility": result.Predictor.Susceptibility,
+		"susceptibility": susceptibility,
 		"phylogenetics":  phylo,
 		"kmer":           k,
 		"probe_sets":     inputs.PanelPaths,
@@ -262,16 +282,12 @@ func runPredict(opts *predictOptions) error {
 	defer f.Close()
 	switch opts.outputFormat {
 	case "json":
-		enc := json.NewEncoder(f)
-		enc.SetIndent("", "  ")
-		return enc.Encode(out)
+		return mykrobe.WriteJSONLikePython(f, out, "  ")
 	case "csv":
 		_, err := f.WriteString(formatCSV(out))
 		return err
 	case "json_and_csv":
-		enc := json.NewEncoder(f)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(out); err != nil {
+		if err := mykrobe.WriteJSONLikePython(f, out, "  "); err != nil {
 			return err
 		}
 		return os.WriteFile(opts.output+".csv", []byte(formatCSV(out)), 0o644)

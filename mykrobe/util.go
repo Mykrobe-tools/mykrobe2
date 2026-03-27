@@ -135,6 +135,17 @@ func FixAminoAcidXVariantKeys(calls map[string]Call) map[string]Call {
 	return calls
 }
 
+func FixAminoAcidXVariantKeysInSusceptibility(susc map[string]map[string]any) map[string]map[string]any {
+	for _, drugDict := range susc {
+		calledBy, ok := drugDict["called_by"].(map[string]Call)
+		if !ok {
+			continue
+		}
+		drugDict["called_by"] = FixAminoAcidXVariantKeys(calledBy)
+	}
+	return susc
+}
+
 func revcompDNA(seq string) string {
 	out := make([]byte, len(seq))
 	for i := range seq {

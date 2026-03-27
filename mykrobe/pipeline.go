@@ -53,7 +53,7 @@ func AnalyzeCoverageSetTBWithOptions(set *CoverageSet, opts AnalysisOptions) (*A
 	if filters == nil {
 		filters = DefaultVariantFilters
 	}
-	vt := NewVariantTyper([]float64{opts.ExpectedDepth}, []float64{}, opts.ErrorRate, opts.MinorFreq, false, filters, opts.VariantConfidenceThreshold, opts.Model, opts.KmerSize, opts.MinProportionExpectedDepth, opts.Ploidy)
+	vt := NewVariantTyper([]float64{opts.ExpectedDepth}, []float64{}, opts.ErrorRate, opts.MinorFreq, true, filters, opts.VariantConfidenceThreshold, opts.Model, opts.KmerSize, opts.MinProportionExpectedDepth, opts.Ploidy)
 	gt := NewGeneCollectionTyper([]float64{opts.ExpectedDepth}, []float64{}, opts.SequenceConfidenceThreshold)
 
 	variantCalls := make(map[string]Call, len(set.Variant))

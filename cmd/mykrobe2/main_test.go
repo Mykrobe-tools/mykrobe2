@@ -70,6 +70,47 @@ func TestPredictCommand(t *testing.T) {
 	}
 }
 
+func TestPredictCommandWithONTAndConfThresholdFlags(t *testing.T) {
+	dir := t.TempDir()
+	panel := filepath.Join(dir, "panel.fa")
+	reads := filepath.Join(dir, "reads.fa")
+	out := filepath.Join(dir, "out.json")
+	lineage := filepath.Join(dir, "lineage.json")
+
+	panelData := "" +
+		">katG?name=katG&panel_type=presence&version=1\nACGTGCACTA\n" +
+		">ref-A123T?var_name=A123T&gene=katG&mut=A123T\nACGTGCACTA\n" +
+		">alt-A123T?var_name=A123T&gene=katG&mut=A123T\nTTTTTCACTA\n"
+	if err := os.WriteFile(panel, []byte(panelData), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(reads, []byte(">r1\nACGTGCACTA\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(lineage, []byte(`{"A123T":{"name":"lineage1","use_ref_allele":true}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := run([]string{
+		"predict",
+		"--sample", "S1",
+		"--seq", reads,
+		"--panel", panel,
+		"--variant_to_resistance_json", "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json",
+		"--lineage_json", lineage,
+		"--output", out,
+		"--k", "5",
+		"--expected_depth", "100",
+		"--ont",
+		"--guess_sequence_method",
+		"--conf_percent_cutoff", "95",
+		"--report_all_calls",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestPredictCommandWithPanelsDir(t *testing.T) {
 	dir := t.TempDir()
 	reads := filepath.Join(dir, "reads.fa")
