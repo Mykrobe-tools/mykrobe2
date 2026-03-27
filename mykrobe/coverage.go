@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/martinghunt/mykrobe2/mccortex"
 )
 
 type ProbeCoverage struct {
@@ -161,6 +163,28 @@ func ParseCoverageReader(r io.Reader) (*CoverageSet, error) {
 			parseSeqRow(set, allele, medianDepth, minDepth, percentCoverage, kCount, kLen)
 		}
 	}
+}
+
+func CoverageSetFromSummaries(summaries []mccortex.CoverageSummary) *CoverageSet {
+	set := &CoverageSet{
+		Variant:  map[string]*VariantProbeCoverage{},
+		Presence: map[string]map[string]SequenceProbeCoverage{},
+		Groups:   map[string]map[string]*TaxonCoverage{},
+	}
+	for _, s := range summaries {
+		medianDepth := float64(s.MedianDepth)
+		minDepth := float64(s.MinDepth)
+		percentCoverage := 100 * s.PercentCoverage
+		kCount := int(s.KmerCount)
+		kLen := s.KmerLength
+		alleleName := strings.Split(s.Name, "?")[0]
+		if isVariantPanel(alleleName) {
+			parseVariantRow(set, nil, s.Name, medianDepth, minDepth, percentCoverage, kCount, kLen)
+		} else {
+			parseSeqRow(set, s.Name, medianDepth, minDepth, percentCoverage, kCount, kLen)
+		}
+	}
+	return set
 }
 
 func parseSummaryRow(row []string) (string, float64, float64, float64, int, int) {

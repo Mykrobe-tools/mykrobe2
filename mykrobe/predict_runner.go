@@ -2,7 +2,6 @@ package mykrobe
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/martinghunt/mykrobe2/mccortex"
@@ -93,10 +92,7 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 		}
 	}
 
-	coverageSet, err := coverageSetFromSummaries(summaries)
-	if err != nil {
-		return nil, err
-	}
+	coverageSet := CoverageSetFromSummaries(summaries)
 	phylo, depths, err := DetectSpeciesAndGetDepths(coverageSet, inputs.HierarchyPath, inputs.SpeciesPhyloGroup)
 	if err != nil {
 		return nil, err
@@ -174,31 +170,6 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 		Output:            map[string]any{opts.Sample: sampleOut},
 		CoverageSummaries: summaries,
 	}, nil
-}
-
-func coverageSetFromSummaries(summaries []mccortex.CoverageSummary) (*CoverageSet, error) {
-	pr, pw := io.Pipe()
-	writeErr := make(chan error, 1)
-	go func() {
-		err := mccortex.WriteCoverageTSV(pw, summaries)
-		if err != nil {
-			_ = pw.CloseWithError(err)
-			writeErr <- err
-			return
-		}
-		writeErr <- pw.Close()
-	}()
-
-	coverageSet, err := ParseCoverageReader(pr)
-	if err != nil {
-		_ = pr.Close()
-		<-writeErr
-		return nil, err
-	}
-	if err := <-writeErr; err != nil {
-		return nil, err
-	}
-	return coverageSet, nil
 }
 
 type panelSummarizer interface {
