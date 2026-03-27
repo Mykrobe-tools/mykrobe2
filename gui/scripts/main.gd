@@ -279,12 +279,22 @@ func _format_phylo_section(section: Variant) -> PackedStringArray:
 	var keys := d.keys()
 	keys.sort()
 	for key in keys:
-		var item: Dictionary = d.get(key, {})
-		lines.append("%s: coverage=%s depth=%s" % [
-			str(key),
-			str(item.get("percent_coverage", "?")),
-			str(item.get("median_depth", "?")),
-		])
+		var item: Variant = d.get(key, null)
+		if typeof(item) == TYPE_DICTIONARY:
+			var item_dict: Dictionary = item
+			lines.append("%s: coverage=%s depth=%s" % [
+				str(key),
+				str(item_dict.get("percent_coverage", "?")),
+				str(item_dict.get("median_depth", "?")),
+			])
+		elif typeof(item) == TYPE_ARRAY:
+			var values: Array = item
+			var rendered: PackedStringArray = []
+			for value in values:
+				rendered.append(str(value))
+			lines.append("%s: %s" % [str(key), ", ".join(rendered)])
+		else:
+			lines.append("%s: %s" % [str(key), str(item)])
 	return lines
 
 func _best_phylo_name(section: Variant) -> String:
@@ -292,7 +302,7 @@ func _best_phylo_name(section: Variant) -> String:
 		return "Unknown"
 	var d: Dictionary = section
 	for key in d.keys():
-		if str(key) != "Unknown":
+		if str(key) != "Unknown" and typeof(d.get(key)) == TYPE_DICTIONARY:
 			return str(key)
 	return "Unknown"
 
