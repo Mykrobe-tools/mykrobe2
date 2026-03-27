@@ -1,0 +1,288 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_2p1fg"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_2p1fg")
+
+[node name="RootMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RootVBox" type="VBoxContainer" parent="RootMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Header" type="PanelContainer" parent="RootMargin/RootVBox"]
+layout_mode = 2
+
+[node name="HeaderMargin" type="MarginContainer" parent="RootMargin/RootVBox/Header"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="HeaderVBox" type="VBoxContainer" parent="RootMargin/RootVBox/Header/HeaderMargin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "mykrobe2"
+
+[node name="Subtitle" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox"]
+layout_mode = 2
+text = "Run mykrobe2 predict from a bundled or local CLI binary."
+
+[node name="BodySplit" type="HSplitContainer" parent="RootMargin/RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 430
+
+[node name="FormPanel" type="PanelContainer" parent="RootMargin/RootVBox/BodySplit"]
+layout_mode = 2
+
+[node name="FormMargin" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="FormVBox" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="FormTitle" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Predict"
+
+[node name="SampleRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+
+[node name="SampleLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SampleRow"]
+layout_mode = 2
+text = "Sample name"
+
+[node name="SampleEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SampleRow"]
+layout_mode = 2
+placeholder_text = "SAMPLE"
+text = "sample"
+
+[node name="ReadsRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+
+[node name="ReadsLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow"]
+layout_mode = 2
+text = "Reads file"
+
+[node name="ReadsPicker" type="HBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ReadsEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "/path/to/reads.fastq.gz"
+
+[node name="ReadsBrowseButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker"]
+layout_mode = 2
+text = "Browse"
+
+[node name="PanelsRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+
+[node name="PanelsLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow"]
+layout_mode = 2
+text = "Panels directory"
+
+[node name="PanelsPicker" type="HBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PanelsDirEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "/path/to/panels"
+
+[node name="PanelsBrowseButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker"]
+layout_mode = 2
+text = "Browse"
+
+[node name="SpeciesRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+
+[node name="SpeciesLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow"]
+layout_mode = 2
+text = "Species"
+
+[node name="SpeciesEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow"]
+layout_mode = 2
+placeholder_text = "tb"
+text = "tb"
+
+[node name="PanelRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+
+[node name="PanelLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelRow"]
+layout_mode = 2
+text = "Panel"
+
+[node name="PanelEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelRow"]
+layout_mode = 2
+placeholder_text = "202309"
+
+[node name="OutputRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+
+[node name="OutputLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow"]
+layout_mode = 2
+text = "Output JSON file (optional)"
+
+[node name="OutputPicker" type="HBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OutputEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Leave blank to use a temporary file"
+
+[node name="OutputBrowseButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker"]
+layout_mode = 2
+text = "Browse"
+
+[node name="FlagsTitle" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Options"
+
+[node name="FlagsGrid" type="GridContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+columns = 2
+
+[node name="ReportAllCallsCheck" type="CheckBox" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid"]
+layout_mode = 2
+text = "Report all calls"
+
+[node name="NCBINamesCheck" type="CheckBox" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid"]
+layout_mode = 2
+text = "Add NCBI names"
+
+[node name="ONTCheck" type="CheckBox" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid"]
+layout_mode = 2
+text = "ONT defaults"
+
+[node name="GuessMethodCheck" type="CheckBox" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid"]
+layout_mode = 2
+text = "Guess sequence method"
+
+[node name="ButtonsRow" type="HBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="RunButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Run Predict"
+
+[node name="ClearButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow"]
+layout_mode = 2
+text = "Clear Results"
+
+[node name="StatusLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Ready."
+
+[node name="ResultsPanel" type="PanelContainer" parent="RootMargin/RootVBox/BodySplit"]
+layout_mode = 2
+
+[node name="ResultsMargin" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="ResultsVBox" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ResultsTitle" type="Label" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Results"
+
+[node name="ResultsTabs" type="TabContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SummaryTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="SummaryText" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/SummaryTab"]
+layout_mode = 2
+bbcode_enabled = false
+fit_content = true
+scroll_following = true
+selection_enabled = true
+
+[node name="RawJSONTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="RawJSONText" type="TextEdit" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/RawJSONTab"]
+layout_mode = 2
+size_flags_vertical = 3
+editable = false
+line_wrapping_mode = 1
+
+[node name="ReadsDialog" type="FileDialog" parent="."]
+title = "Select reads file"
+file_mode = 0
+access = 2
+
+[node name="PanelsDirDialog" type="FileDialog" parent="."]
+title = "Select panels directory"
+file_mode = 2
+access = 2
+
+[node name="OutputDialog" type="FileDialog" parent="."]
+title = "Choose output JSON file"
+file_mode = 4
+access = 2
+filters = PackedStringArray("*.json ; JSON files")
+
+[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker/ReadsBrowseButton" to="." method="_on_reads_browse_pressed"]
+[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker/PanelsBrowseButton" to="." method="_on_panels_browse_pressed"]
+[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker/OutputBrowseButton" to="." method="_on_output_browse_pressed"]
+[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/RunButton" to="." method="_on_run_button_pressed"]
+[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/ClearButton" to="." method="_on_clear_button_pressed"]
+[connection signal="file_selected" from="ReadsDialog" to="." method="_on_reads_dialog_file_selected"]
+[connection signal="dir_selected" from="PanelsDirDialog" to="." method="_on_panels_dir_dialog_dir_selected"]
+[connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]
