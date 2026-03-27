@@ -3,7 +3,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GUI_DIR="${ROOT_DIR}/gui"
-BUILD_BIN_SCRIPT="${ROOT_DIR}/build_mykrobe2_bins.sh"
+BUILD_SCRIPT="${ROOT_DIR}/build.sh"
+GUI_BIN_DIR="${GUI_DIR}/bin"
 DEFAULT_GODOT_BIN="/Users/martin/Applications/Godot.app/Contents/MacOS/Godot"
 
 TARGET=""
@@ -82,8 +83,8 @@ done
 	exit 1
 }
 
-if [[ ! -x "${BUILD_BIN_SCRIPT}" ]]; then
-	echo "Missing or non-executable: ${BUILD_BIN_SCRIPT}" >&2
+if [[ ! -x "${BUILD_SCRIPT}" ]]; then
+	echo "Missing or non-executable: ${BUILD_SCRIPT}" >&2
 	exit 1
 fi
 if [[ ! -x "${GODOT_BIN}" ]]; then
@@ -106,7 +107,23 @@ fi
 
 if [[ "${SKIP_BACKEND}" -eq 0 ]]; then
 	echo "[1/2] Building bundled mykrobe2 for ${TARGET}"
-	"${BUILD_BIN_SCRIPT}" --target "${TARGET}"
+	goos="${TARGET%%/*}"
+	goarch="${TARGET##*/}"
+	if [[ "${goos}" == "${goarch}" ]]; then
+		echo "Invalid --target '${TARGET}'. Expected os/arch." >&2
+		exit 1
+	fi
+	tmp_dir="$(mktemp -d)"
+	trap 'rm -rf "${tmp_dir}"' EXIT
+	"${BUILD_SCRIPT}" --os "${goos}" --arch "${goarch}" --output-dir "${tmp_dir}"
+	mkdir -p "${GUI_BIN_DIR}"
+	bin_name="mykrobe2"
+	artifact_name="mykrobe2-${goos}-${goarch}"
+	if [[ "${goos}" == "windows" ]]; then
+		bin_name="${bin_name}.exe"
+		artifact_name="${artifact_name}.exe"
+	fi
+	cp "${tmp_dir}/${artifact_name}" "${GUI_BIN_DIR}/${bin_name}"
 else
 	echo "[1/2] Skipping bundled mykrobe2 build (--skip-backend)"
 fi

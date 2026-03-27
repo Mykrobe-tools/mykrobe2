@@ -5,12 +5,14 @@ This directory holds the canonical bundled backend binary for Godot exports:
 - `mykrobe2`
 - `mykrobe2.exe` on Windows targets
 
-Build it with:
+Build it with the standard Go build script, then copy the matching target binary here:
 
-- `../build_mykrobe2_bins.sh`
-- `../build_mykrobe2_bins.sh --target darwin/arm64`
-- `../build_mykrobe2_bins.sh --target linux/amd64`
+- `../build.sh`
+- `../build.sh --os darwin --arch arm64`
+- `../build.sh --os linux --arch amd64`
 
-Matrix artifacts for release automation are written to:
+For a full packaged app export, use:
 
-- `bin/targets/mykrobe2_<os>_<arch>[.exe]`
+- `../build_release.sh --target darwin/arm64 --preset "macOS" --out ../dist/mykrobe2.app`
+
+`build_release.sh` now calls `build.sh` internally and copies the correct target binary into this directory before exporting the Godot app.
