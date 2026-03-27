@@ -569,6 +569,52 @@ func TestMakeProbesCommandWithGenbankVariant(t *testing.T) {
 	}
 }
 
+func TestMakeProbesCommandWithVCF(t *testing.T) {
+	dir := t.TempDir()
+	out := filepath.Join(dir, "probes.fa")
+	vcf := filepath.Join(dir, "vars.vcf")
+	vcfData := "" +
+		"##fileformat=VCFv4.2\n" +
+		"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n" +
+		"ref\t31\t.\tA\tT\t.\tPASS\t.\n" +
+		"ref\t32\t.\tA\tG\t.\tPASS\t.\n"
+	if err := os.WriteFile(vcf, []byte(vcfData), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	oldStdout := os.Stdout
+	f, err := os.Create(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	os.Stdout = f
+	defer func() { os.Stdout = oldStdout }()
+
+	err = run([]string{
+		"make-probes",
+		filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "BX571856.1.fasta"),
+		"--vcf", vcf,
+		"--kmer", "31",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(data)
+	if !strings.Contains(text, ">ref-A31T?var_name=A31T") {
+		t.Fatalf("missing first VCF record in output: %s", text)
+	}
+	if !strings.Contains(text, ">alt-A32G?var_name=A32G") {
+		t.Fatalf("missing second VCF record in output: %s", text)
+	}
+}
+
 func writeJSONFile(t *testing.T, path string, v any) {
 	t.Helper()
 	data, err := json.MarshalIndent(v, "", "  ")

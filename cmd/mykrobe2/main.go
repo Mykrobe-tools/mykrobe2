@@ -375,15 +375,23 @@ func runPredict(opts *predictOptions) error {
 
 func runMakeProbes(opts *makeProbesOptions, out io.Writer) error {
 	if opts.vcfPath != "" {
-		return fmt.Errorf("make-probes --vcf is not implemented yet")
+		if opts.textFile != "" || len(opts.variants) > 0 {
+			return fmt.Errorf("make-probes --vcf cannot be combined with --variants or --text_file")
+		}
 	}
-	if len(opts.variants) == 0 && opts.textFile == "" {
-		return fmt.Errorf("make-probes requires --variants or --text_file")
+	if opts.vcfPath == "" && len(opts.variants) == 0 && opts.textFile == "" {
+		return fmt.Errorf("make-probes requires --variants, --text_file, or --vcf")
 	}
 	reference := probes.DefaultReferenceName(opts.referencePath)
 	var mutations []probes.Mutation
 	lineages := map[string]probes.LineageInfo{}
-	if opts.genbankPath != "" {
+	if opts.vcfPath != "" {
+		var err error
+		mutations, err = probes.LoadVCFMutations(opts.vcfPath, reference)
+		if err != nil {
+			return err
+		}
+	} else if opts.genbankPath != "" {
 		aa2dna, err := annotation.NewGeneAminoAcidChangeToDNAVariants(opts.referencePath, opts.genbankPath)
 		if err != nil {
 			return err
