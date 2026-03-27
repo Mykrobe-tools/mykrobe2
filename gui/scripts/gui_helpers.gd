@@ -1,6 +1,11 @@
 extends RefCounted
 class_name GUIHelpers
 
+const TB_LEGACY_PANELS_LAST := {
+	"bradley-2015": 0,
+	"walker-2015": 1,
+}
+
 func load_png_texture(path: String) -> Texture2D:
 	var image := Image.load_from_file(path)
 	if image == null:
@@ -115,9 +120,7 @@ func _load_species_entries_from_panels_dir(panels_dir: String) -> Array:
 					var panels_variant: Variant = species_manifest.get("panels", {})
 					if typeof(panels_variant) == TYPE_DICTIONARY:
 						var panels_dict: Dictionary = panels_variant
-						var panel_names := panels_dict.keys()
-						panel_names.sort()
-						panel_names.reverse()
+						var panel_names := _sort_panel_names(species_name, panels_dict.keys())
 						var panels: Array = []
 						for panel_name_variant in panel_names:
 							var panel_name := str(panel_name_variant)
@@ -133,3 +136,19 @@ func _load_species_entries_from_panels_dir(panels_dir: String) -> Array:
 						species_entry["panels"] = panels
 		entries.append(species_entry)
 	return entries
+
+func _sort_panel_names(species_name: String, panel_names: Array) -> Array:
+	var names: Array = []
+	for panel_name_variant in panel_names:
+		names.append(str(panel_name_variant))
+	names.sort_custom(func(a: String, b: String) -> bool:
+		if species_name.to_lower() == "tb":
+			var a_is_legacy := TB_LEGACY_PANELS_LAST.has(a)
+			var b_is_legacy := TB_LEGACY_PANELS_LAST.has(b)
+			if a_is_legacy != b_is_legacy:
+				return not a_is_legacy
+			if a_is_legacy and b_is_legacy:
+				return int(TB_LEGACY_PANELS_LAST[a]) < int(TB_LEGACY_PANELS_LAST[b])
+		return a > b
+	)
+	return names

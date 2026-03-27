@@ -33,6 +33,11 @@ type describeOutput struct {
 	Species   []speciesDescription `json:"species"`
 }
 
+var tbLegacyPanelsLast = map[string]int{
+	"bradley-2015": 0,
+	"walker-2015":  1,
+}
+
 func runPanelsDescribe(opts *panelsDescribeOptions, w io.Writer) error {
 	ddir, err := speciesdata.NewDataDir(opts.panelsDir)
 	if err != nil {
@@ -86,7 +91,7 @@ func buildPanelsDescribeOutput(ddir *speciesdata.DataDir) (*describeOutput, erro
 			if sdir != nil {
 				item.DefaultPanel = sdir.DefaultPanel()
 				panelNames := sdir.PanelNames()
-				sort.Sort(sort.Reverse(sort.StringSlice(panelNames)))
+				sortPanelNames(species, panelNames)
 				item.Panels = make([]panelDescription, 0, len(panelNames))
 				for _, panelName := range panelNames {
 					if err := sdir.SetPanel(panelName); err != nil {
@@ -103,6 +108,24 @@ func buildPanelsDescribeOutput(ddir *speciesdata.DataDir) (*describeOutput, erro
 		out.Species = append(out.Species, item)
 	}
 	return out, nil
+}
+
+func sortPanelNames(species string, panelNames []string) {
+	sort.Slice(panelNames, func(i, j int) bool {
+		a := panelNames[i]
+		b := panelNames[j]
+		if strings.EqualFold(species, "tb") {
+			aRank, aLegacy := tbLegacyPanelsLast[a]
+			bRank, bLegacy := tbLegacyPanelsLast[b]
+			if aLegacy != bLegacy {
+				return !aLegacy
+			}
+			if aLegacy && bLegacy {
+				return aRank < bRank
+			}
+		}
+		return a > b
+	})
 }
 
 func writePanelsDescribeText(w io.Writer, out *describeOutput) {

@@ -219,6 +219,22 @@ func TestPanelsDescribePanelsNewestFirst(t *testing.T) {
 		"version":       "20240214",
 		"default_panel": "202309",
 		"panels": map[string]any{
+			"bradley-2015": map[string]any{
+				"description":         "legacy bradley",
+				"reference_genome":    "ref-bradley",
+				"species_phylo_group": "mtbc",
+				"fasta_files":         []string{"bradley.fa.gz"},
+				"kmer":                21,
+				"json_files":          map[string]any{"amr": "bradley.json.gz"},
+			},
+			"walker-2015": map[string]any{
+				"description":         "legacy walker",
+				"reference_genome":    "ref-walker",
+				"species_phylo_group": "mtbc",
+				"fasta_files":         []string{"walker.fa.gz"},
+				"kmer":                21,
+				"json_files":          map[string]any{"amr": "walker.json.gz"},
+			},
 			"202001": map[string]any{
 				"description":         "older",
 				"reference_genome":    "ref-old",
@@ -266,10 +282,17 @@ func TestPanelsDescribePanelsNewestFirst(t *testing.T) {
 	if err := json.Unmarshal([]byte(output.String()), &got); err != nil {
 		t.Fatal(err)
 	}
-	if len(got.Species) != 1 || len(got.Species[0].Panels) != 2 {
+	if len(got.Species) != 1 || len(got.Species[0].Panels) != 4 {
 		t.Fatalf("unexpected panel output: %+v", got)
 	}
-	if got.Species[0].Panels[0].Name != "202309" || got.Species[0].Panels[1].Name != "202001" {
+	gotNames := []string{
+		got.Species[0].Panels[0].Name,
+		got.Species[0].Panels[1].Name,
+		got.Species[0].Panels[2].Name,
+		got.Species[0].Panels[3].Name,
+	}
+	wantNames := []string{"202309", "202001", "bradley-2015", "walker-2015"}
+	if strings.Join(gotNames, ",") != strings.Join(wantNames, ",") {
 		t.Fatalf("expected newest first, got %+v", got.Species[0].Panels)
 	}
 }
