@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/martinghunt/mykrobe2/mccortex"
 	"github.com/martinghunt/mykrobe2/mykrobe"
+	"github.com/martinghunt/mykrobe2/mykrobe/probes"
 	"github.com/martinghunt/mykrobe2/mykrobe/speciesdata"
 	"github.com/spf13/cobra"
 )
@@ -69,11 +71,22 @@ type panelsUpdateSpeciesOptions struct {
 	panelsDir string
 }
 
+type makeProbesOptions struct {
+	referencePath string
+	vcfPath       string
+	variants      []string
+	textFile      string
+	genbankPath   string
+	kmer          int
+	noBackgrounds bool
+	lineagePath   string
+}
+
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "mykrobe2",
 	}
-	cmd.AddCommand(newPredictCmd(), newPanelsCmd())
+	cmd.AddCommand(newPredictCmd(), newPanelsCmd(), newMakeProbesCmd())
 	return cmd
 }
 
@@ -151,6 +164,27 @@ func newPanelsUpdateSpeciesCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&opts.panelsDir, "panels_dir", defaultPanels, "Installed panels directory")
+	return cmd
+}
+
+func newMakeProbesCmd() *cobra.Command {
+	opts := &makeProbesOptions{}
+	cmd := &cobra.Command{
+		Use:   "make-probes <reference_filepath>",
+		Short: "Make probes from a list of variants",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.referencePath = args[0]
+			return runMakeProbes(opts, cmd.OutOrStdout())
+		},
+	}
+	cmd.Flags().StringVarP(&opts.vcfPath, "vcf", "f", "", "Use variants defined in a VCF file")
+	cmd.Flags().StringSliceVarP(&opts.variants, "variants", "v", nil, "Variant in DNA positions e.g. A1234T")
+	cmd.Flags().StringVarP(&opts.textFile, "text_file", "t", "", "Tab-delimited file containing DNA variants")
+	cmd.Flags().StringVarP(&opts.genbankPath, "genbank", "g", "", "Genbank file containing genes as features")
+	cmd.Flags().IntVarP(&opts.kmer, "kmer", "k", mykrobe.DefaultKmerSize, "kmer length")
+	cmd.Flags().BoolVar(&opts.noBackgrounds, "no-backgrounds", false, "Ignore nearby variants when building probes")
+	cmd.Flags().StringVar(&opts.lineagePath, "lineage", "", "Write lineage JSON to file")
 	return cmd
 }
 
@@ -335,6 +369,71 @@ func runPredict(opts *predictOptions) error {
 	default:
 		return fmt.Errorf("output format must be one of csv,json,json_and_csv")
 	}
+}
+
+func runMakeProbes(opts *makeProbesOptions, out io.Writer) error {
+	if opts.vcfPath != "" {
+		return fmt.Errorf("make-probes --vcf is not implemented yet")
+	}
+	if opts.genbankPath != "" {
+		return fmt.Errorf("make-probes --genbank is not implemented yet")
+	}
+	if len(opts.variants) == 0 && opts.textFile == "" {
+		return fmt.Errorf("make-probes requires --variants or --text_file")
+	}
+	reference := probes.DefaultReferenceName(opts.referencePath)
+	var mutations []probes.Mutation
+	lineages := map[string]probes.LineageInfo{}
+	if opts.textFile != "" {
+		var err error
+		mutations, lineages, err = probes.LoadDNAVarsTextFile(opts.textFile, reference)
+		if err != nil {
+			return err
+		}
+		if opts.lineagePath != "" {
+			data, err := json.MarshalIndent(lineages, "", "  ")
+			if err != nil {
+				return err
+			}
+			if err := os.WriteFile(opts.lineagePath, data, 0o644); err != nil {
+				return err
+			}
+		}
+	} else {
+		mutations = make([]probes.Mutation, 0, len(opts.variants))
+		for _, v := range opts.variants {
+			mutations = append(mutations, probes.Mutation{Reference: reference, VarName: v})
+		}
+	}
+	ag, err := probes.NewAlleleGenerator(opts.referencePath, opts.kmer)
+	if err != nil {
+		return err
+	}
+	for _, mut := range mutations {
+		v, err := mut.Variant()
+		if err != nil {
+			return err
+		}
+		panel, err := ag.Create(v, nil)
+		if err != nil {
+			return err
+		}
+		for i, ref := range panel.Refs {
+			_, err := fmt.Fprintf(out, ">ref-%s?var_name=%s&num_alts=%d&ref=%s&enum=%d&gene=%s&mut=%s\n%s\n",
+				mut.MutationOutputName(), mut.VarName, len(panel.Alts), mut.Reference, i, "NA", mut.MutationOutputName(), ref)
+			if err != nil {
+				return err
+			}
+		}
+		for i, alt := range panel.Alts {
+			_, err := fmt.Fprintf(out, ">alt-%s?var_name=%s&enum=%d&gene=%s&mut=%s\n%s\n",
+				mut.MutationOutputName(), mut.VarName, i, "NA", mut.MutationOutputName(), alt)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func runPanelsUpdateMetadata(opts *panelsUpdateMetadataOptions) error {

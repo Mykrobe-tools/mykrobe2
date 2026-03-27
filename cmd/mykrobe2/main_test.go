@@ -449,6 +449,88 @@ func TestPredictCommandCSV(t *testing.T) {
 	}
 }
 
+func TestMakeProbesCommandWithVariants(t *testing.T) {
+	dir := t.TempDir()
+	out := filepath.Join(dir, "probes.fa")
+	oldStdout := os.Stdout
+	f, err := os.Create(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	os.Stdout = f
+	defer func() { os.Stdout = oldStdout }()
+
+	err = run([]string{
+		"make-probes",
+		filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "BX571856.1.fasta"),
+		"--variants", "A31T",
+		"--kmer", "31",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(data)
+	if !strings.Contains(text, ">ref-A31T?var_name=A31T") {
+		t.Fatalf("missing ref record in output: %s", text)
+	}
+	if !strings.Contains(text, ">alt-A31T?var_name=A31T") {
+		t.Fatalf("missing alt record in output: %s", text)
+	}
+}
+
+func TestMakeProbesCommandWithTextFileWritesLineage(t *testing.T) {
+	dir := t.TempDir()
+	out := filepath.Join(dir, "probes.fa")
+	lineage := filepath.Join(dir, "lineage.json")
+	refPath := filepath.Join(dir, "ref.fa")
+	textFile := filepath.Join(dir, "vars.tsv")
+	refSeq := []byte(strings.Repeat("A", 80))
+	refSeq[41] = 'G'
+	refSeq[51] = 'C'
+	refSeq[61] = 'C'
+	refSeq[71] = 'A'
+	if err := os.WriteFile(refPath, []byte(">ref\n"+string(refSeq)+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(textFile, []byte("ref\t42\tG\tA\tDNA\tlineage1\nref\t52\tC\tG\tDNA\t*lineage1.2\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	oldStdout := os.Stdout
+	f, err := os.Create(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	os.Stdout = f
+	defer func() { os.Stdout = oldStdout }()
+
+	err = run([]string{
+		"make-probes",
+		refPath,
+		"--text_file", textFile,
+		"--lineage", lineage,
+		"--kmer", "5",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(lineage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), "\"G42A\"") {
+		t.Fatalf("missing lineage output: %s", string(data))
+	}
+}
+
 func writeJSONFile(t *testing.T, path string, v any) {
 	t.Helper()
 	data, err := json.MarshalIndent(v, "", "  ")
