@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://h6ubkubw2gwv"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_2p1fg"]
+[ext_resource type="Script" uid="uid://fkihy2arg2jh" path="res://scripts/main.gd" id="1_2p1fg"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -56,16 +56,15 @@ layout_mode = 2
 theme_override_constants/separation = 14
 
 [node name="Logo" type="TextureRect" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox/HeaderTop"]
-layout_mode = 2
 custom_minimum_size = Vector2(76, 76)
+layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
 [node name="Title" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox/HeaderTop"]
 layout_mode = 2
-size_flags_vertical = 4
-theme_override_font_sizes/font_size = 32
 theme_override_colors/font_color = Color(0.05098, 0.337255, 0.117647, 1)
+theme_override_font_sizes/font_size = 32
 text = "mykrobe2"
 
 [node name="Subtitle" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox"]
@@ -100,13 +99,13 @@ text = "Preparing Mykrobe data"
 
 [node name="BootstrapStatus" type="Label" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox"]
 layout_mode = 2
-autowrap_mode = 3
 text = "Downloading panel metadata and species data."
+autowrap_mode = 3
 
 [node name="BootstrapLog" type="RichTextLabel" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox"]
 layout_mode = 2
 size_flags_vertical = 3
-autowrap_mode = 3
+focus_mode = 2
 scroll_following = true
 selection_enabled = true
 
@@ -155,8 +154,8 @@ text = "Panels Setup"
 
 [node name="SetupStatus" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
 layout_mode = 2
-autowrap_mode = 3
 text = "Checking shared panels directory."
+autowrap_mode = 3
 
 [node name="SetupButtons" type="HBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
 layout_mode = 2
@@ -175,9 +174,9 @@ layout_mode = 2
 text = "Refresh"
 
 [node name="SetupLog" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
-layout_mode = 2
 custom_minimum_size = Vector2(0, 140)
-autowrap_mode = 3
+layout_mode = 2
+focus_mode = 2
 scroll_following = true
 selection_enabled = true
 
@@ -190,8 +189,8 @@ text = "Sample name"
 
 [node name="SampleEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SampleRow"]
 layout_mode = 2
-placeholder_text = "SAMPLE"
 text = "sample"
+placeholder_text = "SAMPLE"
 
 [node name="ReadsRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
 layout_mode = 2
@@ -243,7 +242,6 @@ text = "Species"
 [node name="SpeciesOption" type="OptionButton" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow"]
 layout_mode = 2
 disabled = true
-text = "Loading species..."
 
 [node name="PanelRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
 layout_mode = 2
@@ -316,8 +314,8 @@ text = "Clear Results"
 
 [node name="StatusLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
 layout_mode = 2
-autowrap_mode = 3
 text = "Ready."
+autowrap_mode = 3
 
 [node name="ResultsPanel" type="PanelContainer" parent="RootMargin/RootVBox/BodySplit"]
 layout_mode = 2
@@ -341,6 +339,7 @@ text = "Results"
 [node name="ResultsTabs" type="TabContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox"]
 layout_mode = 2
 size_flags_vertical = 3
+current_tab = 0
 
 [node name="OverviewTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
 layout_mode = 2
@@ -348,93 +347,101 @@ theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
+metadata/_tab_index = 0
 
 [node name="OverviewText" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/OverviewTab"]
 layout_mode = 2
-bbcode_enabled = false
+focus_mode = 2
 fit_content = true
 scroll_following = true
 selection_enabled = true
 
 [node name="DrugsTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
+visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
+metadata/_tab_index = 1
 
 [node name="DrugsText" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/DrugsTab"]
 layout_mode = 2
-bbcode_enabled = false
+focus_mode = 2
 fit_content = true
 scroll_following = true
 selection_enabled = true
 
 [node name="SpeciesTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
+visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
+metadata/_tab_index = 2
 
 [node name="SpeciesText" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/SpeciesTab"]
 layout_mode = 2
-bbcode_enabled = false
+focus_mode = 2
 fit_content = true
 scroll_following = true
 selection_enabled = true
 
 [node name="EvidenceTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
+visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
+metadata/_tab_index = 3
 
 [node name="EvidenceText" type="TextEdit" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/EvidenceTab"]
 layout_mode = 2
 size_flags_vertical = 3
 editable = false
-line_wrapping_mode = 1
 
 [node name="RawJSONTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
+visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
+metadata/_tab_index = 4
 
 [node name="RawJSONText" type="TextEdit" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/RawJSONTab"]
 layout_mode = 2
 size_flags_vertical = 3
 editable = false
-line_wrapping_mode = 1
 
 [node name="ReadsDialog" type="FileDialog" parent="."]
-title = "Select reads file"
+title = "Open a File"
+ok_button_text = "Open"
 file_mode = 0
 access = 2
 
 [node name="PanelsDirDialog" type="FileDialog" parent="."]
-title = "Select panels directory"
+title = "Open a Directory"
+ok_button_text = "Select Current Folder"
 file_mode = 2
 access = 2
 
 [node name="OutputDialog" type="FileDialog" parent="."]
 title = "Choose output JSON file"
-file_mode = 4
 access = 2
 filters = PackedStringArray("*.json ; JSON files")
 
-[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker/ReadsBrowseButton" to="." method="_on_reads_browse_pressed"]
-[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker/PanelsBrowseButton" to="." method="_on_panels_browse_pressed"]
-[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker/OutputBrowseButton" to="." method="_on_output_browse_pressed"]
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/UpdateMetadataButton" to="." method="_on_update_metadata_button_pressed"]
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/InstallSpeciesButton" to="." method="_on_install_species_button_pressed"]
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/RefreshSetupButton" to="." method="_on_refresh_setup_button_pressed"]
+[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker/ReadsBrowseButton" to="." method="_on_reads_browse_pressed"]
+[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker/PanelsBrowseButton" to="." method="_on_panels_browse_pressed"]
+[connection signal="item_selected" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow/SpeciesOption" to="." method="_on_species_option_item_selected"]
+[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker/OutputBrowseButton" to="." method="_on_output_browse_pressed"]
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/RunButton" to="." method="_on_run_button_pressed"]
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/ClearButton" to="." method="_on_clear_button_pressed"]
-[connection signal="item_selected" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow/SpeciesOption" to="." method="_on_species_option_item_selected"]
 [connection signal="file_selected" from="ReadsDialog" to="." method="_on_reads_dialog_file_selected"]
 [connection signal="dir_selected" from="PanelsDirDialog" to="." method="_on_panels_dir_dialog_dir_selected"]
 [connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]
