@@ -1,6 +1,9 @@
 extends Control
 
 const LocalMykrobe2ManagerScript = preload("res://scripts/local_mykrobe2_manager.gd")
+const ResultFormatterScript = preload("res://scripts/result_formatter.gd")
+const GUIHelpersScript = preload("res://scripts/gui_helpers.gd")
+const PanelsSetupManagerScript = preload("res://scripts/panels_setup_manager.gd")
 const BACKGROUND_IMAGE_PATH = "res://assets/background.png"
 const LOGO_IMAGE_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
 
@@ -33,38 +36,47 @@ const LOGO_IMAGE_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
 @onready var output_dialog: FileDialog = $OutputDialog
 
 var _local_mykrobe2_manager: RefCounted
-var _setup_task_running := false
-var _setup_task_pid := -1
-var _setup_log_path := ""
-var _setup_result_path := ""
-var _setup_last_log_text := ""
+var _formatter: RefCounted
+var _helpers: RefCounted
+var _panels_setup: RefCounted
 var _species_entries: Array = []
 
 func _ready() -> void:
-	_apply_branding_assets()
-	panels_dir_edit.text = _default_panels_dir()
-	status_label.text = "Ready."
-	_clear_results()
+	_formatter = ResultFormatterScript.new()
+	_helpers = GUIHelpersScript.new()
+	_panels_setup = PanelsSetupManagerScript.new()
 	_local_mykrobe2_manager = LocalMykrobe2ManagerScript.new()
 	_local_mykrobe2_manager.configure("bin")
+	_apply_branding_assets()
+	panels_dir_edit.text = _helpers.default_panels_dir()
+	status_label.text = "Ready."
+	_clear_results()
 	get_viewport().files_dropped.connect(_on_files_dropped)
 	_refresh_species_options()
 	_refresh_setup_state()
 	_maybe_start_initial_panels_bootstrap()
 
-func _apply_branding_assets() -> void:
-	background_texture.texture = _load_png_texture(BACKGROUND_IMAGE_PATH)
-	var logo_texture_rect: TextureRect = $RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox/HeaderTop/Logo
-	logo_texture_rect.texture = _load_png_texture(LOGO_IMAGE_PATH)
-
-func _load_png_texture(path: String) -> Texture2D:
-	var image := Image.load_from_file(path)
-	if image == null:
-		return null
-	return ImageTexture.create_from_image(image)
-
 func _process(_delta: float) -> void:
-	_poll_setup_task()
+	var result: Dictionary = _panels_setup.poll()
+	if result.get("running", false):
+		setup_log_text.text = str(result.get("log", ""))
+		return
+	if not result.get("finished", false):
+		return
+	_set_setup_busy(false)
+	setup_log_text.text = str(result.get("log", ""))
+	if result.get("success", false):
+		_set_status(str(result.get("status", "Panel setup complete.")))
+		_refresh_species_options()
+		_refresh_setup_state()
+		return
+	_set_status(str(result.get("error", "Panel setup failed.")))
+	_set_setup_status("Panel setup failed.")
+
+func _apply_branding_assets() -> void:
+	background_texture.texture = _helpers.load_png_texture(BACKGROUND_IMAGE_PATH)
+	var logo_texture_rect: TextureRect = $RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox/HeaderTop/Logo
+	logo_texture_rect.texture = _helpers.load_png_texture(LOGO_IMAGE_PATH)
 
 func _on_reads_browse_pressed() -> void:
 	reads_dialog.popup_centered_ratio(0.7)
@@ -119,7 +131,7 @@ func _on_run_button_pressed() -> void:
 	if species == "":
 		_set_status("Species is required.")
 		return
-	if not _species_installed_marker_exists(panels_dir, species):
+	if not _helpers.species_installed_marker_exists(panels_dir, species):
 		_set_status("Species panels are not installed yet. Use Panels Setup first.")
 		_refresh_setup_state()
 		return
@@ -131,7 +143,7 @@ func _on_run_button_pressed() -> void:
 
 	var output_path := output_edit.text.strip_edges()
 	if output_path == "":
-		output_path = _temporary_output_path(sample)
+		output_path = _helpers.temporary_output_path(sample)
 
 	var args := PackedStringArray([
 		"predict",
@@ -162,14 +174,14 @@ func _on_run_button_pressed() -> void:
 	run_button.disabled = false
 
 	if exit_code != 0:
-		var joined := "\n".join(output_lines)
-		_set_status("mykrobe2 failed with exit code %d.\n%s" % [exit_code, joined])
+		_set_status("mykrobe2 failed with exit code %d.\n%s" % [exit_code, "\n".join(output_lines)])
 		return
 
 	_load_json_result(output_path, sample)
 	if raw_json_text.text != "":
 		_set_status("Completed successfully using %s." % binary_path)
 	_refresh_setup_state()
+	_refresh_species_options()
 
 func _load_json_result(path: String, preferred_sample: String = "sample") -> void:
 	if not FileAccess.file_exists(path):
@@ -192,10 +204,10 @@ func _load_json_result(path: String, preferred_sample: String = "sample") -> voi
 
 func _display_results(sample: String, parsed: Variant) -> void:
 	raw_json_text.text = JSON.stringify(parsed, "\t")
-	overview_text.text = _format_overview(sample, parsed)
-	drugs_text.text = _format_drugs(sample, parsed)
-	species_text.text = _format_species(sample, parsed)
-	evidence_text.text = _format_evidence(sample, parsed)
+	overview_text.text = _formatter.format_overview(sample, parsed)
+	drugs_text.text = _formatter.format_drugs(sample, parsed)
+	species_text.text = _formatter.format_species(sample, parsed)
+	evidence_text.text = _formatter.format_evidence(sample, parsed)
 
 func _clear_results() -> void:
 	overview_text.text = "Run a sample to see summary output here."
@@ -210,158 +222,10 @@ func _set_status(message: String) -> void:
 func _set_setup_status(message: String) -> void:
 	setup_status_label.text = message
 
-func _append_setup_log(message: String) -> void:
-	if setup_log_text.text == "":
-		setup_log_text.text = message
-	else:
-		setup_log_text.text += "\n" + message
-	setup_log_text.scroll_vertical = setup_log_text.get_line_count()
-
-func _extract_sample(sample: String, parsed: Variant) -> Dictionary:
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return {}
-	var root: Dictionary = parsed
-	if not root.has(sample):
-		if root.keys().is_empty():
-			return {}
-		sample = str(root.keys()[0])
-	return root.get(sample, {})
-
-func _format_overview(sample: String, parsed: Variant) -> String:
-	var sample_data := _extract_sample(sample, parsed)
-	if sample_data.is_empty():
-		return "No sample output found."
-
-	var lines: PackedStringArray = []
-	lines.append("Sample: %s" % sample)
-
-	var phylo: Dictionary = sample_data.get("phylogenetics", {})
-	lines.append("")
-	lines.append("Phylogenetics")
-	lines.append("Species: %s" % _best_phylo_name(phylo.get("species", {})))
-	lines.append("Lineage: %s" % _best_phylo_name(phylo.get("lineage", {})))
-	lines.append("Phylo group: %s" % _best_phylo_name(phylo.get("phylo_group", {})))
-
-	var susceptibility: Dictionary = sample_data.get("susceptibility", {})
-	var counts := {"R": 0, "S": 0, "N": 0}
-	for value in susceptibility.values():
-		var drug_data: Dictionary = value
-		var predict := str(drug_data.get("predict", "?"))
-		if counts.has(predict):
-			counts[predict] += 1
-
-	lines.append("")
-	lines.append("Susceptibility totals")
-	lines.append("Resistant: %d" % counts["R"])
-	lines.append("Susceptible: %d" % counts["S"])
-	lines.append("No call: %d" % counts["N"])
-	return "\n".join(lines)
-
-func _format_drugs(sample: String, parsed: Variant) -> String:
-	var sample_data := _extract_sample(sample, parsed)
-	if sample_data.is_empty():
-		return ""
-	var susceptibility: Dictionary = sample_data.get("susceptibility", {})
-	var drugs := susceptibility.keys()
-	drugs.sort()
-	var lines: PackedStringArray = []
-	for drug in drugs:
-		var drug_data: Dictionary = susceptibility.get(drug, {})
-		lines.append("%s: %s" % [str(drug), str(drug_data.get("predict", "?"))])
-	return "\n".join(lines)
-
-func _format_species(sample: String, parsed: Variant) -> String:
-	var sample_data := _extract_sample(sample, parsed)
-	if sample_data.is_empty():
-		return ""
-	var phylo: Dictionary = sample_data.get("phylogenetics", {})
-	var lines: PackedStringArray = []
-	lines.append("Phylo group")
-	lines.append_array(_format_phylo_section(phylo.get("phylo_group", {})))
-	lines.append("")
-	lines.append("Sub-complex")
-	lines.append_array(_format_phylo_section(phylo.get("sub_complex", {})))
-	lines.append("")
-	lines.append("Species")
-	lines.append_array(_format_phylo_section(phylo.get("species", {})))
-	lines.append("")
-	lines.append("Lineage")
-	lines.append_array(_format_phylo_section(phylo.get("lineage", {})))
-	return "\n".join(lines)
-
-func _format_evidence(sample: String, parsed: Variant) -> String:
-	var sample_data := _extract_sample(sample, parsed)
-	if sample_data.is_empty():
-		return ""
-	var lines: PackedStringArray = []
-	var variant_calls: Dictionary = sample_data.get("variant_calls", {})
-	var sequence_calls: Dictionary = sample_data.get("sequence_calls", {})
-	var lineage_calls: Dictionary = sample_data.get("lineage_calls", {})
-	lines.append("Variant calls: %d" % variant_calls.size())
-	lines.append("Sequence calls: %d" % sequence_calls.size())
-	lines.append("Lineage calls: %d" % lineage_calls.size())
-	lines.append("")
-	lines.append("Top lineage calls")
-	var lineage_keys: Array = lineage_calls.keys()
-	lineage_keys.sort()
-	var limit: int = min(10, lineage_keys.size())
-	for i in range(limit):
-		var key = lineage_keys[i]
-		var call: Dictionary = lineage_calls.get(key, {})
-		var info: Dictionary = call.get("info", {})
-		lines.append("%s: %s (conf=%s)" % [str(key), str(call.get("genotype", "?")), str(info.get("conf", "?"))])
-	return "\n".join(lines)
-
-func _format_phylo_section(section: Variant) -> PackedStringArray:
-	var lines: PackedStringArray = []
-	if typeof(section) != TYPE_DICTIONARY:
-		lines.append("Unknown")
-		return lines
-	var d: Dictionary = section
-	if d.is_empty():
-		lines.append("Unknown")
-		return lines
-	var keys := d.keys()
-	keys.sort()
-	for key in keys:
-		var item: Variant = d.get(key, null)
-		if typeof(item) == TYPE_DICTIONARY:
-			var item_dict: Dictionary = item
-			lines.append("%s: coverage=%s depth=%s" % [
-				str(key),
-				str(item_dict.get("percent_coverage", "?")),
-				str(item_dict.get("median_depth", "?")),
-			])
-		elif typeof(item) == TYPE_ARRAY:
-			var values: Array = item
-			var rendered: PackedStringArray = []
-			for value in values:
-				rendered.append(str(value))
-			lines.append("%s: %s" % [str(key), ", ".join(rendered)])
-		else:
-			lines.append("%s: %s" % [str(key), str(item)])
-	return lines
-
-func _best_phylo_name(section: Variant) -> String:
-	if typeof(section) != TYPE_DICTIONARY:
-		return "Unknown"
-	var d: Dictionary = section
-	for key in d.keys():
-		if str(key) != "Unknown" and typeof(d.get(key)) == TYPE_DICTIONARY:
-			return str(key)
-	return "Unknown"
-
-func _temporary_output_path(sample: String) -> String:
-	var base := sample.strip_edges()
-	if base == "":
-		base = "sample"
-	return OS.get_user_data_dir().path_join("%s.predict.json" % base)
-
 func _resolve_binary_path() -> String:
 	var from_env := OS.get_environment("MYKROBE2_BINARY").strip_edges()
 	if from_env != "" and FileAccess.file_exists(from_env):
 		return from_env
-
 	if _local_mykrobe2_manager != null and _local_mykrobe2_manager.ensure_local_binary_installed():
 		return _local_mykrobe2_manager.installed_binary_path()
 	return ""
@@ -396,12 +260,10 @@ func _on_install_species_button_pressed() -> void:
 	], "Installing species panels for %s..." % species, "Species panels installed for %s." % species)
 
 func _on_refresh_setup_button_pressed() -> void:
+	_refresh_species_options()
 	_refresh_setup_state()
 
 func _start_panels_task(commands: Array, status_prefix: String, success_status: String) -> void:
-	if _setup_task_running:
-		_set_status("Panel setup is already running.")
-		return
 	var binary_path := _resolve_binary_path()
 	if binary_path == "":
 		_set_status("Could not find mykrobe2 binary for panel setup.")
@@ -414,159 +276,21 @@ func _start_panels_task(commands: Array, status_prefix: String, success_status: 
 	_set_setup_status(status_prefix)
 	_set_setup_busy(true)
 	setup_log_text.text = ""
-	_setup_log_path = OS.get_user_data_dir().path_join("panels-setup.log")
-	if FileAccess.file_exists(_setup_log_path):
-		DirAccess.remove_absolute(_setup_log_path)
-	_setup_result_path = OS.get_user_data_dir().path_join("panels-setup.result")
-	if FileAccess.file_exists(_setup_result_path):
-		DirAccess.remove_absolute(_setup_result_path)
-	_setup_last_log_text = ""
-	_setup_task_running = true
-	_setup_task_pid = _start_panels_process(binary_path, commands, success_status, _setup_log_path, _setup_result_path)
-	if _setup_task_pid == -1:
-		_setup_task_running = false
+	var start_result: Dictionary = _panels_setup.start(binary_path, commands, success_status)
+	if not start_result.get("started", false):
 		_set_setup_busy(false)
-		_set_status("Could not start background panel setup.")
+		_set_status(str(start_result.get("error", "Could not start background panel setup.")))
 		_set_setup_status("Could not start panel setup.")
-
-func _write_setup_log_line(log_path: String, message: String) -> void:
-	var open_mode := FileAccess.READ_WRITE if FileAccess.file_exists(log_path) else FileAccess.WRITE_READ
-	var file := FileAccess.open(log_path, open_mode)
-	if file == null:
-		return
-	file.seek_end()
-	file.store_line(message)
-	file.close()
-
-func _poll_setup_task() -> void:
-	if not _setup_task_running:
-		return
-	_refresh_setup_log_from_disk()
-	if not FileAccess.file_exists(_setup_result_path):
-		return
-	_setup_task_running = false
-	_setup_task_pid = -1
-	_set_setup_busy(false)
-	_refresh_setup_log_from_disk()
-	var result := _read_setup_result(_setup_result_path)
-	if result.get("success", false):
-		_set_status(str(result.get("status", "Panel setup complete.")))
-		_refresh_species_options()
-		_refresh_setup_state()
-		return
-	var error_message := str(result.get("error", "Panel setup failed."))
-	_set_status(error_message)
-	_set_setup_status("Panel setup failed.")
-
-func _start_panels_process(binary_path: String, commands: Array, success_status: String, log_path: String, result_path: String) -> int:
-	var script_path := OS.get_user_data_dir().path_join("panels-setup-script")
-	if OS.get_name() == "Windows":
-		script_path += ".cmd"
-		_write_windows_setup_script(script_path, binary_path, commands, success_status, log_path, result_path)
-		return OS.create_process("cmd.exe", PackedStringArray(["/C", script_path]), false)
-	script_path += ".sh"
-	_write_posix_setup_script(script_path, binary_path, commands, success_status, log_path, result_path)
-	return OS.create_process("/bin/bash", PackedStringArray([script_path]), false)
-
-func _write_posix_setup_script(script_path: String, binary_path: String, commands: Array, success_status: String, log_path: String, result_path: String) -> void:
-	var lines: PackedStringArray = [
-		"#!/usr/bin/env bash",
-		"set -u",
-		"echo \"Starting panel setup.\" >> %s" % _shell_quote(log_path),
-	]
-	for command in commands:
-		var label := str(command.get("label", "Running command"))
-		var args: PackedStringArray = command.get("args", PackedStringArray())
-		lines.append("echo %s >> %s" % [_shell_quote(label + "..."), _shell_quote(log_path)])
-		lines.append("if ! %s %s >> %s 2>&1; then" % [_shell_quote(binary_path), _join_shell_args(args), _shell_quote(log_path)])
-		lines.append("  echo %s > %s" % [_shell_quote("success=0"), _shell_quote(result_path)])
-		lines.append("  echo %s >> %s" % [_shell_quote("status=Panel setup failed."), _shell_quote(result_path)])
-		lines.append("  echo %s >> %s" % [_shell_quote("error=%s failed." % label), _shell_quote(result_path)])
-		lines.append("  exit 0")
-		lines.append("fi")
-		lines.append("echo %s >> %s" % [_shell_quote(label + " complete."), _shell_quote(log_path)])
-	lines.append("echo %s > %s" % [_shell_quote("success=1"), _shell_quote(result_path)])
-	lines.append("echo %s >> %s" % [_shell_quote("status=%s" % success_status), _shell_quote(result_path)])
-	lines.append("echo %s >> %s" % [_shell_quote("error="), _shell_quote(result_path)])
-	_write_text_file(script_path, "\n".join(lines) + "\n")
-	OS.execute("/bin/chmod", PackedStringArray(["+x", script_path]), [], true)
-
-func _write_windows_setup_script(script_path: String, binary_path: String, commands: Array, success_status: String, log_path: String, result_path: String) -> void:
-	var lines: PackedStringArray = [
-		"@echo off",
-		"echo Starting panel setup.>> %s" % _windows_quote(log_path),
-	]
-	for command in commands:
-		var label := str(command.get("label", "Running command"))
-		var args: PackedStringArray = command.get("args", PackedStringArray())
-		lines.append("echo %s>> %s" % [label + "...", _windows_quote(log_path)])
-		lines.append("%s %s >> %s 2>&1" % [_windows_quote(binary_path), _join_windows_args(args), _windows_quote(log_path)])
-		lines.append("if errorlevel 1 (")
-		lines.append("  > %s echo success=0" % _windows_quote(result_path))
-		lines.append("  >> %s echo status=Panel setup failed." % _windows_quote(result_path))
-		lines.append("  >> %s echo error=%s failed." % [_windows_quote(result_path), label])
-		lines.append("  exit /b 0")
-		lines.append(")")
-		lines.append("echo %s>> %s" % [label + " complete.", _windows_quote(log_path)])
-	lines.append("> %s echo success=1" % _windows_quote(result_path))
-	lines.append(">> %s echo status=%s" % [_windows_quote(result_path), success_status])
-	lines.append(">> %s echo error=" % _windows_quote(result_path))
-	_write_text_file(script_path, "\r\n".join(lines) + "\r\n")
-
-func _write_text_file(path: String, text: String) -> void:
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	if file == null:
-		return
-	file.store_string(text)
-	file.close()
-
-func _read_setup_result(path: String) -> Dictionary:
-	var out := {"success": false, "status": "Panel setup failed.", "error": "Panel setup failed."}
-	var file := FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		return out
-	while not file.eof_reached():
-		var line := file.get_line()
-		if not line.contains("="):
-			continue
-		var parts := line.split("=", false, 1)
-		if parts.size() != 2:
-			continue
-		match parts[0]:
-			"success":
-				out["success"] = parts[1] == "1"
-			"status":
-				out["status"] = parts[1]
-			"error":
-				out["error"] = parts[1]
-	file.close()
-	return out
-
-func _refresh_setup_log_from_disk() -> void:
-	if _setup_log_path == "":
-		return
-	if not FileAccess.file_exists(_setup_log_path):
-		return
-	var file := FileAccess.open(_setup_log_path, FileAccess.READ)
-	if file == null:
-		return
-	var text := file.get_as_text()
-	file.close()
-	if text == _setup_last_log_text:
-		return
-	_setup_last_log_text = text
-	setup_log_text.text = text
-	setup_log_text.scroll_vertical = setup_log_text.get_line_count()
 
 func _refresh_setup_state() -> void:
 	var panels_dir := panels_dir_edit.text.strip_edges()
 	var species := _selected_species()
 	var manifest_exists := FileAccess.file_exists(panels_dir.path_join("manifest.json"))
-	var species_installed := _species_installed_marker_exists(panels_dir, species)
+	var species_installed: bool = _helpers.species_installed_marker_exists(panels_dir, species)
 
 	setup_panel.visible = (not manifest_exists) or (species != "" and not species_installed)
 	if not manifest_exists:
-		if _setup_task_running:
+		if _panels_setup.is_running():
 			_set_setup_status("Initial panel download is running in the background.")
 		else:
 			_set_setup_status("Panel metadata is missing. Initial setup will download all species into the shared panels directory.")
@@ -583,7 +307,7 @@ func _set_setup_busy(busy: bool) -> void:
 	run_button.disabled = busy
 
 func _maybe_start_initial_panels_bootstrap() -> void:
-	if _setup_task_running:
+	if _panels_setup.is_running():
 		return
 	if DisplayServer.get_name() == "headless":
 		return
@@ -612,11 +336,6 @@ func _maybe_start_initial_panels_bootstrap() -> void:
 		},
 	], "Downloading panel metadata and all species in the background...", "All species panels are ready.")
 
-func _species_installed_marker_exists(panels_dir: String, species: String) -> bool:
-	if species == "":
-		return false
-	return FileAccess.file_exists(panels_dir.path_join(species).path_join("manifest.json"))
-
 func _selected_species() -> String:
 	if species_option.item_count == 0:
 		return ""
@@ -626,49 +345,15 @@ func _selected_species() -> String:
 	return str(_species_entries[idx].get("species", "")).strip_edges()
 
 func _refresh_species_options() -> void:
-	_species_entries.clear()
+	_species_entries = _helpers.load_species_entries(_resolve_binary_path(), panels_dir_edit.text.strip_edges())
 	species_option.clear()
 	species_option.disabled = true
 	species_option.text = "Loading species..."
-	var binary_path := _resolve_binary_path()
-	if binary_path == "":
-		species_option.text = "No CLI binary"
-		return
-	var panels_dir := panels_dir_edit.text.strip_edges()
-	if panels_dir == "":
-		species_option.text = "No panels directory"
-		return
-	var output_lines: Array = []
-	var exit_code := OS.execute(binary_path, PackedStringArray([
-		"panels",
-		"describe",
-		"--panels_dir", panels_dir,
-		"--format", "json",
-	]), output_lines, true)
-	if exit_code != 0:
+	if _species_entries.is_empty():
 		species_option.text = "No species available"
 		return
-	var parsed = JSON.parse_string("\n".join(output_lines))
-	if typeof(parsed) != TYPE_DICTIONARY:
-		species_option.text = "No species available"
-		return
-	var root: Dictionary = parsed
-	var species_list: Variant = root.get("species", [])
-	if typeof(species_list) != TYPE_ARRAY:
-		species_option.text = "No species available"
-		return
-	for item in species_list:
-		if typeof(item) != TYPE_DICTIONARY:
-			continue
-		var entry: Dictionary = item
-		var species_name := str(entry.get("species", "")).strip_edges()
-		if species_name == "":
-			continue
-		_species_entries.append(entry)
-		species_option.add_item(species_name)
-	if species_option.item_count == 0:
-		species_option.text = "No species available"
-		return
+	for entry in _species_entries:
+		species_option.add_item(str(entry.get("species", "")))
 	species_option.disabled = false
 	var preferred_index := 0
 	for i in range(_species_entries.size()):
@@ -677,22 +362,6 @@ func _refresh_species_options() -> void:
 			break
 	species_option.select(preferred_index)
 	_on_species_option_item_selected(preferred_index)
-
-func _default_panels_dir() -> String:
-	var data_home := OS.get_environment("MYKROBE_DATA_HOME").strip_edges()
-	if data_home != "":
-		return data_home.path_join("mykrobe2").path_join("panels")
-
-	match OS.get_name():
-		"macOS":
-			return OS.get_environment("HOME").path_join("Library").path_join("Application Support").path_join("mykrobe2").path_join("panels")
-		"Windows":
-			var appdata := OS.get_environment("APPDATA").strip_edges()
-			if appdata != "":
-				return appdata.path_join("mykrobe2").path_join("panels")
-			return OS.get_environment("USERPROFILE").path_join("AppData").path_join("Roaming").path_join("mykrobe2").path_join("panels")
-		_:
-			return OS.get_environment("HOME").path_join(".local").path_join("share").path_join("mykrobe2").path_join("panels")
 
 func _on_files_dropped(files: PackedStringArray) -> void:
 	if files.is_empty():
@@ -709,21 +378,3 @@ func _on_files_dropped(files: PackedStringArray) -> void:
 		_on_run_button_pressed()
 	else:
 		_set_status("Loaded reads file from drag and drop. Fill remaining fields and run.")
-
-func _join_shell_args(args: PackedStringArray) -> String:
-	var parts: PackedStringArray = []
-	for arg in args:
-		parts.append(_shell_quote(arg))
-	return " ".join(parts)
-
-func _shell_quote(value: String) -> String:
-	return "'" + value.replace("'", "'\"'\"'") + "'"
-
-func _join_windows_args(args: PackedStringArray) -> String:
-	var parts: PackedStringArray = []
-	for arg in args:
-		parts.append(_windows_quote(arg))
-	return " ".join(parts)
-
-func _windows_quote(value: String) -> String:
-	return "\"" + value.replace("\"", "\"\"") + "\""
