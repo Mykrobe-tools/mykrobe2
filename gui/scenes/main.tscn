@@ -103,11 +103,12 @@ layout_mode = 2
 autowrap_mode = 3
 text = "Downloading panel metadata and species data."
 
-[node name="BootstrapLog" type="TextEdit" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox"]
+[node name="BootstrapLog" type="RichTextLabel" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox"]
 layout_mode = 2
 size_flags_vertical = 3
-editable = false
-line_wrapping_mode = 1
+autowrap_mode = 3
+scroll_following = true
+selection_enabled = true
 
 [node name="BodySplit" type="HSplitContainer" parent="RootMargin/RootVBox"]
 layout_mode = 2
@@ -173,12 +174,12 @@ text = "Install Species"
 layout_mode = 2
 text = "Refresh"
 
-[node name="SetupLog" type="TextEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
+[node name="SetupLog" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 140)
-editable = false
-scroll_fit_content_height = true
-text = ""
+autowrap_mode = 3
+scroll_following = true
+selection_enabled = true
 
 [node name="SampleRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
 layout_mode = 2

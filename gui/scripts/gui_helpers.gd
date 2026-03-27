@@ -35,24 +35,26 @@ func species_installed_marker_exists(panels_dir: String, species: String) -> boo
 	return FileAccess.file_exists(panels_dir.path_join(species).path_join("manifest.json"))
 
 func load_species_entries(binary_path: String, panels_dir: String) -> Array:
-	if binary_path == "" or panels_dir == "":
+	if panels_dir == "":
 		return []
-	var output_lines: Array = []
-	var exit_code := OS.execute(binary_path, PackedStringArray([
-		"panels",
-		"describe",
-		"--panels_dir", panels_dir,
-		"--format", "json",
-	]), output_lines, true)
-	if exit_code != 0:
-		return []
-	var parsed = JSON.parse_string("\n".join(output_lines))
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return []
-	var root: Dictionary = parsed
-	var species_list: Variant = root.get("species", [])
-	if typeof(species_list) != TYPE_ARRAY:
-		return []
+	var species_list: Array = []
+	if binary_path != "":
+		var output_lines: Array = []
+		var exit_code := OS.execute(binary_path, PackedStringArray([
+			"panels",
+			"describe",
+			"--panels_dir", panels_dir,
+			"--format", "json",
+		]), output_lines, true)
+		if exit_code == 0:
+			var parsed = JSON.parse_string("\n".join(output_lines))
+			if typeof(parsed) == TYPE_DICTIONARY:
+				var root: Dictionary = parsed
+				var cli_species_list: Variant = root.get("species", [])
+				if typeof(cli_species_list) == TYPE_ARRAY:
+					species_list = cli_species_list
+	if species_list.is_empty():
+		species_list = _load_species_entries_from_panels_dir(panels_dir)
 	var entries: Array = []
 	for item in species_list:
 		if typeof(item) != TYPE_DICTIONARY:
@@ -62,4 +64,71 @@ func load_species_entries(binary_path: String, panels_dir: String) -> Array:
 		if species_name == "":
 			continue
 		entries.append(entry)
+	return entries
+
+func _load_species_entries_from_panels_dir(panels_dir: String) -> Array:
+	var manifest_path := panels_dir.path_join("manifest.json")
+	if not FileAccess.file_exists(manifest_path):
+		return []
+	var text := FileAccess.get_file_as_string(manifest_path)
+	var parsed = JSON.parse_string(text)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return []
+	var manifest: Dictionary = parsed
+	var species_names := manifest.keys()
+	species_names.sort()
+	var entries: Array = []
+	for species_name_variant in species_names:
+		var species_name := str(species_name_variant)
+		var entry_variant: Variant = manifest.get(species_name, {})
+		if typeof(entry_variant) != TYPE_DICTIONARY:
+			continue
+		var entry: Dictionary = entry_variant
+		var installed := false
+		var installed_info: Dictionary = {}
+		var installed_variant: Variant = entry.get("installed", null)
+		if typeof(installed_variant) == TYPE_DICTIONARY:
+			installed = true
+			installed_info = installed_variant
+		var latest_info: Dictionary = {}
+		var latest_variant: Variant = entry.get("latest", null)
+		if typeof(latest_variant) == TYPE_DICTIONARY:
+			latest_info = latest_variant
+		var species_entry: Dictionary = {
+			"species": species_name,
+			"installed": installed,
+			"installed_version": str(installed_info.get("version", "None")),
+			"installed_url": str(installed_info.get("url", "NA")),
+			"latest_version": str(latest_info.get("version", "")),
+			"latest_url": str(latest_info.get("url", "")),
+			"default_panel": "",
+			"panels": [],
+		}
+		if installed:
+			var species_manifest_path := panels_dir.path_join(species_name).path_join("manifest.json")
+			if FileAccess.file_exists(species_manifest_path):
+				var species_manifest_text := FileAccess.get_file_as_string(species_manifest_path)
+				var species_manifest_variant = JSON.parse_string(species_manifest_text)
+				if typeof(species_manifest_variant) == TYPE_DICTIONARY:
+					var species_manifest: Dictionary = species_manifest_variant
+					species_entry["default_panel"] = str(species_manifest.get("default_panel", ""))
+					var panels_variant: Variant = species_manifest.get("panels", {})
+					if typeof(panels_variant) == TYPE_DICTIONARY:
+						var panels_dict: Dictionary = panels_variant
+						var panel_names := panels_dict.keys()
+						panel_names.sort()
+						var panels: Array = []
+						for panel_name_variant in panel_names:
+							var panel_name := str(panel_name_variant)
+							var panel_info_variant: Variant = panels_dict.get(panel_name, {})
+							if typeof(panel_info_variant) != TYPE_DICTIONARY:
+								continue
+							var panel_info: Dictionary = panel_info_variant
+							panels.append({
+								"name": panel_name,
+								"reference": str(panel_info.get("reference_genome", "")),
+								"description": str(panel_info.get("description", "")),
+							})
+						species_entry["panels"] = panels
+		entries.append(species_entry)
 	return entries
