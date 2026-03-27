@@ -16,7 +16,7 @@ const LOGO_IMAGE_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
 @onready var reads_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker/ReadsEdit
 @onready var panels_dir_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker/PanelsDirEdit
 @onready var species_option: OptionButton = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow/SpeciesOption
-@onready var panel_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelRow/PanelEdit
+@onready var panel_option: OptionButton = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelRow/PanelOption
 @onready var output_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker/OutputEdit
 @onready var report_all_calls_check: CheckBox = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid/ReportAllCallsCheck
 @onready var ncbi_names_check: CheckBox = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid/NCBINamesCheck
@@ -44,6 +44,7 @@ var _formatter: RefCounted
 var _helpers: RefCounted
 var _panels_setup: RefCounted
 var _species_entries: Array = []
+var _panel_entries: Array = []
 
 func _ready() -> void:
 	_formatter = ResultFormatterScript.new()
@@ -111,9 +112,10 @@ func _on_species_option_item_selected(index: int) -> void:
 	if index < 0 or index >= _species_entries.size():
 		return
 	var entry: Dictionary = _species_entries[index]
-	var default_panel := str(entry.get("default_panel", ""))
-	if default_panel != "":
-		panel_edit.text = default_panel
+	_refresh_panel_options(entry)
+
+func _on_panel_option_item_selected(_index: int) -> void:
+	pass
 
 func _on_clear_button_pressed() -> void:
 	status_label.text = "Ready."
@@ -160,8 +162,9 @@ func _on_run_button_pressed() -> void:
 		"--output", output_path,
 		"--format", "json",
 	])
-	if panel_edit.text.strip_edges() != "":
-		args.append_array(["--panel", panel_edit.text.strip_edges()])
+	var panel_name := _selected_panel()
+	if panel_name != "":
+		args.append_array(["--panel", panel_name])
 	if report_all_calls_check.button_pressed:
 		args.append("--report_all_calls")
 	if ncbi_names_check.button_pressed:
@@ -364,6 +367,10 @@ func _refresh_species_options() -> void:
 	species_option.clear()
 	species_option.disabled = true
 	species_option.text = "Loading species..."
+	_panel_entries.clear()
+	panel_option.clear()
+	panel_option.disabled = true
+	panel_option.text = "No panels available"
 	if _species_entries.is_empty():
 		species_option.text = "No species available"
 		return
@@ -380,6 +387,42 @@ func _refresh_species_options() -> void:
 
 func _should_show_bootstrap(manifest_exists: bool) -> bool:
 	return (not manifest_exists) or _panels_setup.is_running()
+
+func _selected_panel() -> String:
+	if panel_option.item_count == 0:
+		return ""
+	var idx := panel_option.selected
+	if idx < 0 or idx >= _panel_entries.size():
+		return ""
+	return str(_panel_entries[idx].get("name", "")).strip_edges()
+
+func _refresh_panel_options(species_entry: Dictionary) -> void:
+	_panel_entries.clear()
+	panel_option.clear()
+	panel_option.disabled = true
+	panel_option.text = "No panels available"
+	var panels_variant: Variant = species_entry.get("panels", [])
+	if typeof(panels_variant) != TYPE_ARRAY:
+		return
+	var default_panel := str(species_entry.get("default_panel", ""))
+	for panel_variant in panels_variant:
+		if typeof(panel_variant) != TYPE_DICTIONARY:
+			continue
+		var panel_entry: Dictionary = panel_variant
+		var panel_name := str(panel_entry.get("name", "")).strip_edges()
+		if panel_name == "":
+			continue
+		_panel_entries.append(panel_entry)
+		panel_option.add_item(panel_name)
+	if panel_option.item_count == 0:
+		return
+	panel_option.disabled = false
+	var preferred_index := 0
+	for i in range(_panel_entries.size()):
+		if str(_panel_entries[i].get("name", "")) == default_panel:
+			preferred_index = i
+			break
+	panel_option.select(preferred_index)
 
 func _on_files_dropped(files: PackedStringArray) -> void:
 	if files.is_empty():
