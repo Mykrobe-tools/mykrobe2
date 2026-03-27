@@ -78,6 +78,46 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Predict"
 
+[node name="SetupPanel" type="PanelContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+layout_mode = 2
+
+[node name="SetupMargin" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="SetupVBox" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SetupTitle" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Panels Setup"
+
+[node name="SetupStatus" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Checking shared panels directory."
+
+[node name="SetupButtons" type="HBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="UpdateMetadataButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons"]
+layout_mode = 2
+text = "Update Metadata"
+
+[node name="InstallSpeciesButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons"]
+layout_mode = 2
+text = "Install Species"
+
+[node name="RefreshSetupButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons"]
+layout_mode = 2
+text = "Refresh"
+
 [node name="SampleRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
 layout_mode = 2
 
@@ -326,6 +366,9 @@ filters = PackedStringArray("*.json ; JSON files")
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker/ReadsBrowseButton" to="." method="_on_reads_browse_pressed"]
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker/PanelsBrowseButton" to="." method="_on_panels_browse_pressed"]
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker/OutputBrowseButton" to="." method="_on_output_browse_pressed"]
+[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/UpdateMetadataButton" to="." method="_on_update_metadata_button_pressed"]
+[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/InstallSpeciesButton" to="." method="_on_install_species_button_pressed"]
+[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/RefreshSetupButton" to="." method="_on_refresh_setup_button_pressed"]
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/RunButton" to="." method="_on_run_button_pressed"]
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/ClearButton" to="." method="_on_clear_button_pressed"]
 [connection signal="file_selected" from="ReadsDialog" to="." method="_on_reads_dialog_file_selected"]

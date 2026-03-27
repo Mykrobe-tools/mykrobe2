@@ -12,6 +12,11 @@ const LocalMykrobe2ManagerScript = preload("res://scripts/local_mykrobe2_manager
 @onready var ncbi_names_check: CheckBox = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid/NCBINamesCheck
 @onready var ont_check: CheckBox = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid/ONTCheck
 @onready var guess_method_check: CheckBox = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid/GuessMethodCheck
+@onready var setup_panel: PanelContainer = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel
+@onready var setup_status_label: Label = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupStatus
+@onready var update_metadata_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/UpdateMetadataButton
+@onready var install_species_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/InstallSpeciesButton
+@onready var refresh_setup_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/RefreshSetupButton
 @onready var run_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/RunButton
 @onready var status_label: Label = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/StatusLabel
 @onready var overview_text: RichTextLabel = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/OverviewTab/OverviewText
@@ -32,6 +37,7 @@ func _ready() -> void:
 	_local_mykrobe2_manager = LocalMykrobe2ManagerScript.new()
 	_local_mykrobe2_manager.configure("bin")
 	get_viewport().files_dropped.connect(_on_files_dropped)
+	_refresh_setup_state()
 
 func _on_reads_browse_pressed() -> void:
 	reads_dialog.popup_centered_ratio(0.7)
@@ -74,6 +80,10 @@ func _on_run_button_pressed() -> void:
 		return
 	if species == "":
 		_set_status("Species is required.")
+		return
+	if not _species_installed_marker_exists(panels_dir, species):
+		_set_status("Species panels are not installed yet. Use Panels Setup first.")
+		_refresh_setup_state()
 		return
 
 	var binary_path := _resolve_binary_path()
@@ -121,6 +131,7 @@ func _on_run_button_pressed() -> void:
 	_load_json_result(output_path, sample)
 	if raw_json_text.text != "":
 		_set_status("Completed successfully using %s." % binary_path)
+	_refresh_setup_state()
 
 func _load_json_result(path: String, preferred_sample: String = "sample") -> void:
 	if not FileAccess.file_exists(path):
@@ -157,6 +168,9 @@ func _clear_results() -> void:
 
 func _set_status(message: String) -> void:
 	status_label.text = message
+
+func _set_setup_status(message: String) -> void:
+	setup_status_label.text = message
 
 func _extract_sample(sample: String, parsed: Variant) -> Dictionary:
 	if typeof(parsed) != TYPE_DICTIONARY:
@@ -296,6 +310,74 @@ func _resolve_binary_path() -> String:
 	if _local_mykrobe2_manager != null and _local_mykrobe2_manager.ensure_local_binary_installed():
 		return _local_mykrobe2_manager.installed_binary_path()
 	return ""
+
+func _on_update_metadata_button_pressed() -> void:
+	_run_panels_command(PackedStringArray([
+		"panels",
+		"update_metadata",
+		"--panels_dir", panels_dir_edit.text.strip_edges(),
+	]), "Updating panel metadata...")
+
+func _on_install_species_button_pressed() -> void:
+	var species := species_edit.text.strip_edges()
+	if species == "":
+		_set_status("Set a species first before installing panels.")
+		return
+	_run_panels_command(PackedStringArray([
+		"panels",
+		"update_species",
+		"--panels_dir", panels_dir_edit.text.strip_edges(),
+		species,
+	]), "Installing species panels for %s..." % species)
+
+func _on_refresh_setup_button_pressed() -> void:
+	_refresh_setup_state()
+
+func _run_panels_command(args: PackedStringArray, status_prefix: String) -> void:
+	var binary_path := _resolve_binary_path()
+	if binary_path == "":
+		_set_status("Could not find mykrobe2 binary for panel setup.")
+		return
+	_set_status(status_prefix)
+	_set_setup_status(status_prefix)
+	_set_setup_busy(true)
+	await get_tree().process_frame
+
+	var output_lines: Array = []
+	var exit_code := OS.execute(binary_path, args, output_lines, true)
+	_set_setup_busy(false)
+	if exit_code != 0:
+		var joined := "\n".join(output_lines)
+		_set_status("Panel setup failed with exit code %d.\n%s" % [exit_code, joined])
+		_set_setup_status("Panel setup failed.")
+		return
+	_refresh_setup_state()
+
+func _refresh_setup_state() -> void:
+	var panels_dir := panels_dir_edit.text.strip_edges()
+	var species := species_edit.text.strip_edges()
+	var manifest_exists := FileAccess.file_exists(panels_dir.path_join("manifest.json"))
+	var species_installed := _species_installed_marker_exists(panels_dir, species)
+
+	setup_panel.visible = (not manifest_exists) or (species != "" and not species_installed)
+	if not manifest_exists:
+		_set_setup_status("Panel metadata is missing. Update metadata to initialise the shared panels directory.")
+	elif species != "" and not species_installed:
+		_set_setup_status("Species '%s' is not installed in the shared panels directory." % species)
+	else:
+		_set_setup_status("Shared panels directory is ready.")
+	install_species_button.disabled = (species == "")
+
+func _set_setup_busy(busy: bool) -> void:
+	update_metadata_button.disabled = busy
+	install_species_button.disabled = busy or species_edit.text.strip_edges() == ""
+	refresh_setup_button.disabled = busy
+	run_button.disabled = busy
+
+func _species_installed_marker_exists(panels_dir: String, species: String) -> bool:
+	if species == "":
+		return false
+	return FileAccess.file_exists(panels_dir.path_join(species).path_join("manifest.json"))
 
 func _default_panels_dir() -> String:
 	var data_home := OS.get_environment("MYKROBE_DATA_HOME").strip_edges()
