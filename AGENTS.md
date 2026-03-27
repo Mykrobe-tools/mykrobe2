@@ -29,6 +29,13 @@ Do not copy Python structure unless it is the clearest option. Port behavior, te
 - `mykrobe/speciesdata`
   - Panel manifest and installed-panel management for Mykrobe-style panel bundles.
 
+- `gui`
+  - Godot 4.4 desktop GUI.
+  - Use scenes for layout, controls, and structure wherever possible.
+  - Keep GDScript focused on behavior, process execution, data binding, and light view logic.
+  - Shared data such as panels should use the same location as the CLI.
+  - GUI-only runtime files may use Godot `user://`.
+
 ## Design Rules
 
 - Prefer library APIs over subprocess-style orchestration.
@@ -37,6 +44,7 @@ Do not copy Python structure unless it is the clearest option. Port behavior, te
 - Do not introduce MongoDB or any database dependency for future `make-probes` work unless explicitly justified.
 - Prefer typed structs and narrow interfaces over large unstructured maps, except where matching JSON-like Mykrobe outputs is simplest.
 - Keep CLI concerns out of core packages.
+- Do not duplicate backend logic in the GUI when the GUI can call the `mykrobe2` binary or a shared library cleanly.
 
 ## Behavioral Source of Truth
 
@@ -69,6 +77,7 @@ The target is behavioral parity, not source parity.
 - Put graph / kmer / coverage mechanics in `mccortex`.
 - Put domain logic such as typing, resistance prediction, lineage, and phylo in `mykrobe`.
 - Put panel install / manifest logic in `mykrobe/speciesdata`.
+- Put Godot scenes, scripts, and bundled GUI assets in `gui`.
 - If `cmd/mykrobe2/main.go` grows, move orchestration into a reusable package and keep the Cobra layer thin.
 
 ## Near-Term Priorities
