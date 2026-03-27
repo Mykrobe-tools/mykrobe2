@@ -8,7 +8,7 @@ const LOGO_IMAGE_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
 @onready var sample_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SampleRow/SampleEdit
 @onready var reads_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker/ReadsEdit
 @onready var panels_dir_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker/PanelsDirEdit
-@onready var species_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow/SpeciesEdit
+@onready var species_option: OptionButton = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow/SpeciesOption
 @onready var panel_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelRow/PanelEdit
 @onready var output_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker/OutputEdit
 @onready var report_all_calls_check: CheckBox = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid/ReportAllCallsCheck
@@ -38,6 +38,7 @@ var _setup_task_pid := -1
 var _setup_log_path := ""
 var _setup_result_path := ""
 var _setup_last_log_text := ""
+var _species_entries: Array = []
 
 func _ready() -> void:
 	_apply_branding_assets()
@@ -47,6 +48,7 @@ func _ready() -> void:
 	_local_mykrobe2_manager = LocalMykrobe2ManagerScript.new()
 	_local_mykrobe2_manager.configure("bin")
 	get_viewport().files_dropped.connect(_on_files_dropped)
+	_refresh_species_options()
 	_refresh_setup_state()
 	_maybe_start_initial_panels_bootstrap()
 
@@ -80,11 +82,20 @@ func _on_reads_dialog_file_selected(path: String) -> void:
 
 func _on_panels_dir_dialog_dir_selected(path: String) -> void:
 	panels_dir_edit.text = path
+	_refresh_species_options()
 	_refresh_setup_state()
 	_maybe_start_initial_panels_bootstrap()
 
 func _on_output_dialog_file_selected(path: String) -> void:
 	output_edit.text = path
+
+func _on_species_option_item_selected(index: int) -> void:
+	if index < 0 or index >= _species_entries.size():
+		return
+	var entry: Dictionary = _species_entries[index]
+	var default_panel := str(entry.get("default_panel", ""))
+	if default_panel != "":
+		panel_edit.text = default_panel
 
 func _on_clear_button_pressed() -> void:
 	status_label.text = "Ready."
@@ -94,7 +105,7 @@ func _on_run_button_pressed() -> void:
 	var sample := sample_edit.text.strip_edges()
 	var reads_path := reads_edit.text.strip_edges()
 	var panels_dir := panels_dir_edit.text.strip_edges()
-	var species := species_edit.text.strip_edges()
+	var species := _selected_species()
 
 	if sample == "":
 		_set_status("Sample name is required.")
@@ -368,7 +379,7 @@ func _on_update_metadata_button_pressed() -> void:
 	], "Updating panel metadata...", "Panel metadata updated.")
 
 func _on_install_species_button_pressed() -> void:
-	var species := species_edit.text.strip_edges()
+	var species := _selected_species()
 	if species == "":
 		_set_status("Set a species first before installing panels.")
 		return
@@ -440,6 +451,7 @@ func _poll_setup_task() -> void:
 	var result := _read_setup_result(_setup_result_path)
 	if result.get("success", false):
 		_set_status(str(result.get("status", "Panel setup complete.")))
+		_refresh_species_options()
 		_refresh_setup_state()
 		return
 	var error_message := str(result.get("error", "Panel setup failed."))
@@ -548,7 +560,7 @@ func _refresh_setup_log_from_disk() -> void:
 
 func _refresh_setup_state() -> void:
 	var panels_dir := panels_dir_edit.text.strip_edges()
-	var species := species_edit.text.strip_edges()
+	var species := _selected_species()
 	var manifest_exists := FileAccess.file_exists(panels_dir.path_join("manifest.json"))
 	var species_installed := _species_installed_marker_exists(panels_dir, species)
 
@@ -566,7 +578,7 @@ func _refresh_setup_state() -> void:
 
 func _set_setup_busy(busy: bool) -> void:
 	update_metadata_button.disabled = busy
-	install_species_button.disabled = busy or species_edit.text.strip_edges() == ""
+	install_species_button.disabled = busy or _selected_species() == ""
 	refresh_setup_button.disabled = busy
 	run_button.disabled = busy
 
@@ -605,6 +617,67 @@ func _species_installed_marker_exists(panels_dir: String, species: String) -> bo
 		return false
 	return FileAccess.file_exists(panels_dir.path_join(species).path_join("manifest.json"))
 
+func _selected_species() -> String:
+	if species_option.item_count == 0:
+		return ""
+	var idx := species_option.selected
+	if idx < 0 or idx >= _species_entries.size():
+		return ""
+	return str(_species_entries[idx].get("species", "")).strip_edges()
+
+func _refresh_species_options() -> void:
+	_species_entries.clear()
+	species_option.clear()
+	species_option.disabled = true
+	species_option.text = "Loading species..."
+	var binary_path := _resolve_binary_path()
+	if binary_path == "":
+		species_option.text = "No CLI binary"
+		return
+	var panels_dir := panels_dir_edit.text.strip_edges()
+	if panels_dir == "":
+		species_option.text = "No panels directory"
+		return
+	var output_lines: Array = []
+	var exit_code := OS.execute(binary_path, PackedStringArray([
+		"panels",
+		"describe",
+		"--panels_dir", panels_dir,
+		"--format", "json",
+	]), output_lines, true)
+	if exit_code != 0:
+		species_option.text = "No species available"
+		return
+	var parsed = JSON.parse_string("\n".join(output_lines))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		species_option.text = "No species available"
+		return
+	var root: Dictionary = parsed
+	var species_list: Variant = root.get("species", [])
+	if typeof(species_list) != TYPE_ARRAY:
+		species_option.text = "No species available"
+		return
+	for item in species_list:
+		if typeof(item) != TYPE_DICTIONARY:
+			continue
+		var entry: Dictionary = item
+		var species_name := str(entry.get("species", "")).strip_edges()
+		if species_name == "":
+			continue
+		_species_entries.append(entry)
+		species_option.add_item(species_name)
+	if species_option.item_count == 0:
+		species_option.text = "No species available"
+		return
+	species_option.disabled = false
+	var preferred_index := 0
+	for i in range(_species_entries.size()):
+		if str(_species_entries[i].get("species", "")) == "tb":
+			preferred_index = i
+			break
+	species_option.select(preferred_index)
+	_on_species_option_item_selected(preferred_index)
+
 func _default_panels_dir() -> String:
 	var data_home := OS.get_environment("MYKROBE_DATA_HOME").strip_edges()
 	if data_home != "":
@@ -632,7 +705,7 @@ func _on_files_dropped(files: PackedStringArray) -> void:
 	reads_edit.text = path
 	if sample_edit.text.strip_edges() == "" or sample_edit.text == "sample":
 		sample_edit.text = path.get_file().get_basename()
-	if panels_dir_edit.text.strip_edges() != "" and species_edit.text.strip_edges() != "":
+	if panels_dir_edit.text.strip_edges() != "" and _selected_species() != "":
 		_on_run_button_pressed()
 	else:
 		_set_status("Loaded reads file from drag and drop. Fill remaining fields and run.")

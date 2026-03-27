@@ -65,6 +65,11 @@ type panelsUpdateSpeciesOptions struct {
 	panelsDir string
 }
 
+type panelsDescribeOptions struct {
+	panelsDir string
+	format    string
+}
+
 type makeProbesOptions struct {
 	referencePath  string
 	vcfPath        string
@@ -128,7 +133,22 @@ func newPanelsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "panels",
 	}
-	cmd.AddCommand(newPanelsUpdateMetadataCmd(), newPanelsUpdateSpeciesCmd())
+	cmd.AddCommand(newPanelsDescribeCmd(), newPanelsUpdateMetadataCmd(), newPanelsUpdateSpeciesCmd())
+	return cmd
+}
+
+func newPanelsDescribeCmd() *cobra.Command {
+	opts := &panelsDescribeOptions{}
+	defaultPanels := defaultPanelsDir()
+	cmd := &cobra.Command{
+		Use:   "describe",
+		Short: "Describe known panels",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runPanelsDescribe(opts, cmd.OutOrStdout())
+		},
+	}
+	cmd.Flags().StringVar(&opts.panelsDir, "panels_dir", defaultPanels, "Installed panels directory")
+	cmd.Flags().StringVar(&opts.format, "format", "text", "Output format: text or json")
 	return cmd
 }
 

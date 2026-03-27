@@ -208,10 +208,10 @@ layout_mode = 2
 layout_mode = 2
 text = "Species"
 
-[node name="SpeciesEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow"]
+[node name="SpeciesOption" type="OptionButton" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow"]
 layout_mode = 2
-placeholder_text = "tb"
-text = "tb"
+disabled = true
+text = "Loading species..."
 
 [node name="PanelRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
 layout_mode = 2
@@ -402,6 +402,7 @@ filters = PackedStringArray("*.json ; JSON files")
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/RefreshSetupButton" to="." method="_on_refresh_setup_button_pressed"]
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/RunButton" to="." method="_on_run_button_pressed"]
 [connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/ClearButton" to="." method="_on_clear_button_pressed"]
+[connection signal="item_selected" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow/SpeciesOption" to="." method="_on_species_option_item_selected"]
 [connection signal="file_selected" from="ReadsDialog" to="." method="_on_reads_dialog_file_selected"]
 [connection signal="dir_selected" from="PanelsDirDialog" to="." method="_on_panels_dir_dialog_dir_selected"]
 [connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]

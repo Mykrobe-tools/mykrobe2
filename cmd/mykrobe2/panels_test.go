@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/martinghunt/mykrobe2/mykrobe/speciesdata"
@@ -110,5 +112,94 @@ func TestPanelsCommandsUseDefaultPanelsDir(t *testing.T) {
 	}
 	if _, err := os.Stat(sdir.PanelIndexFile()); err != nil {
 		t.Fatalf("expected panel index in default panels dir: %v", err)
+	}
+}
+
+func TestPanelsDescribeJSON(t *testing.T) {
+	dir := t.TempDir()
+	panelsDir := filepath.Join(dir, "panels")
+	speciesTar := makeSpeciesTarball(t, "tb", "20240214", "202010")
+	manifestPath := filepath.Join(dir, "manifest.json")
+	writeJSONFile(t, manifestPath, map[string]map[string]string{
+		"tb": {"version": "20240214", "url": speciesTar},
+	})
+
+	if err := run([]string{
+		"panels", "update_metadata",
+		"--panels_dir", panelsDir,
+		"--manifest_file", manifestPath,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := run([]string{
+		"panels", "update_species",
+		"--panels_dir", panelsDir,
+		"tb",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := newRootCmd()
+	var output strings.Builder
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
+	cmd.SetArgs([]string{"panels", "describe", "--panels_dir", panelsDir, "--format", "json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+
+	var got struct {
+		PanelsDir string `json:"panels_dir"`
+		Species   []struct {
+			Species      string `json:"species"`
+			Installed    bool   `json:"installed"`
+			DefaultPanel string `json:"default_panel"`
+			Panels       []struct {
+				Name string `json:"name"`
+			} `json:"panels"`
+		} `json:"species"`
+	}
+	if err := json.Unmarshal([]byte(output.String()), &got); err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Species) != 1 || got.Species[0].Species != "tb" {
+		t.Fatalf("unexpected species output: %+v", got.Species)
+	}
+	if !got.Species[0].Installed || got.Species[0].DefaultPanel != "202010" {
+		t.Fatalf("unexpected installed/default data: %+v", got.Species[0])
+	}
+	if len(got.Species[0].Panels) != 1 || got.Species[0].Panels[0].Name != "202010" {
+		t.Fatalf("unexpected panel list: %+v", got.Species[0].Panels)
+	}
+}
+
+func TestPanelsDescribeText(t *testing.T) {
+	dir := t.TempDir()
+	panelsDir := filepath.Join(dir, "panels")
+	speciesTar := makeSpeciesTarball(t, "tb", "20240214", "202010")
+	manifestPath := filepath.Join(dir, "manifest.json")
+	writeJSONFile(t, manifestPath, map[string]map[string]string{
+		"tb": {"version": "20240214", "url": speciesTar},
+	})
+
+	if err := run([]string{
+		"panels", "update_metadata",
+		"--panels_dir", panelsDir,
+		"--manifest_file", manifestPath,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := newRootCmd()
+	var output strings.Builder
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
+	cmd.SetArgs([]string{"panels", "describe", "--panels_dir", panelsDir})
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	text := output.String()
+	if !strings.Contains(text, "Species summary:") || !strings.Contains(text, "tb") {
+		t.Fatalf("unexpected describe text output:\n%s", text)
 	}
 }
