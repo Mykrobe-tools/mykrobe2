@@ -11,6 +11,16 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_2p1fg")
 
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+
 [node name="RootMargin" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -41,17 +51,31 @@ theme_override_constants/margin_bottom = 18
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Title" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox"]
+[node name="HeaderTop" type="HBoxContainer" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_constants/separation = 14
+
+[node name="Logo" type="TextureRect" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox/HeaderTop"]
+layout_mode = 2
+custom_minimum_size = Vector2(76, 76)
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox/HeaderTop"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.05098, 0.337255, 0.117647, 1)
 text = "mykrobe2"
 
 [node name="Subtitle" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox"]
 layout_mode = 2
-text = "Run mykrobe2 predict from a bundled or local CLI binary."
+theme_override_colors/font_color = Color(0.403922, 0.396078, 0.380392, 1)
+text = "Run mykrobe2 predict with the old Mykrobe visual identity and the new self-contained Go backend."
 
 [node name="DropHint" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.403922, 0.396078, 0.380392, 1)
 text = "Drop a reads file or result JSON onto the window, or browse below."
 
 [node name="BodySplit" type="HSplitContainer" parent="RootMargin/RootVBox"]

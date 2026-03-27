@@ -1,7 +1,10 @@
 extends Control
 
 const LocalMykrobe2ManagerScript = preload("res://scripts/local_mykrobe2_manager.gd")
+const BACKGROUND_IMAGE_PATH = "res://assets/background.png"
+const LOGO_IMAGE_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
 
+@onready var background_texture: TextureRect = $Background
 @onready var sample_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SampleRow/SampleEdit
 @onready var reads_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker/ReadsEdit
 @onready var panels_dir_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker/PanelsDirEdit
@@ -37,6 +40,7 @@ var _setup_result_path := ""
 var _setup_last_log_text := ""
 
 func _ready() -> void:
+	_apply_branding_assets()
 	panels_dir_edit.text = _default_panels_dir()
 	status_label.text = "Ready."
 	_clear_results()
@@ -45,6 +49,17 @@ func _ready() -> void:
 	get_viewport().files_dropped.connect(_on_files_dropped)
 	_refresh_setup_state()
 	_maybe_start_initial_panels_bootstrap()
+
+func _apply_branding_assets() -> void:
+	background_texture.texture = _load_png_texture(BACKGROUND_IMAGE_PATH)
+	var logo_texture_rect: TextureRect = $RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox/HeaderTop/Logo
+	logo_texture_rect.texture = _load_png_texture(LOGO_IMAGE_PATH)
+
+func _load_png_texture(path: String) -> Texture2D:
+	var image := Image.load_from_file(path)
+	if image == null:
+		return null
+	return ImageTexture.create_from_image(image)
 
 func _process(_delta: float) -> void:
 	_poll_setup_task()
