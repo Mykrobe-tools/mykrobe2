@@ -118,6 +118,13 @@ text = "Install Species"
 layout_mode = 2
 text = "Refresh"
 
+[node name="SetupLog" type="TextEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 140)
+editable = false
+scroll_fit_content_height = true
+text = ""
+
 [node name="SampleRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
 layout_mode = 2
 

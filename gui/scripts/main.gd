@@ -17,6 +17,7 @@ const LocalMykrobe2ManagerScript = preload("res://scripts/local_mykrobe2_manager
 @onready var update_metadata_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/UpdateMetadataButton
 @onready var install_species_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/InstallSpeciesButton
 @onready var refresh_setup_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/RefreshSetupButton
+@onready var setup_log_text: TextEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupLog
 @onready var run_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/RunButton
 @onready var status_label: Label = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/StatusLabel
 @onready var overview_text: RichTextLabel = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/OverviewTab/OverviewText
@@ -29,6 +30,11 @@ const LocalMykrobe2ManagerScript = preload("res://scripts/local_mykrobe2_manager
 @onready var output_dialog: FileDialog = $OutputDialog
 
 var _local_mykrobe2_manager: RefCounted
+var _setup_task_running := false
+var _setup_task_pid := -1
+var _setup_log_path := ""
+var _setup_result_path := ""
+var _setup_last_log_text := ""
 
 func _ready() -> void:
 	panels_dir_edit.text = _default_panels_dir()
@@ -38,6 +44,10 @@ func _ready() -> void:
 	_local_mykrobe2_manager.configure("bin")
 	get_viewport().files_dropped.connect(_on_files_dropped)
 	_refresh_setup_state()
+	_maybe_start_initial_panels_bootstrap()
+
+func _process(_delta: float) -> void:
+	_poll_setup_task()
 
 func _on_reads_browse_pressed() -> void:
 	reads_dialog.popup_centered_ratio(0.7)
@@ -55,6 +65,8 @@ func _on_reads_dialog_file_selected(path: String) -> void:
 
 func _on_panels_dir_dialog_dir_selected(path: String) -> void:
 	panels_dir_edit.text = path
+	_refresh_setup_state()
+	_maybe_start_initial_panels_bootstrap()
 
 func _on_output_dialog_file_selected(path: String) -> void:
 	output_edit.text = path
@@ -171,6 +183,13 @@ func _set_status(message: String) -> void:
 
 func _set_setup_status(message: String) -> void:
 	setup_status_label.text = message
+
+func _append_setup_log(message: String) -> void:
+	if setup_log_text.text == "":
+		setup_log_text.text = message
+	else:
+		setup_log_text.text += "\n" + message
+	setup_log_text.scroll_vertical = setup_log_text.get_line_count()
 
 func _extract_sample(sample: String, parsed: Variant) -> Dictionary:
 	if typeof(parsed) != TYPE_DICTIONARY:
@@ -322,46 +341,195 @@ func _resolve_binary_path() -> String:
 	return ""
 
 func _on_update_metadata_button_pressed() -> void:
-	_run_panels_command(PackedStringArray([
-		"panels",
-		"update_metadata",
-		"--panels_dir", panels_dir_edit.text.strip_edges(),
-	]), "Updating panel metadata...")
+	_start_panels_task([
+		{
+			"label": "Updating panel metadata",
+			"args": PackedStringArray([
+				"panels",
+				"update_metadata",
+				"--panels_dir", panels_dir_edit.text.strip_edges(),
+			]),
+		},
+	], "Updating panel metadata...", "Panel metadata updated.")
 
 func _on_install_species_button_pressed() -> void:
 	var species := species_edit.text.strip_edges()
 	if species == "":
 		_set_status("Set a species first before installing panels.")
 		return
-	_run_panels_command(PackedStringArray([
-		"panels",
-		"update_species",
-		"--panels_dir", panels_dir_edit.text.strip_edges(),
-		species,
-	]), "Installing species panels for %s..." % species)
+	_start_panels_task([
+		{
+			"label": "Installing species panels for %s" % species,
+			"args": PackedStringArray([
+				"panels",
+				"update_species",
+				"--panels_dir", panels_dir_edit.text.strip_edges(),
+				species,
+			]),
+		},
+	], "Installing species panels for %s..." % species, "Species panels installed for %s." % species)
 
 func _on_refresh_setup_button_pressed() -> void:
 	_refresh_setup_state()
 
-func _run_panels_command(args: PackedStringArray, status_prefix: String) -> void:
+func _start_panels_task(commands: Array, status_prefix: String, success_status: String) -> void:
+	if _setup_task_running:
+		_set_status("Panel setup is already running.")
+		return
 	var binary_path := _resolve_binary_path()
 	if binary_path == "":
 		_set_status("Could not find mykrobe2 binary for panel setup.")
 		return
+	var panels_dir := panels_dir_edit.text.strip_edges()
+	if panels_dir == "":
+		_set_status("Panels directory is required for panel setup.")
+		return
 	_set_status(status_prefix)
 	_set_setup_status(status_prefix)
 	_set_setup_busy(true)
-	await get_tree().process_frame
+	setup_log_text.text = ""
+	_setup_log_path = OS.get_user_data_dir().path_join("panels-setup.log")
+	if FileAccess.file_exists(_setup_log_path):
+		DirAccess.remove_absolute(_setup_log_path)
+	_setup_result_path = OS.get_user_data_dir().path_join("panels-setup.result")
+	if FileAccess.file_exists(_setup_result_path):
+		DirAccess.remove_absolute(_setup_result_path)
+	_setup_last_log_text = ""
+	_setup_task_running = true
+	_setup_task_pid = _start_panels_process(binary_path, commands, success_status, _setup_log_path, _setup_result_path)
+	if _setup_task_pid == -1:
+		_setup_task_running = false
+		_set_setup_busy(false)
+		_set_status("Could not start background panel setup.")
+		_set_setup_status("Could not start panel setup.")
 
-	var output_lines: Array = []
-	var exit_code := OS.execute(binary_path, args, output_lines, true)
-	_set_setup_busy(false)
-	if exit_code != 0:
-		var joined := "\n".join(output_lines)
-		_set_status("Panel setup failed with exit code %d.\n%s" % [exit_code, joined])
-		_set_setup_status("Panel setup failed.")
+func _write_setup_log_line(log_path: String, message: String) -> void:
+	var open_mode := FileAccess.READ_WRITE if FileAccess.file_exists(log_path) else FileAccess.WRITE_READ
+	var file := FileAccess.open(log_path, open_mode)
+	if file == null:
 		return
-	_refresh_setup_state()
+	file.seek_end()
+	file.store_line(message)
+	file.close()
+
+func _poll_setup_task() -> void:
+	if not _setup_task_running:
+		return
+	_refresh_setup_log_from_disk()
+	if not FileAccess.file_exists(_setup_result_path):
+		return
+	_setup_task_running = false
+	_setup_task_pid = -1
+	_set_setup_busy(false)
+	_refresh_setup_log_from_disk()
+	var result := _read_setup_result(_setup_result_path)
+	if result.get("success", false):
+		_set_status(str(result.get("status", "Panel setup complete.")))
+		_refresh_setup_state()
+		return
+	var error_message := str(result.get("error", "Panel setup failed."))
+	_set_status(error_message)
+	_set_setup_status("Panel setup failed.")
+
+func _start_panels_process(binary_path: String, commands: Array, success_status: String, log_path: String, result_path: String) -> int:
+	var script_path := OS.get_user_data_dir().path_join("panels-setup-script")
+	if OS.get_name() == "Windows":
+		script_path += ".cmd"
+		_write_windows_setup_script(script_path, binary_path, commands, success_status, log_path, result_path)
+		return OS.create_process("cmd.exe", PackedStringArray(["/C", script_path]), false)
+	script_path += ".sh"
+	_write_posix_setup_script(script_path, binary_path, commands, success_status, log_path, result_path)
+	return OS.create_process("/bin/bash", PackedStringArray([script_path]), false)
+
+func _write_posix_setup_script(script_path: String, binary_path: String, commands: Array, success_status: String, log_path: String, result_path: String) -> void:
+	var lines: PackedStringArray = [
+		"#!/usr/bin/env bash",
+		"set -u",
+		"echo \"Starting panel setup.\" >> %s" % _shell_quote(log_path),
+	]
+	for command in commands:
+		var label := str(command.get("label", "Running command"))
+		var args: PackedStringArray = command.get("args", PackedStringArray())
+		lines.append("echo %s >> %s" % [_shell_quote(label + "..."), _shell_quote(log_path)])
+		lines.append("if ! %s %s >> %s 2>&1; then" % [_shell_quote(binary_path), _join_shell_args(args), _shell_quote(log_path)])
+		lines.append("  echo %s > %s" % [_shell_quote("success=0"), _shell_quote(result_path)])
+		lines.append("  echo %s >> %s" % [_shell_quote("status=Panel setup failed."), _shell_quote(result_path)])
+		lines.append("  echo %s >> %s" % [_shell_quote("error=%s failed." % label), _shell_quote(result_path)])
+		lines.append("  exit 0")
+		lines.append("fi")
+		lines.append("echo %s >> %s" % [_shell_quote(label + " complete."), _shell_quote(log_path)])
+	lines.append("echo %s > %s" % [_shell_quote("success=1"), _shell_quote(result_path)])
+	lines.append("echo %s >> %s" % [_shell_quote("status=%s" % success_status), _shell_quote(result_path)])
+	lines.append("echo %s >> %s" % [_shell_quote("error="), _shell_quote(result_path)])
+	_write_text_file(script_path, "\n".join(lines) + "\n")
+	OS.execute("/bin/chmod", PackedStringArray(["+x", script_path]), [], true)
+
+func _write_windows_setup_script(script_path: String, binary_path: String, commands: Array, success_status: String, log_path: String, result_path: String) -> void:
+	var lines: PackedStringArray = [
+		"@echo off",
+		"echo Starting panel setup.>> %s" % _windows_quote(log_path),
+	]
+	for command in commands:
+		var label := str(command.get("label", "Running command"))
+		var args: PackedStringArray = command.get("args", PackedStringArray())
+		lines.append("echo %s>> %s" % [label + "...", _windows_quote(log_path)])
+		lines.append("%s %s >> %s 2>&1" % [_windows_quote(binary_path), _join_windows_args(args), _windows_quote(log_path)])
+		lines.append("if errorlevel 1 (")
+		lines.append("  > %s echo success=0" % _windows_quote(result_path))
+		lines.append("  >> %s echo status=Panel setup failed." % _windows_quote(result_path))
+		lines.append("  >> %s echo error=%s failed." % [_windows_quote(result_path), label])
+		lines.append("  exit /b 0")
+		lines.append(")")
+		lines.append("echo %s>> %s" % [label + " complete.", _windows_quote(log_path)])
+	lines.append("> %s echo success=1" % _windows_quote(result_path))
+	lines.append(">> %s echo status=%s" % [_windows_quote(result_path), success_status])
+	lines.append(">> %s echo error=" % _windows_quote(result_path))
+	_write_text_file(script_path, "\r\n".join(lines) + "\r\n")
+
+func _write_text_file(path: String, text: String) -> void:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string(text)
+	file.close()
+
+func _read_setup_result(path: String) -> Dictionary:
+	var out := {"success": false, "status": "Panel setup failed.", "error": "Panel setup failed."}
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return out
+	while not file.eof_reached():
+		var line := file.get_line()
+		if not line.contains("="):
+			continue
+		var parts := line.split("=", false, 1)
+		if parts.size() != 2:
+			continue
+		match parts[0]:
+			"success":
+				out["success"] = parts[1] == "1"
+			"status":
+				out["status"] = parts[1]
+			"error":
+				out["error"] = parts[1]
+	file.close()
+	return out
+
+func _refresh_setup_log_from_disk() -> void:
+	if _setup_log_path == "":
+		return
+	if not FileAccess.file_exists(_setup_log_path):
+		return
+	var file := FileAccess.open(_setup_log_path, FileAccess.READ)
+	if file == null:
+		return
+	var text := file.get_as_text()
+	file.close()
+	if text == _setup_last_log_text:
+		return
+	_setup_last_log_text = text
+	setup_log_text.text = text
+	setup_log_text.scroll_vertical = setup_log_text.get_line_count()
 
 func _refresh_setup_state() -> void:
 	var panels_dir := panels_dir_edit.text.strip_edges()
@@ -371,7 +539,10 @@ func _refresh_setup_state() -> void:
 
 	setup_panel.visible = (not manifest_exists) or (species != "" and not species_installed)
 	if not manifest_exists:
-		_set_setup_status("Panel metadata is missing. Update metadata to initialise the shared panels directory.")
+		if _setup_task_running:
+			_set_setup_status("Initial panel download is running in the background.")
+		else:
+			_set_setup_status("Panel metadata is missing. Initial setup will download all species into the shared panels directory.")
 	elif species != "" and not species_installed:
 		_set_setup_status("Species '%s' is not installed in the shared panels directory." % species)
 	else:
@@ -383,6 +554,36 @@ func _set_setup_busy(busy: bool) -> void:
 	install_species_button.disabled = busy or species_edit.text.strip_edges() == ""
 	refresh_setup_button.disabled = busy
 	run_button.disabled = busy
+
+func _maybe_start_initial_panels_bootstrap() -> void:
+	if _setup_task_running:
+		return
+	if DisplayServer.get_name() == "headless":
+		return
+	var panels_dir := panels_dir_edit.text.strip_edges()
+	if panels_dir == "":
+		return
+	if FileAccess.file_exists(panels_dir.path_join("manifest.json")):
+		return
+	_start_panels_task([
+		{
+			"label": "Updating panel metadata",
+			"args": PackedStringArray([
+				"panels",
+				"update_metadata",
+				"--panels_dir", panels_dir,
+			]),
+		},
+		{
+			"label": "Installing panels for all species",
+			"args": PackedStringArray([
+				"panels",
+				"update_species",
+				"--panels_dir", panels_dir,
+				"all",
+			]),
+		},
+	], "Downloading panel metadata and all species in the background...", "All species panels are ready.")
 
 func _species_installed_marker_exists(panels_dir: String, species: String) -> bool:
 	if species == "":
@@ -420,3 +621,21 @@ func _on_files_dropped(files: PackedStringArray) -> void:
 		_on_run_button_pressed()
 	else:
 		_set_status("Loaded reads file from drag and drop. Fill remaining fields and run.")
+
+func _join_shell_args(args: PackedStringArray) -> String:
+	var parts: PackedStringArray = []
+	for arg in args:
+		parts.append(_shell_quote(arg))
+	return " ".join(parts)
+
+func _shell_quote(value: String) -> String:
+	return "'" + value.replace("'", "'\"'\"'") + "'"
+
+func _join_windows_args(args: PackedStringArray) -> String:
+	var parts: PackedStringArray = []
+	for arg in args:
+		parts.append(_windows_quote(arg))
+	return " ".join(parts)
+
+func _windows_quote(value: String) -> String:
+	return "\"" + value.replace("\"", "\"\"") + "\""
