@@ -156,6 +156,16 @@ func _apply_palette_overrides() -> void:
 		$AppView/ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox/SpeciesTitle,
 	]:
 		label.add_theme_color_override("font_color", accent)
+	for rich_text in [
+		all_susceptible_text,
+		all_resistant_text,
+		first_line_text,
+		second_line_text,
+		evidence_text,
+		species_text,
+		bootstrap_log_text,
+	]:
+		rich_text.add_theme_color_override("default_color", text)
 	status_label.add_theme_color_override("font_color", text)
 
 func _process(delta: float) -> void:

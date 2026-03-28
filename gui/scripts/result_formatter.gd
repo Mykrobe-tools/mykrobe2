@@ -51,8 +51,8 @@ func format_species_tab(sample: String, parsed: Variant) -> String:
 	if sample_data.is_empty():
 		return ""
 	var phylo: Dictionary = sample_data.get("phylogenetics", {})
-	var species_name := _best_phylo_name(phylo.get("species", {}))
-	var lineage_name := _best_phylo_name(phylo.get("lineage", {}))
+	var species_name := _display_phylo_name(_best_phylo_name(phylo.get("species", {}), "species"))
+	var lineage_name := _best_phylo_name(phylo.get("lineage", {}), "lineage")
 	if lineage_name != "Unknown":
 		return "%s (%s)" % [species_name, lineage_name]
 	return species_name
@@ -82,10 +82,7 @@ func format_evidence_tab(sample: String, parsed: Variant) -> String:
 			if typeof(evidence_variant) != TYPE_DICTIONARY:
 				continue
 			var evidence: Dictionary = evidence_variant
-			var variant_name := str(evidence.get("variant", key))
-			if variant_name == "null" or variant_name == "":
-				variant_name = str(key)
-			blocks.append("Resistance mutation found: %s" % variant_name)
+			blocks.append(_format_evidence_summary(evidence, str(key)))
 			var info_variant: Variant = evidence.get("info", {})
 			if typeof(info_variant) == TYPE_DICTIONARY:
 				var info: Dictionary = info_variant
@@ -100,6 +97,42 @@ func format_evidence_tab(sample: String, parsed: Variant) -> String:
 	if blocks.is_empty():
 		return "No resistant evidence found."
 	return "\n".join(blocks).strip_edges()
+
+func _format_evidence_summary(evidence: Dictionary, fallback_key: String) -> String:
+	var variant_value := str(evidence.get("variant", "")).strip_edges()
+	var fields := _variant_query_fields(variant_value)
+	var gene := str(fields.get("gene", "")).strip_edges()
+	var mut := str(fields.get("mut", "")).strip_edges()
+	if mut == "" and fallback_key.contains("_"):
+		var left_part := fallback_key.split("-", false, 1)[0]
+		var bits := left_part.split("_", false, 1)
+		if bits.size() == 2:
+			gene = bits[0]
+			mut = bits[1]
+	if gene != "" and mut != "":
+		return "Resistance mutation found: %s in gene %s" % [mut, gene]
+	if mut != "":
+		return "Resistance mutation found: %s" % mut
+	if variant_value != "" and variant_value != "null":
+		return "Resistance mutation found: %s" % variant_value
+	return "Resistance mutation found: %s" % fallback_key
+
+func _variant_query_fields(variant_value: String) -> Dictionary:
+	var out := {}
+	if variant_value == "":
+		return out
+	var qmark := variant_value.find("?")
+	if qmark == -1 or qmark + 1 >= variant_value.length():
+		return out
+	var query := variant_value.substr(qmark + 1)
+	for part in query.split("&", false):
+		if not part.contains("="):
+			continue
+		var bits := part.split("=", false, 1)
+		if bits.size() != 2:
+			continue
+		out[bits[0]] = bits[1].uri_decode()
+	return out
 
 func _format_drug_group(drugs: Array, susceptibility: Dictionary) -> String:
 	var lines: PackedStringArray = []
@@ -157,11 +190,29 @@ func _extract_sample(sample: String, parsed: Variant) -> Dictionary:
 		sample = str(root.keys()[0])
 	return root.get(sample, {})
 
-func _best_phylo_name(section: Variant) -> String:
+func _best_phylo_name(section: Variant, list_key: String = "") -> String:
 	if typeof(section) != TYPE_DICTIONARY:
 		return "Unknown"
 	var d: Dictionary = section
+	if list_key != "":
+		var names_variant: Variant = d.get(list_key, null)
+		if typeof(names_variant) == TYPE_ARRAY:
+			var names: Array = names_variant
+			if not names.is_empty():
+				return str(names[0])
+		elif typeof(names_variant) == TYPE_STRING:
+			var single_name := str(names_variant).strip_edges()
+			if single_name != "":
+				return single_name
 	for key in d.keys():
-		if str(key) != "Unknown" and typeof(d.get(key)) == TYPE_DICTIONARY:
+		var key_name := str(key)
+		if key_name in ["Unknown", "calls", "calls_summary", "ncbi_names", "lineage", "species"]:
+			continue
+		if typeof(d.get(key)) == TYPE_DICTIONARY:
 			return str(key)
 	return "Unknown"
+
+func _display_phylo_name(name: String) -> String:
+	if name == "" or name == "Unknown":
+		return "Unknown"
+	return name.replace("_", " ")
