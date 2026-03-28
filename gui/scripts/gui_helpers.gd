@@ -37,8 +37,6 @@ func default_panels_dir() -> String:
 		return data_home.path_join("mykrobe2").path_join("panels")
 
 	match OS.get_name():
-		"macOS":
-			return OS.get_environment("HOME").path_join("Library").path_join("Application Support").path_join("mykrobe2").path_join("panels")
 		"Windows":
 			var appdata := OS.get_environment("APPDATA").strip_edges()
 			if appdata != "":
