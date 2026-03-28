@@ -380,8 +380,7 @@ func _start_predict(reads_path: String) -> void:
 		args.append("--ncbi_names")
 	if ont_check.button_pressed:
 		args.append("--ont")
-	if guess_method_check.button_pressed:
-		args.append("--guess_sequence_method")
+	args.append("--guess_sequence_method")
 
 	var start_result: Dictionary = _predict_run.start(binary_path, args, output_path)
 	if not start_result.get("started", false):
