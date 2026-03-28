@@ -81,6 +81,9 @@ var _pending_run_after_reads_selection := false
 var _active_reads_path := ""
 var _output_dialog_mode := ""
 var _processing_elapsed := 0.0
+var _pending_result_path := ""
+var _pending_result_notice := ""
+var _pending_result_attempts := 0
 
 func _ready() -> void:
 	_formatter = ResultFormatterScript.new()
@@ -188,6 +191,28 @@ func _poll_panels_setup() -> void:
 	_set_notice(str(result.get("error", "Panel setup failed.")))
 
 func _poll_predict_run(delta: float) -> void:
+	if _pending_result_path != "":
+		if _load_json_result(_pending_result_path, _current_result_sample, true):
+			_pending_result_path = ""
+			_pending_result_notice = ""
+			_pending_result_attempts = 0
+			processing_overlay.visible = false
+			cancel_button.disabled = false
+			_set_notice("")
+			return
+		_pending_result_attempts += 1
+		processing_overlay.visible = true
+		processing_label.text = "Loading results"
+		if _pending_result_attempts >= 40:
+			var failed_path := _pending_result_path
+			_pending_result_path = ""
+			_pending_result_notice = ""
+			_pending_result_attempts = 0
+			processing_overlay.visible = false
+			_show_landing_view()
+			_set_notice("Analysis finished but the result JSON could not be loaded from %s." % failed_path)
+			_set_window_title_default()
+		return
 	if _predict_run.is_running():
 		_processing_elapsed += delta
 		_update_processing_dots()
@@ -199,9 +224,11 @@ func _poll_predict_run(delta: float) -> void:
 	processing_overlay.visible = false
 	cancel_button.disabled = false
 	if result.get("success", false):
-		var output_path := str(result.get("output_path", _current_result_path))
-		_load_json_result(output_path, _current_result_sample)
-		_set_notice(str(result.get("status", "Analysis complete.")))
+		_pending_result_path = str(result.get("output_path", _current_result_path))
+		_pending_result_notice = str(result.get("status", "Analysis complete."))
+		_pending_result_attempts = 0
+		processing_overlay.visible = true
+		processing_label.text = "Loading results"
 		return
 	_show_landing_view()
 	_set_notice("%s\n%s" % [str(result.get("error", "Analysis failed.")), str(result.get("log", ""))])
@@ -363,23 +390,27 @@ func _start_predict(reads_path: String) -> void:
 	_set_notice("")
 	_set_window_title_processing(sample)
 
-func _load_json_result(path: String, preferred_sample: String = "sample") -> void:
+func _load_json_result(path: String, preferred_sample: String = "sample", quiet: bool = false) -> bool:
 	if not FileAccess.file_exists(path):
-		_set_notice("Result JSON was not found at %s." % path)
-		return
+		if not quiet:
+			_set_notice("Result JSON was not found at %s." % path)
+		return false
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		_set_notice("Could not open JSON file: %s." % path)
-		return
+		if not quiet:
+			_set_notice("Could not open JSON file: %s." % path)
+		return false
 	var text := file.get_as_text()
 	file.close()
 	var parsed = JSON.parse_string(text)
 	if parsed == null:
-		_set_notice("JSON parsing failed for %s." % path)
-		return
+		if not quiet:
+			_set_notice("JSON parsing failed for %s." % path)
+		return false
 	_current_result_text = text
 	_current_result_path = path
 	_display_results(preferred_sample, parsed)
+	return true
 
 func _display_results(sample: String, parsed: Variant) -> void:
 	var all_tab: Dictionary = _formatter.format_all_tab(sample, parsed)
@@ -624,8 +655,8 @@ func _on_files_dropped(files: PackedStringArray) -> void:
 		return
 	var path := files[0]
 	if path.to_lower().ends_with(".json"):
-		_load_json_result(path, sample_edit.text.strip_edges())
-		_set_notice("Loaded result JSON from %s." % path)
+		if _load_json_result(path, sample_edit.text.strip_edges()):
+			_set_notice("Loaded result JSON from %s." % path)
 		return
 	_active_reads_path = path
 	if sample_edit.text.strip_edges() == "" or sample_edit.text == "sample":
