@@ -50,15 +50,16 @@ const TAB_SPECIES := 3
 @onready var dot_3: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots/Dot3
 @onready var cancel_button: Button = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/CancelButton
 @onready var status_label: Label = $StatusLabel
-@onready var options_dialog: AcceptDialog = $OptionsDialog
-@onready var sample_edit: LineEdit = $OptionsDialog/OptionsMargin/OptionsVBox/SampleRow/SampleEdit
-@onready var panels_dir_edit: LineEdit = $OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker/PanelsDirEdit
-@onready var species_option: OptionButton = $OptionsDialog/OptionsMargin/OptionsVBox/SpeciesRow/SpeciesOption
-@onready var panel_option: OptionButton = $OptionsDialog/OptionsMargin/OptionsVBox/PanelRow/PanelOption
-@onready var report_all_calls_check: CheckBox = $OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid/ReportAllCallsCheck
-@onready var ncbi_names_check: CheckBox = $OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid/NCBINamesCheck
-@onready var ont_check: CheckBox = $OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid/ONTCheck
-@onready var guess_method_check: CheckBox = $OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid/GuessMethodCheck
+@onready var options_dialog: Control = $OptionsDialog
+@onready var options_card: PanelContainer = $OptionsDialog/OptionsCenter/OptionsCard
+@onready var sample_edit: LineEdit = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SampleRow/SampleEdit
+@onready var panels_dir_edit: LineEdit = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker/PanelsDirEdit
+@onready var species_option: OptionButton = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SpeciesRow/SpeciesOption
+@onready var panel_option: OptionButton = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelRow/PanelOption
+@onready var report_all_calls_check: CheckBox = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid/ReportAllCallsCheck
+@onready var ncbi_names_check: CheckBox = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid/NCBINamesCheck
+@onready var ont_check: CheckBox = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid/ONTCheck
+@onready var guess_method_check: CheckBox = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid/GuessMethodCheck
 @onready var reads_dialog: FileDialog = $ReadsDialog
 @onready var panels_dir_dialog: FileDialog = $PanelsDirDialog
 @onready var output_dialog: FileDialog = $OutputDialog
@@ -95,7 +96,6 @@ func _ready() -> void:
 	_local_mykrobe2_manager.configure("bin")
 	_apply_theme(_theme_name)
 	panels_dir_edit.text = _helpers.default_panels_dir()
-	options_dialog.get_ok_button().text = "Close"
 	_apply_tab_styles()
 	_set_results_tab(TAB_ALL)
 	_set_notice("")
@@ -126,6 +126,12 @@ func _apply_theme(theme_name: String) -> void:
 		style.corner_radius_bottom_left = 400
 		style.corner_radius_bottom_right = 400
 		panel.add_theme_stylebox_override("panel", style)
+	var modal_style := StyleBoxFlat.new()
+	modal_style.bg_color = _palette.get("panel_alt", Color("fbf9f3"))
+	modal_style.border_color = _palette.get("border", Color("ddd7ca"))
+	modal_style.set_border_width_all(1)
+	modal_style.set_corner_radius_all(14)
+	options_card.add_theme_stylebox_override("panel", modal_style)
 	var header_style := StyleBoxFlat.new()
 	header_style.bg_color = _palette.get("header_bg", Color(0.97, 0.96, 0.93, 0.95))
 	$AppView/HeaderBar.add_theme_stylebox_override("panel", header_style)
@@ -241,7 +247,10 @@ func _on_analyse_button_pressed() -> void:
 	reads_dialog.popup_centered_ratio(0.7)
 
 func _on_options_button_pressed() -> void:
-	options_dialog.popup_centered()
+	_show_options_dialog()
+
+func _on_close_options_button_pressed() -> void:
+	_hide_options_dialog()
 
 func _on_panels_browse_pressed() -> void:
 	panels_dir_dialog.popup_centered_ratio(0.7)
@@ -335,18 +344,18 @@ func _start_predict(reads_path: String) -> void:
 	var panel_name := _selected_panel()
 	if sample == "":
 		_set_notice("Sample name is required.")
-		options_dialog.popup_centered()
+		_show_options_dialog()
 		return
 	if reads_path.strip_edges() == "":
 		_set_notice("Reads file is required.")
 		return
 	if panels_dir == "":
 		_set_notice("Panels directory is required.")
-		options_dialog.popup_centered()
+		_show_options_dialog()
 		return
 	if species == "":
 		_set_notice("Species is required.")
-		options_dialog.popup_centered()
+		_show_options_dialog()
 		return
 	var binary_path := _resolve_binary_path()
 	if binary_path == "":
@@ -386,7 +395,7 @@ func _start_predict(reads_path: String) -> void:
 	processing_label.text = "Analysing"
 	processing_overlay.visible = true
 	cancel_button.disabled = false
-	options_dialog.hide()
+	_hide_options_dialog()
 	_set_notice("")
 	_set_window_title_processing(sample)
 
@@ -443,6 +452,12 @@ func _show_results_view() -> void:
 	bootstrap_view.visible = false
 	app_view.visible = true
 	animated_background.visible = false
+
+func _show_options_dialog() -> void:
+	options_dialog.visible = true
+
+func _hide_options_dialog() -> void:
+	options_dialog.visible = false
 
 func _refresh_setup_state() -> void:
 	var panels_dir := panels_dir_edit.text.strip_edges()

@@ -626,108 +626,148 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.3, 0.3, 0.3, 1)
 
-[node name="OptionsDialog" type="AcceptDialog" parent="."]
-title = "Analysis options"
-initial_position = 1
-size = Vector2i(620, 520)
+[node name="OptionsDialog" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="OptionsMargin" type="MarginContainer" parent="OptionsDialog"]
-offset_left = 10.0
-offset_top = 10.0
-offset_right = 610.0
-offset_bottom = 470.0
+[node name="OptionsScrim" type="ColorRect" parent="OptionsDialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.972549, 0.960784, 0.933333, 0.55)
+
+[node name="OptionsCenter" type="CenterContainer" parent="OptionsDialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="OptionsCard" type="PanelContainer" parent="OptionsDialog/OptionsCenter"]
+custom_minimum_size = Vector2(500, 260)
+layout_mode = 2
+
+[node name="OptionsMargin" type="MarginContainer" parent="OptionsDialog/OptionsCenter/OptionsCard"]
+layout_mode = 2
 theme_override_constants/margin_left = 18
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 18
 theme_override_constants/margin_bottom = 18
 
-[node name="OptionsVBox" type="VBoxContainer" parent="OptionsDialog/OptionsMargin"]
+[node name="OptionsVBox" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="SampleRow" type="VBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
+[node name="OptionsHeader" type="HBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="OptionsTitle" type="Label" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+text = "Analysis options"
+
+[node name="CloseOptionsButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsHeader"]
+layout_mode = 2
+text = "CLOSE"
+
+[node name="SampleRow" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
+visible = false
 layout_mode = 2
 
-[node name="SampleLabel" type="Label" parent="OptionsDialog/OptionsMargin/OptionsVBox/SampleRow"]
+[node name="SampleLabel" type="Label" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SampleRow"]
 layout_mode = 2
 text = "Sample name"
 
-[node name="SampleEdit" type="LineEdit" parent="OptionsDialog/OptionsMargin/OptionsVBox/SampleRow"]
+[node name="SampleEdit" type="LineEdit" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SampleRow"]
 layout_mode = 2
 text = "sample"
 placeholder_text = "SAMPLE"
 
-[node name="PanelsRow" type="VBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
+[node name="PanelsRow" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
+visible = false
 layout_mode = 2
 
-[node name="PanelsLabel" type="Label" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow"]
+[node name="PanelsLabel" type="Label" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow"]
 layout_mode = 2
 text = "Panels directory"
 
-[node name="PanelsPicker" type="HBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow"]
+[node name="PanelsPicker" type="HBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PanelsDirEdit" type="LineEdit" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker"]
+[node name="PanelsDirEdit" type="LineEdit" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "/path/to/panels"
 
-[node name="PanelsBrowseButton" type="Button" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker"]
+[node name="PanelsBrowseButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker"]
 layout_mode = 2
 text = "Browse"
 
-[node name="SpeciesRow" type="VBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
+[node name="SpeciesRow" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
 layout_mode = 2
 
-[node name="SpeciesLabel" type="Label" parent="OptionsDialog/OptionsMargin/OptionsVBox/SpeciesRow"]
+[node name="SpeciesLabel" type="Label" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SpeciesRow"]
 layout_mode = 2
 text = "Species"
 
-[node name="SpeciesOption" type="OptionButton" parent="OptionsDialog/OptionsMargin/OptionsVBox/SpeciesRow"]
+[node name="SpeciesOption" type="OptionButton" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SpeciesRow"]
 layout_mode = 2
 disabled = true
 
-[node name="PanelRow" type="VBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
+[node name="PanelRow" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
 layout_mode = 2
 
-[node name="PanelLabel" type="Label" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelRow"]
+[node name="PanelLabel" type="Label" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelRow"]
 layout_mode = 2
 text = "Panel"
 
-[node name="PanelOption" type="OptionButton" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelRow"]
+[node name="PanelOption" type="OptionButton" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelRow"]
 layout_mode = 2
 disabled = true
 
-[node name="OptionsGrid" type="GridContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
+[node name="OptionsGrid" type="GridContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
+visible = false
 layout_mode = 2
 columns = 2
 
-[node name="ReportAllCallsCheck" type="CheckBox" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid"]
+[node name="ReportAllCallsCheck" type="CheckBox" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid"]
 layout_mode = 2
 text = "Report all calls"
 
-[node name="NCBINamesCheck" type="CheckBox" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid"]
+[node name="NCBINamesCheck" type="CheckBox" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid"]
 layout_mode = 2
 text = "Add NCBI names"
 
-[node name="ONTCheck" type="CheckBox" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid"]
+[node name="ONTCheck" type="CheckBox" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid"]
 layout_mode = 2
 text = "ONT defaults"
 
-[node name="GuessMethodCheck" type="CheckBox" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid"]
+[node name="GuessMethodCheck" type="CheckBox" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid"]
 layout_mode = 2
 text = "Guess sequence method"
 
-[node name="OptionsButtons" type="HBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
+[node name="OptionsButtons" type="HBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="RefreshPanelsButton" type="Button" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsButtons"]
+[node name="RefreshPanelsButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsButtons"]
 layout_mode = 2
 text = "Refresh Panels"
 
-[node name="OpenPanelsDirButton" type="Button" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsButtons"]
+[node name="OpenPanelsDirButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsButtons"]
 layout_mode = 2
 text = "Use Shared Panels"
 
@@ -760,10 +800,11 @@ use_native_dialog = true
 [connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/SaveButton" to="." method="_on_save_button_pressed"]
 [connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/NewButton" to="." method="_on_new_button_pressed"]
 [connection signal="pressed" from="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/CancelButton" to="." method="_on_cancel_button_pressed"]
-[connection signal="pressed" from="OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker/PanelsBrowseButton" to="." method="_on_panels_browse_pressed"]
-[connection signal="item_selected" from="OptionsDialog/OptionsMargin/OptionsVBox/SpeciesRow/SpeciesOption" to="." method="_on_species_option_item_selected"]
-[connection signal="pressed" from="OptionsDialog/OptionsMargin/OptionsVBox/OptionsButtons/RefreshPanelsButton" to="." method="_on_refresh_setup_button_pressed"]
-[connection signal="pressed" from="OptionsDialog/OptionsMargin/OptionsVBox/OptionsButtons/OpenPanelsDirButton" to="." method="_on_use_shared_panels_button_pressed"]
+[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsHeader/CloseOptionsButton" to="." method="_on_close_options_button_pressed"]
+[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker/PanelsBrowseButton" to="." method="_on_panels_browse_pressed"]
+[connection signal="item_selected" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SpeciesRow/SpeciesOption" to="." method="_on_species_option_item_selected"]
+[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsButtons/RefreshPanelsButton" to="." method="_on_refresh_setup_button_pressed"]
+[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsButtons/OpenPanelsDirButton" to="." method="_on_use_shared_panels_button_pressed"]
 [connection signal="file_selected" from="ReadsDialog" to="." method="_on_reads_dialog_file_selected"]
 [connection signal="dir_selected" from="PanelsDirDialog" to="." method="_on_panels_dir_dialog_dir_selected"]
 [connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]

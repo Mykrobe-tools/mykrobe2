@@ -45,22 +45,47 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 	var default_font_size: int = maxi(8, font_size)
 	theme.default_font_size = default_font_size
 
-	var panel_style: StyleBoxFlat = _panel_style(palette_map["panel"], palette_map["border"], 0, 0)
-	var muted_panel_style: StyleBoxFlat = _panel_style(palette_map["panel_alt"], palette_map["border"], 0, 0)
+	var panel_style: StyleBoxFlat = _panel_style(palette_map["panel"], palette_map["border"], 10, 1)
+	var muted_panel_style: StyleBoxFlat = _panel_style(palette_map["panel_alt"], palette_map["border"], 10, 1)
 	var line_style: StyleBoxFlat = _line_style(palette_map)
 	var focused_line_style: StyleBoxFlat = _line_style(palette_map, true)
 	var button_normal: StyleBoxFlat = _button_style(palette_map["button_bg"], palette_map["button_border"], palette_map["text"], false)
 	var button_hover: StyleBoxFlat = _button_style(palette_map["button_hover"], palette_map["button_border"], palette_map["accent"], false)
 	var button_pressed: StyleBoxFlat = _button_style(palette_map["button_pressed"], palette_map["accent"], palette_map["text_inverse"], true)
 	var button_flat: StyleBoxFlat = _button_style(Color(1, 1, 1, 0), Color(1, 1, 1, 0), palette_map["accent"], false)
+	var popup_panel_style: StyleBoxFlat = _panel_style(palette_map["field_bg"], palette_map["field_border"], 8, 1)
+	var popup_hover_style := StyleBoxFlat.new()
+	popup_hover_style.bg_color = palette_map["button_hover"]
+	popup_hover_style.border_color = palette_map["button_hover"]
+	popup_hover_style.set_border_width_all(0)
+	popup_hover_style.set_corner_radius_all(4)
+	var option_arrow := _make_arrow_icon(10, 7, palette_map["text"])
+	var window_border := StyleBoxFlat.new()
+	window_border.bg_color = Color(0, 0, 0, 0)
+	window_border.border_color = palette_map["border"]
+	window_border.set_border_width_all(1)
+	var window_border_unfocused := window_border.duplicate()
+	window_border_unfocused.border_color = palette_map["field_border"]
 
+	theme.set_stylebox("panel", "Panel", panel_style)
 	theme.set_stylebox("panel", "PanelContainer", panel_style)
 	theme.set_stylebox("panel", "AcceptDialog", muted_panel_style)
+	theme.set_stylebox("panel", "PopupPanel", popup_panel_style)
+	theme.set_stylebox("panel", "PopupMenu", popup_panel_style)
+	theme.set_stylebox("panel", "Window", muted_panel_style)
+	theme.set_stylebox("embedded_border", "Window", window_border)
+	theme.set_stylebox("embedded_unfocused_border", "Window", window_border_unfocused)
+	theme.set_stylebox("hover", "PopupMenu", popup_hover_style)
+	theme.set_color("title_color", "Window", palette_map["text"])
+	theme.set_color("title_outline_modulate", "Window", Color(0, 0, 0, 0))
+	theme.set_color("title_pressed_color", "Window", palette_map["text"])
+	theme.set_color("title_focus_color", "Window", palette_map["text"])
 
 	theme.set_stylebox("normal", "LineEdit", line_style)
 	theme.set_stylebox("focus", "LineEdit", focused_line_style)
 	theme.set_stylebox("read_only", "LineEdit", line_style)
 	theme.set_color("font_color", "LineEdit", palette_map["text"])
+	theme.set_color("caret_color", "LineEdit", palette_map["text"])
 	theme.set_color("font_placeholder_color", "LineEdit", palette_map["text_muted"])
 
 	theme.set_stylebox("normal", "OptionButton", line_style)
@@ -68,6 +93,13 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 	theme.set_stylebox("pressed", "OptionButton", focused_line_style)
 	theme.set_stylebox("focus", "OptionButton", focused_line_style)
 	theme.set_color("font_color", "OptionButton", palette_map["text"])
+	theme.set_color("font_focus_color", "OptionButton", palette_map["text"])
+	theme.set_color("font_hover_color", "OptionButton", palette_map["text"])
+	theme.set_color("font_pressed_color", "OptionButton", palette_map["text"])
+	theme.set_color("font_disabled_color", "OptionButton", palette_map["text_muted"])
+	theme.set_icon("arrow", "OptionButton", option_arrow)
+	theme.set_color("modulate_arrow", "OptionButton", palette_map["text"])
+	theme.set_constant("arrow_margin", "OptionButton", 10)
 
 	theme.set_stylebox("normal", "Button", button_normal)
 	theme.set_stylebox("hover", "Button", button_hover)
@@ -76,12 +108,20 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 	theme.set_color("font_color", "Button", palette_map["text"])
 	theme.set_color("font_hover_color", "Button", palette_map["accent"])
 	theme.set_color("font_pressed_color", "Button", palette_map["text_inverse"])
+	theme.set_color("font_focus_color", "Button", palette_map["text"])
+	theme.set_color("font_disabled_color", "Button", palette_map["text_muted"])
 	theme.set_constant("h_separation", "Button", 8)
 
 	theme.set_color("font_color", "Label", palette_map["text"])
+	theme.set_color("font_color", "RichTextLabel", palette_map["text"])
 	theme.set_color("default_color", "RichTextLabel", palette_map["text"])
 	theme.set_color("font_color", "CheckBox", palette_map["text"])
 	theme.set_color("font_color", "CheckButton", palette_map["text"])
+	theme.set_color("font_color", "PopupMenu", palette_map["text"])
+	theme.set_color("font_disabled_color", "PopupMenu", palette_map["text_muted"])
+	theme.set_color("font_hover_color", "PopupMenu", palette_map["text"])
+	theme.set_color("font_separator_color", "PopupMenu", palette_map["text_muted"])
+	theme.set_color("font_accelerator_color", "PopupMenu", palette_map["text_muted"])
 
 	theme.set_stylebox("normal", "CheckBox", button_flat)
 	theme.set_stylebox("hover", "CheckBox", button_flat)
@@ -93,6 +133,18 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 	theme.set_stylebox("focus", "CheckButton", button_flat)
 
 	return theme
+
+func _make_arrow_icon(width: int, height: int, color: Color) -> Texture2D:
+	var image := Image.create(width, height, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0, 0, 0, 0))
+	for y in range(height):
+		var inset := mini(y, height - 1 - y)
+		var start_x := inset
+		var end_x := width - inset - 1
+		for x in range(start_x, end_x + 1):
+			if y >= height / 2:
+				image.set_pixel(x, y, color)
+	return ImageTexture.create_from_image(image)
 
 func _panel_style(bg: Color, border: Color, radius: int, border_width: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
