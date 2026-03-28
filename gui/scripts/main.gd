@@ -393,8 +393,8 @@ func _display_results(sample: String, parsed: Variant) -> void:
 	species_text.text = _formatter.format_species_tab(sample, parsed)
 	save_button.disabled = false
 	_show_results_view()
-	_set_results_tab(_current_tab)
-	_set_window_title_results(sample, _current_tab)
+	_set_results_tab(TAB_ALL)
+	_set_window_title_results(sample, TAB_ALL)
 
 func _show_landing_view() -> void:
 	landing_view.visible = true
