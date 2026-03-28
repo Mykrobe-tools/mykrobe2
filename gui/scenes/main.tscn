@@ -69,8 +69,8 @@ grow_vertical = 2
 
 [node name="LandingVBox" type="VBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin"]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 24
+alignment = 1
 
 [node name="LandingSpacerTop" type="Control" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
 custom_minimum_size = Vector2(0, 16)
@@ -78,8 +78,8 @@ layout_mode = 2
 
 [node name="LandingLogo" type="HBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 14
+alignment = 1
 
 [node name="LandingLogoIcon" type="TextureRect" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo"]
 custom_minimum_size = Vector2(56, 56)
@@ -97,7 +97,8 @@ text = "MYKROBE"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
 theme_override_font_sizes/font_size = 26
-text = "Antimicrobial resistance information\nwithin minutes"
+text = "Antimicrobial resistance information
+within minutes"
 horizontal_alignment = 1
 
 [node name="LandingButtons" type="VBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
@@ -114,8 +115,8 @@ text = "ANALYSE SAMPLE"
 [node name="OptionsButton" type="Button" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons"]
 layout_mode = 2
 size_flags_horizontal = 4
-flat = true
 text = "OPTIONS"
+flat = true
 
 [node name="LandingHint" type="Label" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
 layout_mode = 2
@@ -177,8 +178,8 @@ theme_override_constants/separation = 14
 
 [node name="BootstrapLogo" type="HBoxContainer" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 14
+alignment = 1
 
 [node name="BootstrapLogoIcon" type="TextureRect" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo"]
 custom_minimum_size = Vector2(48, 48)
@@ -244,8 +245,8 @@ grow_vertical = 2
 
 [node name="HeaderHBox" type="HBoxContainer" parent="AppView/HeaderBar/HeaderMargin"]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 24
+alignment = 1
 
 [node name="HeaderLogo" type="HBoxContainer" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox"]
 custom_minimum_size = Vector2(170, 48)
@@ -467,6 +468,7 @@ layout_mode = 2
 [node name="EvidenceText" type="RichTextLabel" parent="AppView/ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
 layout_mode = 2
 size_flags_vertical = 3
+focus_mode = 2
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
@@ -497,6 +499,7 @@ layout_mode = 2
 [node name="SpeciesText" type="RichTextLabel" parent="AppView/ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
 layout_mode = 2
 size_flags_vertical = 3
+focus_mode = 2
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
@@ -551,13 +554,13 @@ grow_vertical = 2
 
 [node name="ProcessingVBox" type="VBoxContainer" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin"]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 20
+alignment = 1
 
 [node name="ProcessingDots" type="HBoxContainer" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox"]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 24
+alignment = 1
 
 [node name="Dot1" type="Label" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots"]
 layout_mode = 2
@@ -611,7 +614,6 @@ initial_position = 1
 size = Vector2i(620, 520)
 
 [node name="OptionsMargin" type="MarginContainer" parent="OptionsDialog"]
-layout_mode = 2
 offset_left = 10.0
 offset_top = 10.0
 offset_right = 610.0
@@ -712,13 +714,13 @@ layout_mode = 2
 text = "Use Shared Panels"
 
 [node name="ReadsDialog" type="FileDialog" parent="."]
-title = "Choose reads file"
+title = "Open a File"
 ok_button_text = "Open"
 file_mode = 0
 access = 2
 
 [node name="PanelsDirDialog" type="FileDialog" parent="."]
-title = "Choose panels directory"
+title = "Open a Directory"
 ok_button_text = "Select Current Folder"
 file_mode = 2
 access = 2
