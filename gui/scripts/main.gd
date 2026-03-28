@@ -4,37 +4,60 @@ const LocalMykrobe2ManagerScript = preload("res://scripts/local_mykrobe2_manager
 const ResultFormatterScript = preload("res://scripts/result_formatter.gd")
 const GUIHelpersScript = preload("res://scripts/gui_helpers.gd")
 const PanelsSetupManagerScript = preload("res://scripts/panels_setup_manager.gd")
+const PredictRunManagerScript = preload("res://scripts/predict_run_manager.gd")
 const BACKGROUND_IMAGE_PATH = "res://assets/background.png"
-const LOGO_IMAGE_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
+const LOGO_ICON_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
+
+const TAB_ALL := 0
+const TAB_DRUGS := 1
+const TAB_EVIDENCE := 2
+const TAB_SPECIES := 3
 
 @onready var background_texture: TextureRect = $Background
-@onready var bootstrap_panel: PanelContainer = $RootMargin/RootVBox/BootstrapPanel
-@onready var bootstrap_status_label: Label = $RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox/BootstrapStatus
-@onready var bootstrap_log_text: RichTextLabel = $RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox/BootstrapLog
-@onready var body_split: HSplitContainer = $RootMargin/RootVBox/BodySplit
-@onready var sample_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SampleRow/SampleEdit
-@onready var reads_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker/ReadsEdit
-@onready var panels_dir_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker/PanelsDirEdit
-@onready var species_option: OptionButton = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow/SpeciesOption
-@onready var panel_option: OptionButton = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelRow/PanelOption
-@onready var output_edit: LineEdit = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker/OutputEdit
-@onready var report_all_calls_check: CheckBox = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid/ReportAllCallsCheck
-@onready var ncbi_names_check: CheckBox = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid/NCBINamesCheck
-@onready var ont_check: CheckBox = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid/ONTCheck
-@onready var guess_method_check: CheckBox = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid/GuessMethodCheck
-@onready var setup_panel: PanelContainer = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel
-@onready var setup_status_label: Label = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupStatus
-@onready var update_metadata_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/UpdateMetadataButton
-@onready var install_species_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/InstallSpeciesButton
-@onready var refresh_setup_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/RefreshSetupButton
-@onready var setup_log_text: RichTextLabel = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupLog
-@onready var run_button: Button = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/RunButton
-@onready var status_label: Label = $RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/StatusLabel
-@onready var overview_text: RichTextLabel = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/OverviewTab/OverviewText
-@onready var drugs_text: RichTextLabel = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/DrugsTab/DrugsText
-@onready var species_text: RichTextLabel = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/SpeciesTab/SpeciesText
-@onready var evidence_text: TextEdit = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/EvidenceTab/EvidenceText
-@onready var raw_json_text: TextEdit = $RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/RawJSONTab/RawJSONText
+@onready var landing_circle: PanelContainer = $LandingView/LandingCenter/LandingCard/LandingCircle
+@onready var bootstrap_circle: PanelContainer = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapCircle
+@onready var processing_circle: PanelContainer = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingCircle
+@onready var landing_logo_icon: TextureRect = $LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo/LandingLogoIcon
+@onready var bootstrap_logo_icon: TextureRect = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo/BootstrapLogoIcon
+@onready var header_logo_icon: TextureRect = $AppView/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo/HeaderLogoIcon
+@onready var landing_view: Control = $LandingView
+@onready var bootstrap_view: Control = $BootstrapView
+@onready var bootstrap_status_label: Label = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapStatus
+@onready var bootstrap_log_text: RichTextLabel = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLog
+@onready var app_view: Control = $AppView
+@onready var analyse_button: Button = $LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/AnalyseButton
+@onready var all_tab_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/AllTabButton
+@onready var drugs_tab_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/DrugsTabButton
+@onready var evidence_tab_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/EvidenceTabButton
+@onready var species_tab_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/SpeciesTabButton
+@onready var save_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/SaveButton
+@onready var new_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/NewButton
+@onready var all_view: Control = $AppView/ResultsMargin/ResultsStack/AllView
+@onready var drugs_view: Control = $AppView/ResultsMargin/ResultsStack/DrugsView
+@onready var evidence_view: Control = $AppView/ResultsMargin/ResultsStack/EvidenceView
+@onready var species_view: Control = $AppView/ResultsMargin/ResultsStack/SpeciesView
+@onready var all_susceptible_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn/AllSusceptibleText
+@onready var all_resistant_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn/AllResistantText
+@onready var first_line_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn/FirstLineText
+@onready var second_line_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn/SecondLineText
+@onready var evidence_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox/EvidenceText
+@onready var species_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox/SpeciesText
+@onready var processing_overlay: Control = $ProcessingOverlay
+@onready var processing_label: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingLabel
+@onready var dot_1: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots/Dot1
+@onready var dot_2: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots/Dot2
+@onready var dot_3: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots/Dot3
+@onready var cancel_button: Button = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/CancelButton
+@onready var status_label: Label = $StatusLabel
+@onready var options_dialog: AcceptDialog = $OptionsDialog
+@onready var sample_edit: LineEdit = $OptionsDialog/OptionsMargin/OptionsVBox/SampleRow/SampleEdit
+@onready var panels_dir_edit: LineEdit = $OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker/PanelsDirEdit
+@onready var species_option: OptionButton = $OptionsDialog/OptionsMargin/OptionsVBox/SpeciesRow/SpeciesOption
+@onready var panel_option: OptionButton = $OptionsDialog/OptionsMargin/OptionsVBox/PanelRow/PanelOption
+@onready var report_all_calls_check: CheckBox = $OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid/ReportAllCallsCheck
+@onready var ncbi_names_check: CheckBox = $OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid/NCBINamesCheck
+@onready var ont_check: CheckBox = $OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid/ONTCheck
+@onready var guess_method_check: CheckBox = $OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid/GuessMethodCheck
 @onready var reads_dialog: FileDialog = $ReadsDialog
 @onready var panels_dir_dialog: FileDialog = $PanelsDirDialog
 @onready var output_dialog: FileDialog = $OutputDialog
@@ -43,61 +66,112 @@ var _local_mykrobe2_manager: RefCounted
 var _formatter: RefCounted
 var _helpers: RefCounted
 var _panels_setup: RefCounted
+var _predict_run: RefCounted
 var _species_entries: Array = []
 var _panel_entries: Array = []
+var _current_result_text := ""
+var _current_result_sample := ""
+var _current_result_path := ""
+var _current_tab := TAB_ALL
+var _pending_run_after_reads_selection := false
+var _active_reads_path := ""
+var _output_dialog_mode := ""
+var _processing_elapsed := 0.0
 
 func _ready() -> void:
 	_formatter = ResultFormatterScript.new()
 	_helpers = GUIHelpersScript.new()
 	_panels_setup = PanelsSetupManagerScript.new()
+	_predict_run = PredictRunManagerScript.new()
 	_local_mykrobe2_manager = LocalMykrobe2ManagerScript.new()
 	_local_mykrobe2_manager.configure("bin")
-	_apply_branding_assets()
+	_apply_branding()
 	panels_dir_edit.text = _helpers.default_panels_dir()
-	status_label.text = "Ready."
-	_clear_results()
+	options_dialog.get_ok_button().text = "Close"
+	_apply_tab_styles()
+	_set_results_tab(TAB_ALL)
+	_set_notice("")
+	_set_window_title_default()
+	save_button.disabled = true
 	get_viewport().files_dropped.connect(_on_files_dropped)
 	_refresh_species_options()
 	_refresh_setup_state()
 	_maybe_start_initial_panels_bootstrap()
 
-func _process(_delta: float) -> void:
+func _apply_branding() -> void:
+	background_texture.texture = _helpers.load_texture(BACKGROUND_IMAGE_PATH)
+	var icon_texture: Texture2D = _helpers.load_texture(LOGO_ICON_PATH)
+	landing_logo_icon.texture = icon_texture
+	bootstrap_logo_icon.texture = icon_texture
+	header_logo_icon.texture = icon_texture
+	for panel in [landing_circle, bootstrap_circle, processing_circle]:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(1, 1, 1, 0.92)
+		style.corner_radius_top_left = 400
+		style.corner_radius_top_right = 400
+		style.corner_radius_bottom_left = 400
+		style.corner_radius_bottom_right = 400
+		panel.add_theme_stylebox_override("panel", style)
+
+func _process(delta: float) -> void:
+	_poll_panels_setup()
+	_poll_predict_run(delta)
+
+func _poll_panels_setup() -> void:
 	var result: Dictionary = _panels_setup.poll()
 	if result.get("running", false):
-		setup_log_text.text = str(result.get("log", ""))
 		bootstrap_log_text.text = str(result.get("log", ""))
 		return
 	if not result.get("finished", false):
 		return
-	_set_setup_busy(false)
-	setup_log_text.text = str(result.get("log", ""))
 	bootstrap_log_text.text = str(result.get("log", ""))
 	if result.get("success", false):
-		_set_status(str(result.get("status", "Panel setup complete.")))
 		_refresh_species_options()
 		_refresh_setup_state()
+		_set_notice(str(result.get("status", "Panel setup complete.")))
 		return
-	_set_status(str(result.get("error", "Panel setup failed.")))
-	_set_setup_status("Panel setup failed.")
+	_refresh_setup_state()
+	_set_notice(str(result.get("error", "Panel setup failed.")))
 
-func _apply_branding_assets() -> void:
-	background_texture.texture = _helpers.load_png_texture(BACKGROUND_IMAGE_PATH)
-	var logo_texture_rect: TextureRect = $RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox/HeaderTop/Logo
-	logo_texture_rect.texture = _helpers.load_png_texture(LOGO_IMAGE_PATH)
+func _poll_predict_run(delta: float) -> void:
+	if _predict_run.is_running():
+		_processing_elapsed += delta
+		_update_processing_dots()
+	var result: Dictionary = _predict_run.poll()
+	if result.get("running", false):
+		return
+	if not result.get("finished", false):
+		return
+	processing_overlay.visible = false
+	cancel_button.disabled = false
+	if result.get("success", false):
+		var output_path := str(result.get("output_path", _current_result_path))
+		_load_json_result(output_path, _current_result_sample)
+		_set_notice(str(result.get("status", "Analysis complete.")))
+		return
+	_show_landing_view()
+	_set_notice("%s\n%s" % [str(result.get("error", "Analysis failed.")), str(result.get("log", ""))])
+	_set_window_title_default()
 
-func _on_reads_browse_pressed() -> void:
+func _on_analyse_button_pressed() -> void:
+	if bootstrap_view.visible:
+		return
+	_pending_run_after_reads_selection = true
 	reads_dialog.popup_centered_ratio(0.7)
+
+func _on_options_button_pressed() -> void:
+	options_dialog.popup_centered()
 
 func _on_panels_browse_pressed() -> void:
 	panels_dir_dialog.popup_centered_ratio(0.7)
 
-func _on_output_browse_pressed() -> void:
-	output_dialog.popup_centered_ratio(0.7)
-
 func _on_reads_dialog_file_selected(path: String) -> void:
-	reads_edit.text = path
+	_active_reads_path = path
 	if sample_edit.text.strip_edges() == "" or sample_edit.text == "sample":
 		sample_edit.text = path.get_file().get_basename()
+	if _pending_run_after_reads_selection:
+		_pending_run_after_reads_selection = false
+		_start_predict(path)
 
 func _on_panels_dir_dialog_dir_selected(path: String) -> void:
 	panels_dir_edit.text = path
@@ -106,53 +180,99 @@ func _on_panels_dir_dialog_dir_selected(path: String) -> void:
 	_maybe_start_initial_panels_bootstrap()
 
 func _on_output_dialog_file_selected(path: String) -> void:
-	output_edit.text = path
+	if _output_dialog_mode != "save_result":
+		return
+	_output_dialog_mode = ""
+	if _current_result_text == "":
+		_set_notice("No result is loaded.")
+		return
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		_set_notice("Could not write %s." % path)
+		return
+	file.store_string(_current_result_text)
+	file.close()
+	_set_notice("Saved %s." % path)
 
 func _on_species_option_item_selected(index: int) -> void:
 	if index < 0 or index >= _species_entries.size():
 		return
-	var entry: Dictionary = _species_entries[index]
-	_refresh_panel_options(entry)
+	_refresh_panel_options(_species_entries[index])
 
-func _on_panel_option_item_selected(_index: int) -> void:
-	pass
+func _on_refresh_setup_button_pressed() -> void:
+	_refresh_species_options()
+	_refresh_setup_state()
+	_maybe_start_initial_panels_bootstrap()
 
-func _on_clear_button_pressed() -> void:
-	status_label.text = "Ready."
-	_clear_results()
+func _on_use_shared_panels_button_pressed() -> void:
+	panels_dir_edit.text = _helpers.default_panels_dir()
+	_refresh_species_options()
+	_refresh_setup_state()
 
-func _on_run_button_pressed() -> void:
+func _on_all_tab_button_pressed() -> void:
+	_set_results_tab(TAB_ALL)
+
+func _on_drugs_tab_button_pressed() -> void:
+	_set_results_tab(TAB_DRUGS)
+
+func _on_evidence_tab_button_pressed() -> void:
+	_set_results_tab(TAB_EVIDENCE)
+
+func _on_species_tab_button_pressed() -> void:
+	_set_results_tab(TAB_SPECIES)
+
+func _on_save_button_pressed() -> void:
+	if _current_result_text == "":
+		_set_notice("No result is loaded.")
+		return
+	_output_dialog_mode = "save_result"
+	output_dialog.popup_centered_ratio(0.7)
+
+func _on_new_button_pressed() -> void:
+	_current_result_text = ""
+	_current_result_sample = ""
+	_current_result_path = ""
+	save_button.disabled = true
+	_show_landing_view()
+	_set_notice("")
+	_set_window_title_default()
+
+func _on_cancel_button_pressed() -> void:
+	if not _predict_run.is_running():
+		return
+	cancel_button.disabled = true
+	_predict_run.cancel()
+	processing_overlay.visible = false
+	_show_landing_view()
+	_set_notice("Analysis cancelled.")
+	_set_window_title_default()
+
+func _start_predict(reads_path: String) -> void:
 	var sample := sample_edit.text.strip_edges()
-	var reads_path := reads_edit.text.strip_edges()
 	var panels_dir := panels_dir_edit.text.strip_edges()
 	var species := _selected_species()
-
+	var panel_name := _selected_panel()
 	if sample == "":
-		_set_status("Sample name is required.")
+		_set_notice("Sample name is required.")
+		options_dialog.popup_centered()
 		return
-	if reads_path == "":
-		_set_status("Reads file is required.")
+	if reads_path.strip_edges() == "":
+		_set_notice("Reads file is required.")
 		return
 	if panels_dir == "":
-		_set_status("Panels directory is required.")
+		_set_notice("Panels directory is required.")
+		options_dialog.popup_centered()
 		return
 	if species == "":
-		_set_status("Species is required.")
+		_set_notice("Species is required.")
+		options_dialog.popup_centered()
 		return
-	if not _helpers.species_installed_marker_exists(panels_dir, species):
-		_set_status("Species panels are not installed yet. Use Panels Setup first.")
-		_refresh_setup_state()
-		return
-
 	var binary_path := _resolve_binary_path()
 	if binary_path == "":
-		_set_status("Could not find mykrobe2 binary. Set MYKROBE2_BINARY or provide a bundled binary.")
+		_set_notice("Could not find mykrobe2 binary.")
 		return
 
-	var output_path := output_edit.text.strip_edges()
-	if output_path == "":
-		output_path = _helpers.temporary_output_path(sample)
-
+	var output_path: String = _helpers.temporary_output_path(sample)
 	var args := PackedStringArray([
 		"predict",
 		"--sample", sample,
@@ -162,7 +282,6 @@ func _on_run_button_pressed() -> void:
 		"--output", output_path,
 		"--format", "json",
 	])
-	var panel_name := _selected_panel()
 	if panel_name != "":
 		args.append_array(["--panel", panel_name])
 	if report_all_calls_check.button_pressed:
@@ -174,155 +293,83 @@ func _on_run_button_pressed() -> void:
 	if guess_method_check.button_pressed:
 		args.append("--guess_sequence_method")
 
-	run_button.disabled = true
-	_set_status("Running mykrobe2 predict...")
-	await get_tree().process_frame
-
-	var output_lines: Array = []
-	var exit_code := OS.execute(binary_path, args, output_lines, true)
-	run_button.disabled = false
-
-	if exit_code != 0:
-		_set_status("mykrobe2 failed with exit code %d.\n%s" % [exit_code, "\n".join(output_lines)])
+	var start_result: Dictionary = _predict_run.start(binary_path, args, output_path)
+	if not start_result.get("started", false):
+		_set_notice(str(start_result.get("error", "Could not start analysis.")))
 		return
 
-	_load_json_result(output_path, sample)
-	if raw_json_text.text != "":
-		_set_status("Completed successfully using %s." % binary_path)
-	_refresh_setup_state()
-	_refresh_species_options()
+	_current_result_sample = sample
+	_current_result_path = output_path
+	_processing_elapsed = 0.0
+	_update_processing_dots()
+	processing_label.text = "Analysing"
+	processing_overlay.visible = true
+	cancel_button.disabled = false
+	options_dialog.hide()
+	_set_notice("")
+	_set_window_title_processing(sample)
 
 func _load_json_result(path: String, preferred_sample: String = "sample") -> void:
 	if not FileAccess.file_exists(path):
-		_set_status("Result JSON was not found at %s." % path)
+		_set_notice("Result JSON was not found at %s." % path)
 		return
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		_set_status("Could not open JSON file: %s." % path)
+		_set_notice("Could not open JSON file: %s." % path)
 		return
 	var text := file.get_as_text()
 	file.close()
-
 	var parsed = JSON.parse_string(text)
 	if parsed == null:
-		raw_json_text.text = text
-		_set_status("JSON parsing failed for %s." % path)
+		_set_notice("JSON parsing failed for %s." % path)
 		return
-
+	_current_result_text = text
+	_current_result_path = path
 	_display_results(preferred_sample, parsed)
 
 func _display_results(sample: String, parsed: Variant) -> void:
-	raw_json_text.text = JSON.stringify(parsed, "\t")
-	overview_text.text = _formatter.format_overview(sample, parsed)
-	drugs_text.text = _formatter.format_drugs(sample, parsed)
-	species_text.text = _formatter.format_species(sample, parsed)
-	evidence_text.text = _formatter.format_evidence(sample, parsed)
+	var all_tab: Dictionary = _formatter.format_all_tab(sample, parsed)
+	all_susceptible_text.text = str(all_tab.get("susceptible", ""))
+	all_resistant_text.text = str(all_tab.get("resistant", ""))
+	var drugs_tab: Dictionary = _formatter.format_drugs_tab(sample, parsed)
+	first_line_text.text = str(drugs_tab.get("first_line", ""))
+	second_line_text.text = str(drugs_tab.get("second_line", ""))
+	evidence_text.text = _formatter.format_evidence_tab(sample, parsed)
+	species_text.text = _formatter.format_species_tab(sample, parsed)
+	save_button.disabled = false
+	_show_results_view()
+	_set_results_tab(_current_tab)
+	_set_window_title_results(sample, _current_tab)
 
-func _clear_results() -> void:
-	overview_text.text = "Run a sample to see summary output here."
-	drugs_text.text = ""
-	species_text.text = ""
-	evidence_text.text = ""
-	raw_json_text.text = ""
+func _show_landing_view() -> void:
+	landing_view.visible = true
+	bootstrap_view.visible = false
+	app_view.visible = false
 
-func _set_status(message: String) -> void:
-	status_label.text = message
+func _show_bootstrap_view() -> void:
+	landing_view.visible = false
+	bootstrap_view.visible = true
+	app_view.visible = false
 
-func _set_setup_status(message: String) -> void:
-	setup_status_label.text = message
-
-func _resolve_binary_path() -> String:
-	var from_env := OS.get_environment("MYKROBE2_BINARY").strip_edges()
-	if from_env != "" and FileAccess.file_exists(from_env):
-		return from_env
-	if _local_mykrobe2_manager != null and _local_mykrobe2_manager.ensure_local_binary_installed():
-		return _local_mykrobe2_manager.installed_binary_path()
-	return ""
-
-func _on_update_metadata_button_pressed() -> void:
-	_start_panels_task([
-		{
-			"label": "Updating panel metadata",
-			"args": PackedStringArray([
-				"panels",
-				"update_metadata",
-				"--panels_dir", panels_dir_edit.text.strip_edges(),
-			]),
-		},
-	], "Updating panel metadata...", "Panel metadata updated.")
-
-func _on_install_species_button_pressed() -> void:
-	var species := _selected_species()
-	if species == "":
-		_set_status("Set a species first before installing panels.")
-		return
-	_start_panels_task([
-		{
-			"label": "Installing species panels for %s" % species,
-			"args": PackedStringArray([
-				"panels",
-				"update_species",
-				"--panels_dir", panels_dir_edit.text.strip_edges(),
-				species,
-			]),
-		},
-	], "Installing species panels for %s..." % species, "Species panels installed for %s." % species)
-
-func _on_refresh_setup_button_pressed() -> void:
-	_refresh_species_options()
-	_refresh_setup_state()
-
-func _start_panels_task(commands: Array, status_prefix: String, success_status: String) -> void:
-	var binary_path := _resolve_binary_path()
-	if binary_path == "":
-		_set_status("Could not find mykrobe2 binary for panel setup.")
-		return
-	var panels_dir := panels_dir_edit.text.strip_edges()
-	if panels_dir == "":
-		_set_status("Panels directory is required for panel setup.")
-		return
-	_set_status(status_prefix)
-	_set_setup_status(status_prefix)
-	bootstrap_status_label.text = status_prefix
-	_set_setup_busy(true)
-	setup_log_text.text = ""
-	bootstrap_log_text.text = ""
-	var start_result: Dictionary = _panels_setup.start(binary_path, commands, success_status)
-	if not start_result.get("started", false):
-		_set_setup_busy(false)
-		_set_status(str(start_result.get("error", "Could not start background panel setup.")))
-		_set_setup_status("Could not start panel setup.")
+func _show_results_view() -> void:
+	landing_view.visible = false
+	bootstrap_view.visible = false
+	app_view.visible = true
 
 func _refresh_setup_state() -> void:
 	var panels_dir := panels_dir_edit.text.strip_edges()
-	var species := _selected_species()
 	var manifest_exists := FileAccess.file_exists(panels_dir.path_join("manifest.json"))
-	var species_installed: bool = _helpers.species_installed_marker_exists(panels_dir, species)
-	var bootstrap_mode := _should_show_bootstrap(manifest_exists)
-
-	bootstrap_panel.visible = bootstrap_mode
-	body_split.visible = not bootstrap_mode
-	setup_panel.visible = (not manifest_exists) or (species != "" and not species_installed)
-	if not manifest_exists:
+	if _panels_setup.is_running() or not manifest_exists:
 		if _panels_setup.is_running():
-			_set_setup_status("Initial panel download is running in the background.")
 			bootstrap_status_label.text = "Downloading panel metadata and species data. This can take a little while."
 		else:
-			_set_setup_status("Panel metadata is missing. Initial setup will download all species into the shared panels directory.")
-			bootstrap_status_label.text = "Panel metadata is missing. Initial setup will download all species into the shared panels directory."
-	elif species != "" and not species_installed:
-		_set_setup_status("Species '%s' is not installed in the shared panels directory." % species)
-		bootstrap_status_label.text = "Species panels are still being prepared."
+			bootstrap_status_label.text = "Panel metadata is missing. Mykrobe is downloading all species into the shared panels directory."
+		_show_bootstrap_view()
+		return
+	if _current_result_text != "":
+		_show_results_view()
 	else:
-		_set_setup_status("Shared panels directory is ready.")
-		bootstrap_status_label.text = "Shared panels directory is ready."
-	install_species_button.disabled = (species == "")
-
-func _set_setup_busy(busy: bool) -> void:
-	update_metadata_button.disabled = busy
-	install_species_button.disabled = busy or _selected_species() == ""
-	refresh_setup_button.disabled = busy
-	run_button.disabled = busy
+		_show_landing_view()
 
 func _maybe_start_initial_panels_bootstrap() -> void:
 	if _panels_setup.is_running():
@@ -334,7 +381,12 @@ func _maybe_start_initial_panels_bootstrap() -> void:
 		return
 	if FileAccess.file_exists(panels_dir.path_join("manifest.json")):
 		return
-	_start_panels_task([
+	_show_bootstrap_view()
+	var binary_path := _resolve_binary_path()
+	if binary_path == "":
+		_set_notice("Could not find mykrobe2 binary for panel setup.")
+		return
+	var start_result: Dictionary = _panels_setup.start(binary_path, [
 		{
 			"label": "Updating panel metadata",
 			"args": PackedStringArray([
@@ -352,7 +404,9 @@ func _maybe_start_initial_panels_bootstrap() -> void:
 				"all",
 			]),
 		},
-	], "Downloading panel metadata and all species in the background...", "All species panels are ready.")
+	], "All species panels are ready.")
+	if not start_result.get("started", false):
+		_set_notice(str(start_result.get("error", "Could not start panel setup.")))
 
 func _selected_species() -> String:
 	if species_option.item_count == 0:
@@ -362,17 +416,22 @@ func _selected_species() -> String:
 		return ""
 	return str(_species_entries[idx].get("species", "")).strip_edges()
 
+func _selected_panel() -> String:
+	if panel_option.item_count == 0:
+		return ""
+	var idx := panel_option.selected
+	if idx < 0 or idx >= _panel_entries.size():
+		return ""
+	return str(_panel_entries[idx].get("name", "")).strip_edges()
+
 func _refresh_species_options() -> void:
 	_species_entries = _helpers.load_species_entries(_resolve_binary_path(), panels_dir_edit.text.strip_edges())
 	species_option.clear()
 	species_option.disabled = true
-	species_option.text = "Loading species..."
-	_panel_entries.clear()
 	panel_option.clear()
 	panel_option.disabled = true
-	panel_option.text = "No panels available"
+	_panel_entries.clear()
 	if _species_entries.is_empty():
-		species_option.text = "No species available"
 		return
 	for entry in _species_entries:
 		species_option.add_item(str(entry.get("species", "")))
@@ -383,24 +442,13 @@ func _refresh_species_options() -> void:
 			preferred_index = i
 			break
 	species_option.select(preferred_index)
-	_on_species_option_item_selected(preferred_index)
-
-func _should_show_bootstrap(manifest_exists: bool) -> bool:
-	return (not manifest_exists) or _panels_setup.is_running()
-
-func _selected_panel() -> String:
-	if panel_option.item_count == 0:
-		return ""
-	var idx := panel_option.selected
-	if idx < 0 or idx >= _panel_entries.size():
-		return ""
-	return str(_panel_entries[idx].get("name", "")).strip_edges()
+	_refresh_panel_options(_species_entries[preferred_index])
+	analyse_button.disabled = false
 
 func _refresh_panel_options(species_entry: Dictionary) -> void:
 	_panel_entries.clear()
 	panel_option.clear()
 	panel_option.disabled = true
-	panel_option.text = "No panels available"
 	var panels_variant: Variant = species_entry.get("panels", [])
 	if typeof(panels_variant) != TYPE_ARRAY:
 		return
@@ -424,18 +472,101 @@ func _refresh_panel_options(species_entry: Dictionary) -> void:
 			break
 	panel_option.select(preferred_index)
 
+func _resolve_binary_path() -> String:
+	var from_env := OS.get_environment("MYKROBE2_BINARY").strip_edges()
+	if from_env != "" and FileAccess.file_exists(from_env):
+		return from_env
+	if _local_mykrobe2_manager != null and _local_mykrobe2_manager.ensure_local_binary_installed():
+		return _local_mykrobe2_manager.installed_binary_path()
+	return ""
+
+func _set_results_tab(tab_index: int) -> void:
+	_current_tab = tab_index
+	all_view.visible = tab_index == TAB_ALL
+	drugs_view.visible = tab_index == TAB_DRUGS
+	evidence_view.visible = tab_index == TAB_EVIDENCE
+	species_view.visible = tab_index == TAB_SPECIES
+	all_tab_button.button_pressed = tab_index == TAB_ALL
+	drugs_tab_button.button_pressed = tab_index == TAB_DRUGS
+	evidence_tab_button.button_pressed = tab_index == TAB_EVIDENCE
+	species_tab_button.button_pressed = tab_index == TAB_SPECIES
+	_apply_tab_styles()
+	if _current_result_sample != "":
+		_set_window_title_results(_current_result_sample, tab_index)
+
+func _apply_tab_styles() -> void:
+	var selected_bg := Color(0.23, 0.53, 0.70, 1.0)
+	var selected_fg := Color(1, 1, 1, 1)
+	var unselected_fg := Color(0.23, 0.53, 0.70, 1)
+	for button in [all_tab_button, drugs_tab_button, evidence_tab_button, species_tab_button]:
+		button.flat = not button.button_pressed
+		button.add_theme_color_override("font_color", selected_fg if button.button_pressed else unselected_fg)
+		button.add_theme_color_override("font_hover_color", selected_fg if button.button_pressed else unselected_fg)
+		button.add_theme_color_override("font_pressed_color", selected_fg)
+		var style := StyleBoxFlat.new()
+		style.corner_radius_top_left = 18
+		style.corner_radius_top_right = 18
+		style.corner_radius_bottom_left = 18
+		style.corner_radius_bottom_right = 18
+		style.content_margin_left = 16
+		style.content_margin_right = 16
+		style.content_margin_top = 8
+		style.content_margin_bottom = 8
+		if button.button_pressed:
+			style.bg_color = selected_bg
+			style.border_width_left = 0
+			style.border_width_top = 0
+			style.border_width_right = 0
+			style.border_width_bottom = 0
+		else:
+			style.bg_color = Color(1, 1, 1, 0)
+			style.border_color = Color(0.23, 0.53, 0.70, 0.18)
+			style.border_width_left = 0
+			style.border_width_top = 0
+			style.border_width_right = 0
+			style.border_width_bottom = 0
+		button.add_theme_stylebox_override("normal", style)
+		button.add_theme_stylebox_override("hover", style)
+		button.add_theme_stylebox_override("pressed", style)
+		button.add_theme_stylebox_override("focus", style)
+
+func _set_notice(message: String) -> void:
+	status_label.visible = message.strip_edges() != ""
+	status_label.text = message
+
+func _set_window_title_default() -> void:
+	get_window().title = "Mykrobe"
+
+func _set_window_title_processing(sample: String) -> void:
+	get_window().title = "%s - Analysing - Mykrobe" % sample
+
+func _set_window_title_results(sample: String, tab_index: int) -> void:
+	var tab_name := "All"
+	match tab_index:
+		TAB_DRUGS:
+			tab_name = "Drugs"
+		TAB_EVIDENCE:
+			tab_name = "Evidence"
+		TAB_SPECIES:
+			tab_name = "Species"
+	get_window().title = "%s - Resistance - %s - Mykrobe" % [sample, tab_name]
+
+func _update_processing_dots() -> void:
+	var active_index := int(floor(_processing_elapsed * 2.0)) % 4
+	var active_count := 0 if active_index == 3 else active_index + 1
+	var dots := [dot_1, dot_2, dot_3]
+	for i in range(dots.size()):
+		dots[i].modulate = Color(1, 1, 1, 1) if i < active_count else Color(1, 1, 1, 0.25)
+
 func _on_files_dropped(files: PackedStringArray) -> void:
 	if files.is_empty():
 		return
 	var path := files[0]
 	if path.to_lower().ends_with(".json"):
 		_load_json_result(path, sample_edit.text.strip_edges())
-		_set_status("Loaded result JSON from %s." % path)
+		_set_notice("Loaded result JSON from %s." % path)
 		return
-	reads_edit.text = path
+	_active_reads_path = path
 	if sample_edit.text.strip_edges() == "" or sample_edit.text == "sample":
 		sample_edit.text = path.get_file().get_basename()
-	if panels_dir_edit.text.strip_edges() != "" and _selected_species() != "":
-		_on_run_button_pressed()
-	else:
-		_set_status("Loaded reads file from drag and drop. Fill remaining fields and run.")
+	_start_predict(path)

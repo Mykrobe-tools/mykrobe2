@@ -6,7 +6,20 @@ const TB_LEGACY_PANELS_LAST := {
 	"walker-2015": 1,
 }
 
-func load_png_texture(path: String) -> Texture2D:
+func load_texture(path: String) -> Texture2D:
+	if path.to_lower().ends_with(".png"):
+		var file := FileAccess.open(path, FileAccess.READ)
+		if file == null:
+			return null
+		var bytes := file.get_buffer(file.get_length())
+		file.close()
+		var image := Image.new()
+		if image.load_png_from_buffer(bytes) != OK:
+			return null
+		return ImageTexture.create_from_image(image)
+	var loaded: Variant = load(path)
+	if loaded is Texture2D:
+		return loaded
 	var image := Image.load_from_file(path)
 	if image == null:
 		return null

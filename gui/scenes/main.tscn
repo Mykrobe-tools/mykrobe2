@@ -21,429 +21,722 @@ grow_vertical = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="RootMargin" type="MarginContainer" parent="."]
+[node name="LandingView" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 18.0
-offset_top = 18.0
-offset_right = -18.0
-offset_bottom = -18.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="RootVBox" type="VBoxContainer" parent="RootMargin"]
+[node name="LandingCenter" type="CenterContainer" parent="LandingView"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LandingCard" type="Control" parent="LandingView/LandingCenter"]
+custom_minimum_size = Vector2(560, 560)
 layout_mode = 2
+
+[node name="LandingCircle" type="PanelContainer" parent="LandingView/LandingCenter/LandingCard"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -280.0
+offset_right = 280.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LandingMargin" type="MarginContainer" parent="LandingView/LandingCenter/LandingCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 92.0
+offset_top = 110.0
+offset_right = -92.0
+offset_bottom = -92.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LandingVBox" type="VBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 24
+
+[node name="LandingSpacerTop" type="Control" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+
+[node name="LandingLogo" type="HBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+layout_mode = 2
+alignment = 1
 theme_override_constants/separation = 14
 
-[node name="Header" type="PanelContainer" parent="RootMargin/RootVBox"]
-layout_mode = 2
-
-[node name="HeaderMargin" type="MarginContainer" parent="RootMargin/RootVBox/Header"]
-layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 18
-
-[node name="HeaderVBox" type="VBoxContainer" parent="RootMargin/RootVBox/Header/HeaderMargin"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="HeaderTop" type="HBoxContainer" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="Logo" type="TextureRect" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox/HeaderTop"]
-custom_minimum_size = Vector2(76, 76)
+[node name="LandingLogoIcon" type="TextureRect" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo"]
+custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Title" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox/HeaderTop"]
+[node name="LandingLogoText" type="Label" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.05098, 0.337255, 0.117647, 1)
-theme_override_font_sizes/font_size = 32
-text = "mykrobe2"
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 30
+text = "MYKROBE"
 
-[node name="Subtitle" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox"]
+[node name="LandingTagline" type="Label" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.403922, 0.396078, 0.380392, 1)
-text = "Run mykrobe2 predict with the old Mykrobe visual identity and the new self-contained Go backend."
+theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
+theme_override_font_sizes/font_size = 26
+text = "Antimicrobial resistance information\nwithin minutes"
+horizontal_alignment = 1
 
-[node name="DropHint" type="Label" parent="RootMargin/RootVBox/Header/HeaderMargin/HeaderVBox"]
+[node name="LandingButtons" type="VBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.403922, 0.396078, 0.380392, 1)
-text = "Drop a reads file or result JSON onto the window, or browse below."
+theme_override_constants/separation = 10
+alignment = 1
 
-[node name="BootstrapPanel" type="PanelContainer" parent="RootMargin/RootVBox"]
+[node name="AnalyseButton" type="Button" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons"]
+custom_minimum_size = Vector2(220, 46)
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_horizontal = 4
+text = "ANALYSE SAMPLE"
 
-[node name="BootstrapMargin" type="MarginContainer" parent="RootMargin/RootVBox/BootstrapPanel"]
+[node name="OptionsButton" type="Button" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons"]
 layout_mode = 2
-theme_override_constants/margin_left = 26
-theme_override_constants/margin_top = 26
-theme_override_constants/margin_right = 26
-theme_override_constants/margin_bottom = 26
+size_flags_horizontal = 4
+flat = true
+text = "OPTIONS"
 
-[node name="BootstrapVBox" type="VBoxContainer" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin"]
+[node name="LandingHint" type="Label" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
+text = "Drop a reads file or a saved JSON result onto the window."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="BootstrapView" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BootstrapCenter" type="CenterContainer" parent="BootstrapView"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BootstrapCard" type="Control" parent="BootstrapView/BootstrapCenter"]
+custom_minimum_size = Vector2(720, 600)
+layout_mode = 2
+
+[node name="BootstrapCircle" type="PanelContainer" parent="BootstrapView/BootstrapCenter/BootstrapCard"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -300.0
+offset_right = 300.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BootstrapMargin" type="MarginContainer" parent="BootstrapView/BootstrapCenter/BootstrapCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 90.0
+offset_top = 80.0
+offset_right = -90.0
+offset_bottom = -80.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BootstrapVBox" type="VBoxContainer" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin"]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="BootstrapTitle" type="Label" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox"]
+[node name="BootstrapLogo" type="HBoxContainer" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "Preparing Mykrobe data"
+alignment = 1
+theme_override_constants/separation = 14
 
-[node name="BootstrapStatus" type="Label" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox"]
+[node name="BootstrapLogoIcon" type="TextureRect" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo"]
+custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BootstrapLogoText" type="Label" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 28
+text = "MYKROBE"
+
+[node name="BootstrapTitle" type="Label" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
+theme_override_font_sizes/font_size = 28
+text = "Preparing Mykrobe data"
+horizontal_alignment = 1
+
+[node name="BootstrapStatus" type="Label" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
 text = "Downloading panel metadata and species data."
+horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="BootstrapLog" type="RichTextLabel" parent="RootMargin/RootVBox/BootstrapPanel/BootstrapMargin/BootstrapVBox"]
+[node name="BootstrapLog" type="RichTextLabel" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 focus_mode = 2
 scroll_following = true
 selection_enabled = true
 
-[node name="BodySplit" type="HSplitContainer" parent="RootMargin/RootVBox"]
+[node name="AppView" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeaderBar" type="ColorRect" parent="AppView"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 104.0
+grow_horizontal = 2
+color = Color(0.97, 0.96, 0.93, 0.95)
+
+[node name="HeaderMargin" type="MarginContainer" parent="AppView/HeaderBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 18.0
+offset_right = -28.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeaderHBox" type="HBoxContainer" parent="AppView/HeaderBar/HeaderMargin"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 24
+
+[node name="HeaderLogo" type="HBoxContainer" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox"]
+custom_minimum_size = Vector2(170, 48)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderLogoIcon" type="TextureRect" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo"]
+custom_minimum_size = Vector2(42, 42)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HeaderLogoText" type="Label" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 28
+text = "MYKROBE"
+
+[node name="HeaderSpacerLeft" type="Control" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TabsRow" type="HBoxContainer" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AllTabButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+layout_mode = 2
+toggle_mode = true
+text = "ALL"
+
+[node name="DrugsTabButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+layout_mode = 2
+toggle_mode = true
+text = "DRUGS"
+
+[node name="EvidenceTabButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+layout_mode = 2
+toggle_mode = true
+text = "EVIDENCE"
+
+[node name="SpeciesTabButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+layout_mode = 2
+toggle_mode = true
+text = "SPECIES"
+
+[node name="HeaderSpacerRight" type="Control" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SaveButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox"]
+layout_mode = 2
+text = "SAVE"
+
+[node name="NewButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox"]
+layout_mode = 2
+text = "NEW"
+
+[node name="ResultsMargin" type="MarginContainer" parent="AppView"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 134.0
+offset_right = -30.0
+offset_bottom = -34.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ResultsStack" type="Control" parent="AppView/ResultsMargin"]
 layout_mode = 2
 size_flags_vertical = 3
-split_offset = 430
 
-[node name="FormPanel" type="PanelContainer" parent="RootMargin/RootVBox/BodySplit"]
+[node name="AllView" type="Control" parent="AppView/ResultsMargin/ResultsStack"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AllVBox" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/AllView"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AllTitle" type="Label" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 18
+text = "RESISTANCE PROFILE"
+
+[node name="AllSeparator" type="HSeparator" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox"]
 layout_mode = 2
 
-[node name="FormMargin" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel"]
+[node name="AllColumns" type="HBoxContainer" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox"]
 layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="AllSusceptibleColumn" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="AllSusceptibleHeading" type="Label" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.458824, 0.694118, 0.243137, 1)
+theme_override_font_sizes/font_size = 18
+text = "● SUSCEPTIBLE"
+
+[node name="AllSusceptibleText" type="RichTextLabel" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="AllResistantColumn" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="AllResistantHeading" type="Label" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.960784, 0.341176, 0.196078, 1)
+theme_override_font_sizes/font_size = 18
+text = "▲ RESISTANT"
+
+[node name="AllResistantText" type="RichTextLabel" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="DrugsView" type="Control" parent="AppView/ResultsMargin/ResultsStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DrugsVBox" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/DrugsView"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="DrugsColumns" type="HBoxContainer" parent="AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="FirstLineColumn" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="FirstLineTitle" type="Label" parent="AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 18
+text = "FIRST LINE DRUGS"
+
+[node name="FirstLineSeparator" type="HSeparator" parent="AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn"]
+layout_mode = 2
+
+[node name="FirstLineText" type="RichTextLabel" parent="AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="SecondLineColumn" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="SecondLineTitle" type="Label" parent="AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 18
+text = "SECOND LINE DRUGS"
+
+[node name="SecondLineSeparator" type="HSeparator" parent="AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn"]
+layout_mode = 2
+
+[node name="SecondLineText" type="RichTextLabel" parent="AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="EvidenceView" type="Control" parent="AppView/ResultsMargin/ResultsStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EvidenceVBox" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/EvidenceView"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="EvidenceTitle" type="Label" parent="AppView/ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 18
+text = "EVIDENCE"
+
+[node name="EvidenceSeparator" type="HSeparator" parent="AppView/ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
+layout_mode = 2
+
+[node name="EvidenceText" type="RichTextLabel" parent="AppView/ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+selection_enabled = true
+
+[node name="SpeciesView" type="Control" parent="AppView/ResultsMargin/ResultsStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SpeciesVBox" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/SpeciesView"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SpeciesTitle" type="Label" parent="AppView/ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 18
+text = "SPECIES"
+
+[node name="SpeciesSeparator" type="HSeparator" parent="AppView/ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
+layout_mode = 2
+
+[node name="SpeciesText" type="RichTextLabel" parent="AppView/ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+selection_enabled = true
+
+[node name="ProcessingOverlay" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ProcessingCenter" type="CenterContainer" parent="ProcessingOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ProcessingCard" type="Control" parent="ProcessingOverlay/ProcessingCenter"]
+custom_minimum_size = Vector2(560, 560)
+layout_mode = 2
+
+[node name="ProcessingCircle" type="PanelContainer" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -280.0
+offset_right = 280.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ProcessingMargin" type="MarginContainer" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 120.0
+offset_top = 150.0
+offset_right = -120.0
+offset_bottom = -130.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ProcessingVBox" type="VBoxContainer" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 20
+
+[node name="ProcessingDots" type="HBoxContainer" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 24
+
+[node name="Dot1" type="Label" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.77, 0.75, 1)
+theme_override_font_sizes/font_size = 74
+text = "•"
+
+[node name="Dot2" type="Label" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.77, 0.75, 1)
+theme_override_font_sizes/font_size = 74
+text = "•"
+
+[node name="Dot3" type="Label" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.77, 0.75, 1)
+theme_override_font_sizes/font_size = 74
+text = "•"
+
+[node name="ProcessingLabel" type="Label" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
+theme_override_font_sizes/font_size = 28
+text = "Analysing"
+horizontal_alignment = 1
+
+[node name="CancelButton" type="Button" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox"]
+custom_minimum_size = Vector2(150, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "CANCEL"
+
+[node name="StatusLabel" type="Label" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = -34.0
+offset_right = -30.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="OptionsDialog" type="AcceptDialog" parent="."]
+title = "Analysis options"
+initial_position = 1
+size = Vector2i(620, 520)
+
+[node name="OptionsMargin" type="MarginContainer" parent="OptionsDialog"]
+layout_mode = 2
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 610.0
+offset_bottom = 470.0
 theme_override_constants/margin_left = 18
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 18
 theme_override_constants/margin_bottom = 18
 
-[node name="FormVBox" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin"]
+[node name="OptionsVBox" type="VBoxContainer" parent="OptionsDialog/OptionsMargin"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="FormTitle" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Predict"
-
-[node name="SetupPanel" type="PanelContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+[node name="SampleRow" type="VBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
 layout_mode = 2
 
-[node name="SetupMargin" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
-
-[node name="SetupVBox" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="SetupTitle" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "Panels Setup"
-
-[node name="SetupStatus" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
-layout_mode = 2
-text = "Checking shared panels directory."
-autowrap_mode = 3
-
-[node name="SetupButtons" type="HBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="UpdateMetadataButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons"]
-layout_mode = 2
-text = "Update Metadata"
-
-[node name="InstallSpeciesButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons"]
-layout_mode = 2
-text = "Install Species"
-
-[node name="RefreshSetupButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons"]
-layout_mode = 2
-text = "Refresh"
-
-[node name="SetupLog" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox"]
-custom_minimum_size = Vector2(0, 140)
-layout_mode = 2
-focus_mode = 2
-scroll_following = true
-selection_enabled = true
-
-[node name="SampleRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
-layout_mode = 2
-
-[node name="SampleLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SampleRow"]
+[node name="SampleLabel" type="Label" parent="OptionsDialog/OptionsMargin/OptionsVBox/SampleRow"]
 layout_mode = 2
 text = "Sample name"
 
-[node name="SampleEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SampleRow"]
+[node name="SampleEdit" type="LineEdit" parent="OptionsDialog/OptionsMargin/OptionsVBox/SampleRow"]
 layout_mode = 2
 text = "sample"
 placeholder_text = "SAMPLE"
 
-[node name="ReadsRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+[node name="PanelsRow" type="VBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
 layout_mode = 2
 
-[node name="ReadsLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow"]
-layout_mode = 2
-text = "Reads file"
-
-[node name="ReadsPicker" type="HBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="ReadsEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker"]
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "/path/to/reads.fastq.gz"
-
-[node name="ReadsBrowseButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker"]
-layout_mode = 2
-text = "Browse"
-
-[node name="PanelsRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
-layout_mode = 2
-
-[node name="PanelsLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow"]
+[node name="PanelsLabel" type="Label" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow"]
 layout_mode = 2
 text = "Panels directory"
 
-[node name="PanelsPicker" type="HBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow"]
+[node name="PanelsPicker" type="HBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PanelsDirEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker"]
+[node name="PanelsDirEdit" type="LineEdit" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "/path/to/panels"
 
-[node name="PanelsBrowseButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker"]
+[node name="PanelsBrowseButton" type="Button" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker"]
 layout_mode = 2
 text = "Browse"
 
-[node name="SpeciesRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+[node name="SpeciesRow" type="VBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
 layout_mode = 2
 
-[node name="SpeciesLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow"]
+[node name="SpeciesLabel" type="Label" parent="OptionsDialog/OptionsMargin/OptionsVBox/SpeciesRow"]
 layout_mode = 2
 text = "Species"
 
-[node name="SpeciesOption" type="OptionButton" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow"]
+[node name="SpeciesOption" type="OptionButton" parent="OptionsDialog/OptionsMargin/OptionsVBox/SpeciesRow"]
 layout_mode = 2
 disabled = true
 
-[node name="PanelRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+[node name="PanelRow" type="VBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
 layout_mode = 2
 
-[node name="PanelLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelRow"]
+[node name="PanelLabel" type="Label" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelRow"]
 layout_mode = 2
 text = "Panel"
 
-[node name="PanelOption" type="OptionButton" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelRow"]
+[node name="PanelOption" type="OptionButton" parent="OptionsDialog/OptionsMargin/OptionsVBox/PanelRow"]
 layout_mode = 2
 disabled = true
-text = "Loading panels..."
 
-[node name="OutputRow" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
-layout_mode = 2
-
-[node name="OutputLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow"]
-layout_mode = 2
-text = "Output JSON file (optional)"
-
-[node name="OutputPicker" type="HBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="OutputEdit" type="LineEdit" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker"]
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "Leave blank to use a temporary file"
-
-[node name="OutputBrowseButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker"]
-layout_mode = 2
-text = "Browse"
-
-[node name="FlagsTitle" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Options"
-
-[node name="FlagsGrid" type="GridContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+[node name="OptionsGrid" type="GridContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
 layout_mode = 2
 columns = 2
 
-[node name="ReportAllCallsCheck" type="CheckBox" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid"]
+[node name="ReportAllCallsCheck" type="CheckBox" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid"]
 layout_mode = 2
 text = "Report all calls"
 
-[node name="NCBINamesCheck" type="CheckBox" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid"]
+[node name="NCBINamesCheck" type="CheckBox" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid"]
 layout_mode = 2
 text = "Add NCBI names"
 
-[node name="ONTCheck" type="CheckBox" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid"]
+[node name="ONTCheck" type="CheckBox" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid"]
 layout_mode = 2
 text = "ONT defaults"
 
-[node name="GuessMethodCheck" type="CheckBox" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/FlagsGrid"]
+[node name="GuessMethodCheck" type="CheckBox" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsGrid"]
 layout_mode = 2
 text = "Guess sequence method"
 
-[node name="ButtonsRow" type="HBoxContainer" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
+[node name="OptionsButtons" type="HBoxContainer" parent="OptionsDialog/OptionsMargin/OptionsVBox"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
-[node name="RunButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow"]
+[node name="RefreshPanelsButton" type="Button" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsButtons"]
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Run Predict"
+text = "Refresh Panels"
 
-[node name="ClearButton" type="Button" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow"]
+[node name="OpenPanelsDirButton" type="Button" parent="OptionsDialog/OptionsMargin/OptionsVBox/OptionsButtons"]
 layout_mode = 2
-text = "Clear Results"
-
-[node name="StatusLabel" type="Label" parent="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox"]
-layout_mode = 2
-text = "Ready."
-autowrap_mode = 3
-
-[node name="ResultsPanel" type="PanelContainer" parent="RootMargin/RootVBox/BodySplit"]
-layout_mode = 2
-
-[node name="ResultsMargin" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 18
-
-[node name="ResultsVBox" type="VBoxContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="ResultsTitle" type="Label" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Results"
-
-[node name="ResultsTabs" type="TabContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox"]
-layout_mode = 2
-size_flags_vertical = 3
-current_tab = 0
-
-[node name="OverviewTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
-metadata/_tab_index = 0
-
-[node name="OverviewText" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/OverviewTab"]
-layout_mode = 2
-focus_mode = 2
-fit_content = true
-scroll_following = true
-selection_enabled = true
-
-[node name="DrugsTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
-visible = false
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
-metadata/_tab_index = 1
-
-[node name="DrugsText" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/DrugsTab"]
-layout_mode = 2
-focus_mode = 2
-fit_content = true
-scroll_following = true
-selection_enabled = true
-
-[node name="SpeciesTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
-visible = false
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
-metadata/_tab_index = 2
-
-[node name="SpeciesText" type="RichTextLabel" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/SpeciesTab"]
-layout_mode = 2
-focus_mode = 2
-fit_content = true
-scroll_following = true
-selection_enabled = true
-
-[node name="EvidenceTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
-visible = false
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
-metadata/_tab_index = 3
-
-[node name="EvidenceText" type="TextEdit" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/EvidenceTab"]
-layout_mode = 2
-size_flags_vertical = 3
-editable = false
-
-[node name="RawJSONTab" type="MarginContainer" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs"]
-visible = false
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
-metadata/_tab_index = 4
-
-[node name="RawJSONText" type="TextEdit" parent="RootMargin/RootVBox/BodySplit/ResultsPanel/ResultsMargin/ResultsVBox/ResultsTabs/RawJSONTab"]
-layout_mode = 2
-size_flags_vertical = 3
-editable = false
+text = "Use Shared Panels"
 
 [node name="ReadsDialog" type="FileDialog" parent="."]
-title = "Open a File"
+title = "Choose reads file"
 ok_button_text = "Open"
 file_mode = 0
 access = 2
 
 [node name="PanelsDirDialog" type="FileDialog" parent="."]
-title = "Open a Directory"
+title = "Choose panels directory"
 ok_button_text = "Select Current Folder"
 file_mode = 2
 access = 2
 
 [node name="OutputDialog" type="FileDialog" parent="."]
-title = "Choose output JSON file"
+title = "Save result JSON"
 access = 2
 filters = PackedStringArray("*.json ; JSON files")
 
-[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/UpdateMetadataButton" to="." method="_on_update_metadata_button_pressed"]
-[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/InstallSpeciesButton" to="." method="_on_install_species_button_pressed"]
-[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SetupPanel/SetupMargin/SetupVBox/SetupButtons/RefreshSetupButton" to="." method="_on_refresh_setup_button_pressed"]
-[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ReadsRow/ReadsPicker/ReadsBrowseButton" to="." method="_on_reads_browse_pressed"]
-[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelsRow/PanelsPicker/PanelsBrowseButton" to="." method="_on_panels_browse_pressed"]
-[connection signal="item_selected" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/SpeciesRow/SpeciesOption" to="." method="_on_species_option_item_selected"]
-[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/OutputRow/OutputPicker/OutputBrowseButton" to="." method="_on_output_browse_pressed"]
-[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/RunButton" to="." method="_on_run_button_pressed"]
-[connection signal="pressed" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/ButtonsRow/ClearButton" to="." method="_on_clear_button_pressed"]
-[connection signal="item_selected" from="RootMargin/RootVBox/BodySplit/FormPanel/FormMargin/FormVBox/PanelRow/PanelOption" to="." method="_on_panel_option_item_selected"]
+[connection signal="pressed" from="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/AnalyseButton" to="." method="_on_analyse_button_pressed"]
+[connection signal="pressed" from="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/OptionsButton" to="." method="_on_options_button_pressed"]
+[connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/AllTabButton" to="." method="_on_all_tab_button_pressed"]
+[connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/DrugsTabButton" to="." method="_on_drugs_tab_button_pressed"]
+[connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/EvidenceTabButton" to="." method="_on_evidence_tab_button_pressed"]
+[connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/SpeciesTabButton" to="." method="_on_species_tab_button_pressed"]
+[connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/NewButton" to="." method="_on_new_button_pressed"]
+[connection signal="pressed" from="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/CancelButton" to="." method="_on_cancel_button_pressed"]
+[connection signal="pressed" from="OptionsDialog/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker/PanelsBrowseButton" to="." method="_on_panels_browse_pressed"]
+[connection signal="item_selected" from="OptionsDialog/OptionsMargin/OptionsVBox/SpeciesRow/SpeciesOption" to="." method="_on_species_option_item_selected"]
+[connection signal="pressed" from="OptionsDialog/OptionsMargin/OptionsVBox/OptionsButtons/RefreshPanelsButton" to="." method="_on_refresh_setup_button_pressed"]
+[connection signal="pressed" from="OptionsDialog/OptionsMargin/OptionsVBox/OptionsButtons/OpenPanelsDirButton" to="." method="_on_use_shared_panels_button_pressed"]
 [connection signal="file_selected" from="ReadsDialog" to="." method="_on_reads_dialog_file_selected"]
 [connection signal="dir_selected" from="PanelsDirDialog" to="." method="_on_panels_dir_dialog_dir_selected"]
 [connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]
