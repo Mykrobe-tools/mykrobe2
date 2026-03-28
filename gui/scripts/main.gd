@@ -191,7 +191,7 @@ func _poll_panels_setup() -> void:
 	if result.get("success", false):
 		_refresh_species_options()
 		_refresh_setup_state()
-		_set_notice(str(result.get("status", "Panel setup complete.")))
+		_set_notice("")
 		return
 	_refresh_setup_state()
 	_set_notice(str(result.get("error", "Panel setup failed.")))
