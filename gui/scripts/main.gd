@@ -6,7 +6,6 @@ const GUIHelpersScript = preload("res://scripts/gui_helpers.gd")
 const PanelsSetupManagerScript = preload("res://scripts/panels_setup_manager.gd")
 const PredictRunManagerScript = preload("res://scripts/predict_run_manager.gd")
 const ThemesLibScript = preload("res://scripts/themes.gd")
-const BACKGROUND_IMAGE_PATH = "res://assets/background.png"
 const LOGO_ICON_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
 
 const TAB_ALL := 0
@@ -14,7 +13,8 @@ const TAB_DRUGS := 1
 const TAB_EVIDENCE := 2
 const TAB_SPECIES := 3
 
-@onready var background_texture: TextureRect = $Background
+@onready var background_rect: ColorRect = $Background
+@onready var animated_background: Control = $AnimatedBackground
 @onready var landing_circle: PanelContainer = $LandingView/LandingCenter/LandingCard/LandingCircle
 @onready var bootstrap_circle: PanelContainer = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapCircle
 @onready var processing_circle: PanelContainer = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingCircle
@@ -109,7 +109,7 @@ func _apply_theme(theme_name: String) -> void:
 	_theme_name = theme_name
 	_palette = _themes_lib.palette(theme_name)
 	self.theme = _themes_lib.make_theme(theme_name, 16)
-	background_texture.texture = _helpers.load_texture(BACKGROUND_IMAGE_PATH)
+	background_rect.color = _palette.get("bg", Color("f8f5ee"))
 	var icon_texture: Texture2D = _helpers.load_texture(LOGO_ICON_PATH)
 	landing_logo_icon.texture = icon_texture
 	bootstrap_logo_icon.texture = icon_texture
@@ -400,16 +400,19 @@ func _show_landing_view() -> void:
 	landing_view.visible = true
 	bootstrap_view.visible = false
 	app_view.visible = false
+	animated_background.visible = true
 
 func _show_bootstrap_view() -> void:
 	landing_view.visible = false
 	bootstrap_view.visible = true
 	app_view.visible = false
+	animated_background.visible = true
 
 func _show_results_view() -> void:
 	landing_view.visible = false
 	bootstrap_view.visible = false
 	app_view.visible = true
+	animated_background.visible = false
 
 func _refresh_setup_state() -> void:
 	var panels_dir := panels_dir_edit.text.strip_edges()

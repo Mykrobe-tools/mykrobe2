@@ -1,0 +1,113 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/background_pills.gd" id="1_mgr"]
+[ext_resource type="PackedScene" path="res://scenes/AnimatedPill.tscn" id="2_pill"]
+
+[node name="BackgroundPills" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_mgr")
+
+[node name="BlueTopLeft" parent="." instance=ExtResource("2_pill")]
+pill_size = Vector2(320, 102)
+speed_x = 46.0
+speed_y = 6.0
+angle_degrees = 26.0
+spawn_y_ratio = 0.12
+start_offset_x = 120.0
+x_jitter = 120.0
+
+[node name="GreenTopLeft" parent="." instance=ExtResource("2_pill")]
+pill_size = Vector2(300, 96)
+speed_x = 42.0
+speed_y = 4.5
+angle_degrees = 12.0
+spawn_y_ratio = 0.16
+start_offset_x = 80.0
+x_jitter = 110.0
+
+[node name="OrangeTopLeft" parent="." instance=ExtResource("2_pill")]
+pill_size = Vector2(300, 98)
+speed_x = 44.0
+speed_y = 5.0
+angle_degrees = 52.0
+spawn_y_ratio = 0.21
+start_offset_x = 160.0
+x_jitter = 120.0
+
+[node name="BlueTopMiddle" parent="." instance=ExtResource("2_pill")]
+pill_size = Vector2(330, 104)
+speed_x = 52.0
+speed_y = 5.0
+angle_degrees = 62.0
+spawn_y_ratio = 0.10
+start_offset_x = 240.0
+x_jitter = 140.0
+
+[node name="OrangeTopRight" parent="." instance=ExtResource("2_pill")]
+pill_size = Vector2(300, 100)
+speed_x = 43.0
+speed_y = 4.0
+angle_degrees = 58.0
+spawn_y_ratio = 0.08
+start_offset_x = 520.0
+x_jitter = 180.0
+
+[node name="BlueRight" parent="." instance=ExtResource("2_pill")]
+pill_size = Vector2(360, 112)
+speed_x = 49.0
+speed_y = 7.0
+angle_degrees = 82.0
+spawn_y_ratio = 0.34
+start_offset_x = 620.0
+x_jitter = 180.0
+
+[node name="BlueBottomLeft" parent="." instance=ExtResource("2_pill")]
+pill_size = Vector2(300, 96)
+speed_x = 42.0
+speed_y = -5.0
+angle_degrees = 68.0
+spawn_y_ratio = 0.78
+start_offset_x = 140.0
+x_jitter = 130.0
+
+[node name="OrangeBottomCenter" parent="." instance=ExtResource("2_pill")]
+pill_size = Vector2(360, 114)
+speed_x = 48.0
+speed_y = -6.0
+angle_degrees = 62.0
+spawn_y_ratio = 0.82
+start_offset_x = 280.0
+x_jitter = 150.0
+
+[node name="GreenBottomCenter" parent="." instance=ExtResource("2_pill")]
+pill_size = Vector2(290, 92)
+speed_x = 40.0
+speed_y = -4.0
+angle_degrees = 42.0
+spawn_y_ratio = 0.74
+start_offset_x = 380.0
+x_jitter = 140.0
+
+[node name="BlueBottomRight" parent="." instance=ExtResource("2_pill")]
+pill_size = Vector2(360, 114)
+speed_x = 54.0
+speed_y = -6.5
+angle_degrees = 56.0
+spawn_y_ratio = 0.86
+start_offset_x = 460.0
+x_jitter = 180.0
+
+[node name="OrangeRightEdge" parent="." instance=ExtResource("2_pill")]
+pill_size = Vector2(300, 96)
+speed_x = 45.0
+speed_y = -3.5
+angle_degrees = 70.0
+spawn_y_ratio = 0.68
+start_offset_x = 700.0
+x_jitter = 200.0
