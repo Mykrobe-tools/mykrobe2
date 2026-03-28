@@ -5,6 +5,7 @@ const ResultFormatterScript = preload("res://scripts/result_formatter.gd")
 const GUIHelpersScript = preload("res://scripts/gui_helpers.gd")
 const PanelsSetupManagerScript = preload("res://scripts/panels_setup_manager.gd")
 const PredictRunManagerScript = preload("res://scripts/predict_run_manager.gd")
+const ThemesLibScript = preload("res://scripts/themes.gd")
 const BACKGROUND_IMAGE_PATH = "res://assets/background.png"
 const LOGO_ICON_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
 
@@ -67,6 +68,9 @@ var _formatter: RefCounted
 var _helpers: RefCounted
 var _panels_setup: RefCounted
 var _predict_run: RefCounted
+var _themes_lib: RefCounted
+var _theme_name := "Light"
+var _palette: Dictionary = {}
 var _species_entries: Array = []
 var _panel_entries: Array = []
 var _current_result_text := ""
@@ -83,9 +87,10 @@ func _ready() -> void:
 	_helpers = GUIHelpersScript.new()
 	_panels_setup = PanelsSetupManagerScript.new()
 	_predict_run = PredictRunManagerScript.new()
+	_themes_lib = ThemesLibScript.new()
 	_local_mykrobe2_manager = LocalMykrobe2ManagerScript.new()
 	_local_mykrobe2_manager.configure("bin")
-	_apply_branding()
+	_apply_theme(_theme_name)
 	panels_dir_edit.text = _helpers.default_panels_dir()
 	options_dialog.get_ok_button().text = "Close"
 	_apply_tab_styles()
@@ -98,20 +103,60 @@ func _ready() -> void:
 	_refresh_setup_state()
 	_maybe_start_initial_panels_bootstrap()
 
-func _apply_branding() -> void:
+func _apply_theme(theme_name: String) -> void:
+	if _themes_lib == null or not _themes_lib.has_theme(theme_name):
+		return
+	_theme_name = theme_name
+	_palette = _themes_lib.palette(theme_name)
+	self.theme = _themes_lib.make_theme(theme_name, 16)
 	background_texture.texture = _helpers.load_texture(BACKGROUND_IMAGE_PATH)
 	var icon_texture: Texture2D = _helpers.load_texture(LOGO_ICON_PATH)
 	landing_logo_icon.texture = icon_texture
 	bootstrap_logo_icon.texture = icon_texture
 	header_logo_icon.texture = icon_texture
+	modulate = Color(1, 1, 1, 1)
 	for panel in [landing_circle, bootstrap_circle, processing_circle]:
 		var style := StyleBoxFlat.new()
-		style.bg_color = Color(1, 1, 1, 0.92)
+		style.bg_color = _palette.get("circle_bg", Color(1, 1, 1, 0.92))
 		style.corner_radius_top_left = 400
 		style.corner_radius_top_right = 400
 		style.corner_radius_bottom_left = 400
 		style.corner_radius_bottom_right = 400
 		panel.add_theme_stylebox_override("panel", style)
+	var header_style := StyleBoxFlat.new()
+	header_style.bg_color = _palette.get("header_bg", Color(0.97, 0.96, 0.93, 0.95))
+	$AppView/HeaderBar.add_theme_stylebox_override("panel", header_style)
+	$AppView/HeaderBar.color = _palette.get("header_bg", Color(0.97, 0.96, 0.93, 0.95))
+	_apply_palette_overrides()
+
+func _apply_palette_overrides() -> void:
+	var accent: Color = _palette.get("accent", Color("3987b5"))
+	var text: Color = _palette.get("text", Color("6d6a65"))
+	var muted: Color = _palette.get("text_muted", Color("8b8478"))
+	var success: Color = _palette.get("success", Color("78b13f"))
+	var danger: Color = _palette.get("danger", Color("f55a32"))
+	var dot: Color = _palette.get("dot", Color("c9c4bc"))
+	$LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo/LandingLogoText.add_theme_color_override("font_color", accent)
+	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo/BootstrapLogoText.add_theme_color_override("font_color", accent)
+	$AppView/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo/HeaderLogoText.add_theme_color_override("font_color", accent)
+	$LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingTagline.add_theme_color_override("font_color", text)
+	$LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingHint.add_theme_color_override("font_color", muted)
+	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapTitle.add_theme_color_override("font_color", text)
+	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapStatus.add_theme_color_override("font_color", muted)
+	processing_label.add_theme_color_override("font_color", text)
+	for label in [dot_1, dot_2, dot_3]:
+		label.add_theme_color_override("font_color", dot)
+	$AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn/AllSusceptibleHeading.add_theme_color_override("font_color", success)
+	$AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn/AllResistantHeading.add_theme_color_override("font_color", danger)
+	for label in [
+		$AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllTitle,
+		$AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn/FirstLineTitle,
+		$AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn/SecondLineTitle,
+		$AppView/ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox/EvidenceTitle,
+		$AppView/ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox/SpeciesTitle,
+	]:
+		label.add_theme_color_override("font_color", accent)
+	status_label.add_theme_color_override("font_color", text)
 
 func _process(delta: float) -> void:
 	_poll_panels_setup()
@@ -496,8 +541,12 @@ func _set_results_tab(tab_index: int) -> void:
 
 func _apply_tab_styles() -> void:
 	var selected_bg := Color(0.23, 0.53, 0.70, 1.0)
+	if _palette.has("accent"):
+		selected_bg = _palette["accent"]
 	var selected_fg := Color(1, 1, 1, 1)
 	var unselected_fg := Color(0.23, 0.53, 0.70, 1)
+	if _palette.has("accent"):
+		unselected_fg = _palette["accent"]
 	for button in [all_tab_button, drugs_tab_button, evidence_tab_button, species_tab_button]:
 		button.flat = not button.button_pressed
 		button.add_theme_color_override("font_color", selected_fg if button.button_pressed else unselected_fg)
