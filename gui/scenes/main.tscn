@@ -222,7 +222,7 @@ grow_vertical = 2
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 104.0
+offset_bottom = 86.0
 grow_horizontal = 2
 color = Color(0.97, 0.96, 0.93, 0.95)
 
@@ -232,9 +232,9 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 28.0
-offset_top = 18.0
+offset_top = 12.0
 offset_right = -28.0
-offset_bottom = -18.0
+offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -244,12 +244,12 @@ theme_override_constants/separation = 24
 alignment = 1
 
 [node name="HeaderLogo" type="HBoxContainer" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox"]
-custom_minimum_size = Vector2(170, 48)
+custom_minimum_size = Vector2(160, 40)
 layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="HeaderLogoIcon" type="TextureRect" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo"]
-custom_minimum_size = Vector2(42, 42)
+custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
@@ -257,7 +257,7 @@ stretch_mode = 5
 [node name="HeaderLogoText" type="Label" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 24
 text = "MYKROBE"
 
 [node name="HeaderSpacerLeft" type="Control" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox"]
@@ -269,22 +269,30 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="AllTabButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
+size_flags_vertical = 4
 toggle_mode = true
 text = "ALL"
 
 [node name="DrugsTabButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
+size_flags_vertical = 4
 toggle_mode = true
 text = "DRUGS"
 
 [node name="EvidenceTabButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
+size_flags_vertical = 4
 toggle_mode = true
 text = "EVIDENCE"
 
 [node name="SpeciesTabButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
+size_flags_vertical = 4
 toggle_mode = true
 text = "SPECIES"
 
@@ -293,11 +301,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="SaveButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox"]
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
+size_flags_vertical = 4
 text = "SAVE"
 
 [node name="NewButton" type="Button" parent="AppView/HeaderBar/HeaderMargin/HeaderHBox"]
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
+size_flags_vertical = 4
 text = "NEW"
 
 [node name="ResultsMargin" type="MarginContainer" parent="AppView"]
@@ -306,7 +318,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 30.0
-offset_top = 134.0
+offset_top = 112.0
 offset_right = -30.0
 offset_bottom = -34.0
 grow_horizontal = 2

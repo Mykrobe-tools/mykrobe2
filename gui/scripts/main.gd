@@ -610,14 +610,14 @@ func _apply_tab_styles() -> void:
 		button.add_theme_color_override("font_hover_color", selected_fg if button.button_pressed else unselected_fg)
 		button.add_theme_color_override("font_pressed_color", selected_fg)
 		var style := StyleBoxFlat.new()
-		style.corner_radius_top_left = 18
-		style.corner_radius_top_right = 18
-		style.corner_radius_bottom_left = 18
-		style.corner_radius_bottom_right = 18
+		style.corner_radius_top_left = 20
+		style.corner_radius_top_right = 20
+		style.corner_radius_bottom_left = 20
+		style.corner_radius_bottom_right = 20
 		style.content_margin_left = 16
 		style.content_margin_right = 16
-		style.content_margin_top = 8
-		style.content_margin_bottom = 8
+		style.content_margin_top = 3
+		style.content_margin_bottom = 3
 		if button.button_pressed:
 			style.bg_color = selected_bg
 			style.border_width_left = 0

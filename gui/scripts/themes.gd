@@ -171,11 +171,11 @@ func _button_style(bg: Color, border: Color, font_color: Color, filled: bool) ->
 	style.bg_color = bg
 	style.border_color = border
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(18)
-	style.content_margin_left = 18
-	style.content_margin_right = 18
-	style.content_margin_top = 10
-	style.content_margin_bottom = 10
+	style.set_corner_radius_all(20)
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
 	if filled:
 		style.shadow_size = 0
 	return style
