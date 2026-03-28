@@ -140,7 +140,6 @@ func _apply_palette_overrides() -> void:
 	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo/BootstrapLogoText.add_theme_color_override("font_color", accent)
 	$AppView/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo/HeaderLogoText.add_theme_color_override("font_color", accent)
 	$LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingTagline.add_theme_color_override("font_color", text)
-	$LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingHint.add_theme_color_override("font_color", muted)
 	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapTitle.add_theme_color_override("font_color", text)
 	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapStatus.add_theme_color_override("font_color", muted)
 	processing_label.add_theme_color_override("font_color", text)
