@@ -330,7 +330,12 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="AllVBox" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/AllView"]
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 10
 
 [node name="AllTitle" type="Label" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox"]
@@ -338,9 +343,6 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
 theme_override_font_sizes/font_size = 18
 text = "RESISTANCE PROFILE"
-
-[node name="AllSeparator" type="HSeparator" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox"]
-layout_mode = 2
 
 [node name="AllColumns" type="HBoxContainer" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox"]
 layout_mode = 2
@@ -357,6 +359,9 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.458824, 0.694118, 0.243137, 1)
 theme_override_font_sizes/font_size = 18
 text = "● SUSCEPTIBLE"
+
+[node name="AllSusceptibleSeparator" type="HSeparator" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn"]
+layout_mode = 2
 
 [node name="AllSusceptibleText" type="RichTextLabel" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn"]
 layout_mode = 2
@@ -376,6 +381,9 @@ theme_override_colors/font_color = Color(0.960784, 0.341176, 0.196078, 1)
 theme_override_font_sizes/font_size = 18
 text = "▲ RESISTANT"
 
+[node name="AllResistantSeparator" type="HSeparator" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn"]
+layout_mode = 2
+
 [node name="AllResistantText" type="RichTextLabel" parent="AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -393,7 +401,12 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="DrugsVBox" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/DrugsView"]
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 10
 
 [node name="DrugsColumns" type="HBoxContainer" parent="AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox"]
@@ -453,7 +466,12 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="EvidenceVBox" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/EvidenceView"]
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 10
 
 [node name="EvidenceTitle" type="Label" parent="AppView/ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
@@ -484,7 +502,12 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="SpeciesVBox" type="VBoxContainer" parent="AppView/ResultsMargin/ResultsStack/SpeciesView"]
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 10
 
 [node name="SpeciesTitle" type="Label" parent="AppView/ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
