@@ -736,17 +736,20 @@ title = "Open a File"
 ok_button_text = "Open"
 file_mode = 0
 access = 2
+use_native_dialog = true
 
 [node name="PanelsDirDialog" type="FileDialog" parent="."]
 title = "Open a Directory"
 ok_button_text = "Select Current Folder"
 file_mode = 2
 access = 2
+use_native_dialog = true
 
 [node name="OutputDialog" type="FileDialog" parent="."]
 title = "Save result JSON"
 access = 2
 filters = PackedStringArray("*.json ; JSON files")
+use_native_dialog = true
 
 [connection signal="pressed" from="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/AnalyseButton" to="." method="_on_analyse_button_pressed"]
 [connection signal="pressed" from="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/OptionsButton" to="." method="_on_options_button_pressed"]
