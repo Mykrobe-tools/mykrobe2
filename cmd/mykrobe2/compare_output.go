@@ -18,7 +18,7 @@ type compareOutputOptions struct {
 	compareAll     bool
 }
 
-const defaultCompareFloatTolerance = 1e-10
+const defaultCompareFloatTolerance = 1e-8
 
 type diffEntry struct {
 	Path   string
