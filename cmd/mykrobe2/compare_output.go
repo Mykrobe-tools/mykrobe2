@@ -6,7 +6,7 @@ import (
 	"io"
 	"math"
 	"os"
-	"reflect"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -15,6 +15,7 @@ import (
 
 type compareOutputOptions struct {
 	floatTolerance float64
+	compareAll     bool
 }
 
 const defaultCompareFloatTolerance = 1e-10
@@ -38,6 +39,7 @@ func newCompareOutputCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().Float64Var(&opts.floatTolerance, "float_tolerance", defaultCompareFloatTolerance, "Absolute float tolerance")
+	cmd.Flags().BoolVar(&opts.compareAll, "compare_all", false, "Compare all fields strictly, including version strings and full probe set paths")
 	return cmd
 }
 
@@ -66,7 +68,7 @@ func runCompareOutput(opts *compareOutputOptions, out io.Writer, leftPath string
 		return fmt.Errorf("report_all_calls mismatch: %s=%t %s=%t", leftPath, leftHasReport, rightPath, rightHasReport)
 	}
 
-	summary := compareJSONDocuments(leftSamples, rightSamples, opts.floatTolerance)
+	summary := compareJSONDocuments(leftSamples, rightSamples, opts)
 	writeCompareSummary(out, summary)
 	if summary.Different {
 		return fmt.Errorf("outputs differ")
@@ -79,9 +81,9 @@ type compareSummary struct {
 	Diffs     []diffEntry
 }
 
-func compareJSONDocuments(left map[string]any, right map[string]any, floatTolerance float64) compareSummary {
+func compareJSONDocuments(left map[string]any, right map[string]any, opts *compareOutputOptions) compareSummary {
 	var diffs []diffEntry
-	diffJSONValue("root", left, right, floatTolerance, &diffs)
+	diffJSONValue("root", left, right, opts, &diffs)
 	return compareSummary{Different: len(diffs) > 0, Diffs: diffs}
 }
 
@@ -195,8 +197,11 @@ func shortJSON(v any) string {
 	return s
 }
 
-func diffJSONValue(path string, left any, right any, floatTolerance float64, diffs *[]diffEntry) {
+func diffJSONValue(path string, left any, right any, opts *compareOutputOptions, diffs *[]diffEntry) {
 	if len(*diffs) >= 200 {
+		return
+	}
+	if shouldIgnorePath(path, opts) {
 		return
 	}
 	if left == nil && right == nil {
@@ -213,10 +218,18 @@ func diffJSONValue(path string, left any, right any, floatTolerance float64, dif
 
 	if lf, ok := asFloat64(left); ok {
 		if rf, ok := asFloat64(right); ok {
-			if math.Abs(lf-rf) > floatTolerance {
+			if math.Abs(lf-rf) > opts.floatTolerance {
 				*diffs = append(*diffs, diffEntry{Path: path, Left: lf, Right: rf, Reason: "float"})
 			}
 			return
+		}
+	}
+
+	if ls, ok := left.(string); ok {
+		if rs, ok := right.(string); ok {
+			if equivalentStringAtPath(path, ls, rs, opts) {
+				return
+			}
 		}
 	}
 
@@ -251,7 +264,7 @@ func diffJSONValue(path string, left any, right any, floatTolerance float64, dif
 				*diffs = append(*diffs, diffEntry{Path: childPath, Left: lv, Reason: "missing_right"})
 				continue
 			}
-			diffJSONValue(childPath, lv, rv, floatTolerance, diffs)
+			diffJSONValue(childPath, lv, rv, opts, diffs)
 			if len(*diffs) >= 200 {
 				return
 			}
@@ -267,16 +280,48 @@ func diffJSONValue(path string, left any, right any, floatTolerance float64, dif
 			return
 		}
 		for i := range l {
-			diffJSONValue(fmt.Sprintf("%s[%d]", path, i), l[i], r[i], floatTolerance, diffs)
+			diffJSONValue(fmt.Sprintf("%s[%d]", path, i), l[i], r[i], opts, diffs)
 			if len(*diffs) >= 200 {
 				return
 			}
 		}
 	default:
-		if !reflect.DeepEqual(left, right) {
+		if fmt.Sprintf("%v", left) != fmt.Sprintf("%v", right) {
 			*diffs = append(*diffs, diffEntry{Path: path, Left: left, Right: right, Reason: "value"})
 		}
 	}
+}
+
+func shouldIgnorePath(path string, opts *compareOutputOptions) bool {
+	if opts.compareAll {
+		return false
+	}
+	return strings.HasSuffix(path, ".version.mykrobe-atlas") ||
+		strings.HasSuffix(path, ".version.mykrobe-predictor")
+}
+
+func equivalentStringAtPath(path string, left string, right string, opts *compareOutputOptions) bool {
+	if left == right {
+		return true
+	}
+	if opts.compareAll {
+		return false
+	}
+	if strings.Contains(path, ".probe_sets[") {
+		return normalizeProbeSetPath(left) == normalizeProbeSetPath(right)
+	}
+	return false
+}
+
+func normalizeProbeSetPath(s string) string {
+	s = filepath.ToSlash(s)
+	parts := strings.Split(s, "/")
+	for i := 0; i < len(parts)-1; i++ {
+		if parts[i] == "tb" {
+			return strings.Join(parts[i:], "/")
+		}
+	}
+	return filepath.Base(s)
 }
 
 func asFloat64(v any) (float64, bool) {

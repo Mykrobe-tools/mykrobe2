@@ -134,3 +134,105 @@ func TestCompareOutputIgnoresTinyFloatDiffs(t *testing.T) {
 		t.Fatalf("expected tiny float difference to be ignored, got %v with output %s", err, out.String())
 	}
 }
+
+func TestCompareOutputIgnoresVersionStringsByDefault(t *testing.T) {
+	dir := t.TempDir()
+	left := dir + "/left.json"
+	right := dir + "/right.json"
+	writeJSONFile(t, left, map[string]any{
+		"SAMPLE": map[string]any{
+			"version": map[string]any{
+				"mykrobe-predictor": "v0.13.0",
+				"mykrobe-atlas":     "v0.13.0",
+			},
+		},
+	})
+	writeJSONFile(t, right, map[string]any{
+		"SAMPLE": map[string]any{
+			"version": map[string]any{
+				"mykrobe-predictor": "mykrobe2",
+				"mykrobe-atlas":     "mykrobe2",
+			},
+		},
+	})
+	var out bytes.Buffer
+	err := runCompareOutput(&compareOutputOptions{floatTolerance: defaultCompareFloatTolerance}, &out, left, right)
+	if err != nil {
+		t.Fatalf("expected version strings to be ignored by default, got %v with output %s", err, out.String())
+	}
+}
+
+func TestCompareOutputComparesVersionStringsWithCompareAll(t *testing.T) {
+	dir := t.TempDir()
+	left := dir + "/left.json"
+	right := dir + "/right.json"
+	writeJSONFile(t, left, map[string]any{
+		"SAMPLE": map[string]any{
+			"version": map[string]any{
+				"mykrobe-predictor": "v0.13.0",
+			},
+		},
+	})
+	writeJSONFile(t, right, map[string]any{
+		"SAMPLE": map[string]any{
+			"version": map[string]any{
+				"mykrobe-predictor": "mykrobe2",
+			},
+		},
+	})
+	var out bytes.Buffer
+	err := runCompareOutput(&compareOutputOptions{floatTolerance: defaultCompareFloatTolerance, compareAll: true}, &out, left, right)
+	if err == nil || !strings.Contains(out.String(), "version.mykrobe-predictor") {
+		t.Fatalf("expected strict version diff, got err=%v output=%s", err, out.String())
+	}
+}
+
+func TestCompareOutputIgnoresProbeSetParentDirsByDefault(t *testing.T) {
+	dir := t.TempDir()
+	left := dir + "/left.json"
+	right := dir + "/right.json"
+	writeJSONFile(t, left, map[string]any{
+		"SAMPLE": map[string]any{
+			"probe_sets": []any{
+				"/usr/local/lib/python3.8/dist-packages/mykrobe/data/tb/tb-species-202309.fasta.gz",
+			},
+		},
+	})
+	writeJSONFile(t, right, map[string]any{
+		"SAMPLE": map[string]any{
+			"probe_sets": []any{
+				"/Users/martin/tmp/myk_test/mykrobe_data/tb/tb-species-202309.fasta.gz",
+			},
+		},
+	})
+	var out bytes.Buffer
+	err := runCompareOutput(&compareOutputOptions{floatTolerance: defaultCompareFloatTolerance}, &out, left, right)
+	if err != nil {
+		t.Fatalf("expected probe set parent dirs to be ignored, got %v with output %s", err, out.String())
+	}
+}
+
+func TestCompareOutputComparesFullProbeSetPathsWithCompareAll(t *testing.T) {
+	dir := t.TempDir()
+	left := dir + "/left.json"
+	right := dir + "/right.json"
+	writeJSONFile(t, left, map[string]any{
+		"SAMPLE": map[string]any{
+			"probe_sets": []any{
+				"/a/tb/tb-species-202309.fasta.gz",
+			},
+		},
+	})
+	writeJSONFile(t, right, map[string]any{
+		"SAMPLE": map[string]any{
+			"probe_sets": []any{
+				"/b/tb/tb-species-202309.fasta.gz",
+			},
+		},
+	})
+	var out bytes.Buffer
+	err := runCompareOutput(&compareOutputOptions{floatTolerance: defaultCompareFloatTolerance, compareAll: true}, &out, left, right)
+	if err == nil || !strings.Contains(out.String(), "probe_sets[0]") {
+		t.Fatalf("expected strict probe set path diff, got err=%v output=%s", err, out.String())
+	}
+}
