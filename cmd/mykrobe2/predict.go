@@ -17,7 +17,7 @@ func runPredict(opts *predictOptions) error {
 	}
 	result, err := mykrobe.RunTBPredict(mykrobe.PredictRunOptions{
 		Sample:               opts.sample,
-		SeqPath:              opts.seqPath,
+		SeqPaths:             opts.seqPaths,
 		PanelArg:             opts.panelArg,
 		MapPath:              opts.mapPath,
 		LineagePath:          opts.lineagePath,

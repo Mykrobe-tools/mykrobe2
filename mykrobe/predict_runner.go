@@ -10,7 +10,7 @@ import (
 
 type PredictRunOptions struct {
 	Sample               string
-	SeqPath              string
+	SeqPaths             []string
 	PanelArg             string
 	MapPath              string
 	LineagePath          string
@@ -56,7 +56,7 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	if opts.SeqPath == "" || len(inputs.PanelPaths) == 0 || inputs.MapPath == "" {
+	if len(opts.SeqPaths) == 0 || len(inputs.PanelPaths) == 0 || inputs.MapPath == "" {
 		return nil, fmt.Errorf("predict requires --seq, a panel source, and variant-to-resistance data")
 	}
 	k := opts.K
@@ -72,8 +72,10 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := counter.AddPath(opts.SeqPath); err != nil {
-		return nil, err
+	for _, seqPath := range opts.SeqPaths {
+		if err := counter.AddPath(seqPath); err != nil {
+			return nil, err
+		}
 	}
 	var summaries []mccortex.CoverageSummary
 	if inputs.PanelIndexPath != "" {
@@ -153,7 +155,7 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 		"phylogenetics":  phylo,
 		"kmer":           k,
 		"probe_sets":     inputs.PanelPaths,
-		"files":          []string{opts.SeqPath},
+		"files":          append([]string(nil), opts.SeqPaths...),
 		"version": map[string]any{
 			"mykrobe-predictor": "mykrobe2",
 			"mykrobe-atlas":     "mykrobe2",

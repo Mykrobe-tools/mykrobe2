@@ -28,7 +28,7 @@ func run(args []string) error {
 
 type predictOptions struct {
 	sample               string
-	seqPath              string
+	seqPaths             []string
 	panelArg             string
 	mapPath              string
 	lineagePath          string
@@ -101,7 +101,7 @@ func newPredictCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&opts.sample, "sample", "sample", "")
-	cmd.Flags().StringVar(&opts.seqPath, "seq", "", "")
+	cmd.Flags().StringSliceVarP(&opts.seqPaths, "seq", "i", nil, "")
 	cmd.Flags().StringVar(&opts.panelArg, "panel", "", "")
 	cmd.Flags().StringVar(&opts.mapPath, "variant_to_resistance_json", "", "")
 	cmd.Flags().StringVar(&opts.lineagePath, "lineage_json", "", "")

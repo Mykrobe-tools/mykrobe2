@@ -80,6 +80,61 @@ func TestPredictCommand(t *testing.T) {
 	}
 }
 
+func TestPredictCommandWithMultipleSeqFiles(t *testing.T) {
+	dir := t.TempDir()
+	panel := filepath.Join(dir, "panel.fa")
+	reads1 := filepath.Join(dir, "reads1.fa")
+	reads2 := filepath.Join(dir, "reads2.fa")
+	out := filepath.Join(dir, "out.json")
+
+	panelData := "" +
+		">katG?name=katG&panel_type=presence&version=1\nACGTGCACTA\n" +
+		">ref-A123T?var_name=A123T&gene=katG&mut=A123T\nACGTGCACTA\n" +
+		">alt-A123T?var_name=A123T&gene=katG&mut=A123T\nTTTTTCACTA\n"
+	if err := os.WriteFile(panel, []byte(panelData), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(reads1, []byte(">r1\nACGTGCACTA\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(reads2, []byte(">r2\nTTTTTCACTA\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	err := run([]string{
+		"predict",
+		"--sample", "S1",
+		"--seq", reads1,
+		"--seq", reads2,
+		"--panel", panel,
+		"--variant_to_resistance_json", "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json",
+		"--output", out,
+		"--k", "5",
+		"--expected_depth", "100",
+		"--report_all_calls",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := map[string]map[string]any{}
+	f, err := os.Open(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	if err := json.NewDecoder(f).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	files, ok := got["S1"]["files"].([]any)
+	if !ok {
+		t.Fatalf("missing files list: %v", got["S1"])
+	}
+	if len(files) != 2 || files[0] != reads1 || files[1] != reads2 {
+		t.Fatalf("unexpected files list: %#v", files)
+	}
+}
+
 func TestPredictCommandWithONTAndConfThresholdFlags(t *testing.T) {
 	dir := t.TempDir()
 	panel := filepath.Join(dir, "panel.fa")
