@@ -83,3 +83,29 @@ func TestLogLikProbabilityOfNGapsMatchesPythonRounding(t *testing.T) {
 		t.Fatalf("got=%v want=%v", got, want)
 	}
 }
+
+func TestLikelihoodsToConfidenceMatchesPythonRounding(t *testing.T) {
+	got := LikelihoodsToConfidence([]float64{-15.5, -99999999, -9770.1})
+	if got != 9755 {
+		t.Fatalf("got=%d want=9755", got)
+	}
+}
+
+func TestGeneCollectionTyperGetBestVersionSortsTiesByVersionAscending(t *testing.T) {
+	gt := NewGeneCollectionTyper([]float64{36}, nil, 1)
+	got := gt.GetBestVersion(map[string]SequenceProbeCoverage{
+		"13": {Version: "13", ProbeCoverage: ProbeCoverage{PercentCoverage: 100}},
+		"1":  {Version: "1", ProbeCoverage: ProbeCoverage{PercentCoverage: 100}},
+		"8":  {Version: "8", ProbeCoverage: ProbeCoverage{PercentCoverage: 100}},
+		"7":  {Version: "7", ProbeCoverage: ProbeCoverage{PercentCoverage: 100}},
+	}, 100)
+	want := []string{"1", "7", "8", "13"}
+	if len(got) != len(want) {
+		t.Fatalf("len=%d want=%d", len(got), len(want))
+	}
+	for i, w := range want {
+		if got[i].Version != w {
+			t.Fatalf("at %d got=%s want=%s full=%v", i, got[i].Version, w, got)
+		}
+	}
+}

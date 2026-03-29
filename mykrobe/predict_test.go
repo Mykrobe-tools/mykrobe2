@@ -3,6 +3,8 @@ package mykrobe
 import (
 	"bytes"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -123,6 +125,43 @@ func TestTBPredictorAddsCalledByForResistanceCalls(t *testing.T) {
 	}
 }
 
+func TestTBPredictorMutatesCalledGeneToNullVariant(t *testing.T) {
+	mapPath := filepath.Join(t.TempDir(), "staph_map.json")
+	if err := os.WriteFile(mapPath, []byte(`{"ermC":["Erythromycin"]}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	calledGenes := map[string]Call{
+		"ermC": {
+			Class:               "Call.SequenceCall",
+			Genotype:            []int{1, 1},
+			GenotypeLikelihoods: []float64{-10, -5, -1},
+			Info: map[string]any{
+				"contamination_depths": []float64{},
+				"coverage": map[string]any{
+					"percent_coverage":   97.92,
+					"median_depth":       576.0,
+					"min_non_zero_depth": 465.0,
+					"kmer_count":         416715,
+					"klen":               721,
+				},
+				"expected_depths": []float64{36},
+				"version":         "2",
+			},
+		},
+	}
+	p, err := NewTBPredictor(nil, calledGenes, mapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := p.Run().Susceptibility["Erythromycin"]
+	if got["predict"] != "R" {
+		t.Fatalf("predict=%v", got)
+	}
+	if mutated := calledGenes["ermC"]; !mutated.ForceVariantField || mutated.Variant != nil {
+		t.Fatalf("expected source gene call to be marked for null variant, got %+v", mutated)
+	}
+}
+
 func TestTBPredictorNamesForAlleleKeepsMutationPrefixesWithHyphens(t *testing.T) {
 	p := &TBPredictor{}
 	got := p.namesForAllele("eis_G-10A-C2715342T")
@@ -135,6 +174,25 @@ func TestVariantCallJSONKeepsNullVariant(t *testing.T) {
 	data, err := json.Marshal(Call{
 		Class:               "Call.VariantCall",
 		Variant:             nil,
+		ForceVariantField:   true,
+		Genotype:            []int{1, 1},
+		GenotypeLikelihoods: []float64{-1, -2, -3},
+		Info:                map[string]any{"contamination_depths": []float64{}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(data)
+	if !strings.Contains(got, `"variant":null`) {
+		t.Fatalf("expected null variant in JSON, got %s", got)
+	}
+}
+
+func TestSequenceCallJSONKeepsNullVariantWhenForced(t *testing.T) {
+	data, err := json.Marshal(Call{
+		Class:               "Call.SequenceCall",
+		Variant:             nil,
+		ForceVariantField:   true,
 		Genotype:            []int{1, 1},
 		GenotypeLikelihoods: []float64{-1, -2, -3},
 		Info:                map[string]any{"contamination_depths": []float64{}},

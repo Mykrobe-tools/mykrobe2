@@ -191,15 +191,15 @@ func (p *LineagePredictor) CallLineageUsingConfScores(lineageCalls map[string]ma
 	}
 	result := map[string]any{
 		"lineage": []string{},
-		"calls":   map[string]map[string]map[string]Call{},
+		"calls":   map[string]map[string]any{},
 	}
 	for _, path := range bestPaths {
 		result["lineage"] = append(result["lineage"].([]string), path.Lineage)
-		used := map[string]map[string]Call{}
+		used := map[string]any{}
 		for lineage := range path.Scores {
-			used[lineage] = lineageCalls[lineage]
+			used[lineage] = lineageCallsForResult(lineageCalls, lineage)
 		}
-		result["calls"].(map[string]map[string]map[string]Call)[path.Lineage] = used
+		result["calls"].(map[string]map[string]any)[path.Lineage] = used
 	}
 	return result
 }
@@ -303,13 +303,11 @@ func (p *LineagePredictor) CallLineage(lineageCalls map[string]map[string]Call, 
 		lineages = append(lineages, lineage)
 	}
 	slices.Sort(lineages)
-	calls := map[string]map[string]map[string]Call{}
+	calls := map[string]map[string]any{}
 	for _, lineage := range lineages {
-		calls[lineage] = map[string]map[string]Call{}
+		calls[lineage] = map[string]any{}
 		for lineage2 := range paths[lineage].Genotypes {
-			if lc, ok := lineageCalls[lineage2]; ok {
-				calls[lineage][lineage2] = lc
-			}
+			calls[lineage][lineage2] = lineageCallsForResult(lineageCalls, lineage2)
 		}
 	}
 	result := map[string]any{
@@ -330,8 +328,8 @@ func (p *LineagePredictor) applyReportNames(result map[string]any) {
 	}
 	result["lineage"] = lineages
 
-	oldCalls := result["calls"].(map[string]map[string]map[string]Call)
-	newCalls := map[string]map[string]map[string]Call{}
+	oldCalls := result["calls"].(map[string]map[string]any)
+	newCalls := map[string]map[string]any{}
 	for lineage, d := range oldCalls {
 		lineage2 := p.ReportNames[lineage]
 		newCalls[lineage2] = p.replaceNestedCallKeys(d)
@@ -359,8 +357,8 @@ func (p *LineagePredictor) ApplyReportNamesToLineageCalls(d map[string]map[strin
 	return out
 }
 
-func (p *LineagePredictor) replaceNestedCallKeys(d map[string]map[string]Call) map[string]map[string]Call {
-	out := map[string]map[string]Call{}
+func (p *LineagePredictor) replaceNestedCallKeys(d map[string]any) map[string]any {
+	out := map[string]any{}
 	for k, v := range d {
 		if name, ok := p.ReportNames[k]; ok {
 			out[name] = v
@@ -369,6 +367,13 @@ func (p *LineagePredictor) replaceNestedCallKeys(d map[string]map[string]Call) m
 		}
 	}
 	return out
+}
+
+func lineageCallsForResult(lineageCalls map[string]map[string]Call, lineage string) any {
+	if lc, ok := lineageCalls[lineage]; ok {
+		return lc
+	}
+	return nil
 }
 
 func (p *LineagePredictor) replaceFloatKeys(d map[string]float64) map[string]float64 {

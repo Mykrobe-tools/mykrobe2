@@ -113,7 +113,7 @@ func newPredictCmd() *cobra.Command {
 	cmd.Flags().StringVar(&opts.ploidy, "ploidy", "diploid", "")
 	cmd.Flags().IntVar(&opts.k, "k", 0, "")
 	cmd.Flags().Float64Var(&opts.expectedDepth, "expected_depth", 0, "")
-	cmd.Flags().Float64Var(&opts.minDepth, "min_depth", 3, "")
+	cmd.Flags().Float64Var(&opts.minDepth, "min_depth", 1, "")
 	cmd.Flags().Float64Var(&opts.errorRate, "expected_error_rate", mykrobe.DefaultErrorRate, "")
 	cmd.Flags().Float64Var(&opts.minorFreq, "minor_freq", mykrobe.DefaultMinorFreq, "")
 	cmd.Flags().Float64Var(&opts.minPropExpectedDepth, "min_proportion_expected_depth", 0.3, "")

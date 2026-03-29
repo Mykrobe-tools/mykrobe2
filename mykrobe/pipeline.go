@@ -78,6 +78,14 @@ func AnalyzeCoverageSetTBWithOptions(set *CoverageSet, opts AnalysisOptions) (*A
 	predictor.DepthThreshold = opts.MinDepth
 	predictor.IgnoreMinorCalls = opts.IgnoreMinorCalls
 	result := predictor.Run()
+	for name, mutated := range predictor.CalledGenes {
+		calls, ok := geneCalls[name]
+		if !ok || len(calls) == 0 {
+			continue
+		}
+		calls[0] = mutated
+		geneCalls[name] = calls
+	}
 	lineageCalls := map[string]map[string]Call{}
 	lineageResult := map[string]any(nil)
 	if opts.LineagePath != "" {

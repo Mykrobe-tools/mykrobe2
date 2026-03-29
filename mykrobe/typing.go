@@ -2,7 +2,7 @@ package mykrobe
 
 import (
 	"encoding/json"
-	"math"
+	"strconv"
 	"slices"
 	"sort"
 )
@@ -10,6 +10,7 @@ import (
 type Call struct {
 	Class               string         `json:"_cls,omitempty"`
 	Variant             any            `json:"variant,omitempty"`
+	ForceVariantField   bool           `json:"-"`
 	Genotype            []int          `json:"genotype"`
 	GenotypeLikelihoods []float64      `json:"genotype_likelihoods"`
 	Info                map[string]any `json:"info"`
@@ -24,7 +25,7 @@ func (c Call) MarshalJSON() ([]byte, error) {
 	if c.Class != "" {
 		out["_cls"] = c.Class
 	}
-	if c.Variant != nil || c.Class == "Call.VariantCall" {
+	if c.Variant != nil || c.Class == "Call.VariantCall" || c.ForceVariantField {
 		out["variant"] = c.Variant
 	}
 	data, err := json.Marshal(NormalizeForPythonJSON(out))
@@ -167,7 +168,14 @@ func (g GeneCollectionTyper) GetBestVersion(collection map[string]SequenceProbeC
 	for _, v := range collection {
 		items = append(items, v)
 	}
-	sort.Slice(items, func(i, j int) bool { return items[i].PercentCoverage() > items[j].PercentCoverage() })
+	sort.Slice(items, func(i, j int) bool {
+		pi := items[i].PercentCoverage()
+		pj := items[j].PercentCoverage()
+		if pi != pj {
+			return pi > pj
+		}
+		return compareVersionStrings(items[i].Version, items[j].Version) < 0
+	})
 	best := []SequenceProbeCoverage{items[0]}
 	for _, gene := range items[1:] {
 		if gene.PercentCoverage() >= threshold {
@@ -179,13 +187,36 @@ func (g GeneCollectionTyper) GetBestVersion(collection map[string]SequenceProbeC
 	return best
 }
 
+func compareVersionStrings(a, b string) int {
+	ai, aerr := strconv.Atoi(a)
+	bi, berr := strconv.Atoi(b)
+	if aerr == nil && berr == nil {
+		switch {
+		case ai < bi:
+			return -1
+		case ai > bi:
+			return 1
+		default:
+			return 0
+		}
+	}
+	switch {
+	case a < b:
+		return -1
+	case a > b:
+		return 1
+	default:
+		return 0
+	}
+}
+
 func LikelihoodsToConfidence(l []float64) int {
 	sorted := slices.Clone(l)
 	sort.Sort(sort.Reverse(sort.Float64Slice(sorted)))
 	if sorted[2] == l[0] {
-		return int(math.Round(sorted[0] - l[0]))
+		return pythonRoundToInt(sorted[0] - l[0])
 	}
-	return int(math.Round(sorted[0] - sorted[1]))
+	return pythonRoundToInt(sorted[0] - sorted[1])
 }
 
 type VariantTyper struct {

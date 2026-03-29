@@ -111,6 +111,27 @@ func TestLineageGenotypeAndGoodPathsAndCall(t *testing.T) {
 	}
 }
 
+func TestLineageCallPreservesMissingParentAsNull(t *testing.T) {
+	v := map[string]LineageVariant{
+		"var1":   {"lineage1", false, ""},
+		"var1.2": {"lineage1.1.1", false, ""},
+	}
+	lineageCalls := map[string]map[string]Call{
+		"lineage1":     {"var1": {Genotype: []int{1, 1}}},
+		"lineage1.1.1": {"var1.2": {Genotype: []int{1, 1}}},
+	}
+	p := NewLineagePredictor(v)
+	call := p.CallLineage(lineageCalls, 0.5)
+	calls := call["calls"].(map[string]map[string]any)
+	lineageCallsOut := calls["lineage1.1.1"]
+	if _, ok := lineageCallsOut["lineage1.1"]; !ok {
+		t.Fatalf("missing parent lineage placeholder: %#v", lineageCallsOut)
+	}
+	if lineageCallsOut["lineage1.1"] != nil {
+		t.Fatalf("expected nil parent lineage placeholder, got %#v", lineageCallsOut["lineage1.1"])
+	}
+}
+
 func childNames(n *lineageNode) []string {
 	out := make([]string, len(n.Children))
 	for i, c := range n.Children {

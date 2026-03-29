@@ -2,6 +2,7 @@ package mykrobe
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"math"
 	"os"
@@ -174,7 +175,7 @@ func CoverageSetFromSummaries(summaries []mccortex.CoverageSummary) *CoverageSet
 	for _, s := range summaries {
 		medianDepth := float64(s.MedianDepth)
 		minDepth := float64(s.MinDepth)
-		percentCoverage := 100 * s.PercentCoverage
+		percentCoverage := 100 * quantizeCoverageRatioLikeTSV(s.PercentCoverage)
 		kCount := int(s.KmerCount)
 		kLen := s.KmerLength
 		alleleName := strings.Split(s.Name, "?")[0]
@@ -185,6 +186,15 @@ func CoverageSetFromSummaries(summaries []mccortex.CoverageSummary) *CoverageSet
 		}
 	}
 	return set
+}
+
+func quantizeCoverageRatioLikeTSV(v float64) float64 {
+	s := fmt.Sprintf("%f", v)
+	out, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return v
+	}
+	return out
 }
 
 func parseSummaryRow(row []string) (string, float64, float64, float64, int, int) {
