@@ -27,7 +27,11 @@ func (c Call) MarshalJSON() ([]byte, error) {
 	if c.Variant != nil || c.Class == "Call.VariantCall" {
 		out["variant"] = c.Variant
 	}
-	return json.Marshal(NormalizeForPythonJSON(out))
+	data, err := json.Marshal(NormalizeForPythonJSON(out))
+	if err != nil {
+		return nil, err
+	}
+	return unescapeHTMLJSON(data), nil
 }
 
 type Typer struct {

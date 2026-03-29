@@ -1,6 +1,7 @@
 package mykrobe
 
 import (
+	"bytes"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -163,5 +164,28 @@ func TestVariantCallJSONFormatsIntegralFloatsLikePython(t *testing.T) {
 	}
 	if !strings.Contains(got, `"genotype_likelihoods":[-1.0,-2.0]`) {
 		t.Fatalf("expected rounded float formatting, got %s", got)
+	}
+}
+
+func TestVariantCallJSONDoesNotEscapeAmpersands(t *testing.T) {
+	var buf bytes.Buffer
+	err := WriteJSONLikePython(&buf, map[string]any{
+		"call": Call{
+		Class:               "Call.VariantCall",
+		Variant:             "ref-A1692141C?var_name=A1692141C&num_alts=1&ref=NC_000962.3&enum=0&gene=NA&mut=A1692141C",
+		Genotype:            []int{1, 1},
+		GenotypeLikelihoods: []float64{-1, -2, -3},
+		Info:                map[string]any{"contamination_depths": []float64{}},
+		},
+	}, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := buf.String()
+	if strings.Contains(got, `\u0026`) {
+		t.Fatalf("expected ampersands to remain literal, got %s", got)
+	}
+	if !strings.Contains(got, `&num_alts=1&ref=NC_000962.3&enum=0&gene=NA&mut=A1692141C`) {
+		t.Fatalf("expected literal ampersands in variant, got %s", got)
 	}
 }

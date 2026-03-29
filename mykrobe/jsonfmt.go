@@ -1,11 +1,13 @@
 package mykrobe
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"math"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 type pythonFloat float64
@@ -76,9 +78,31 @@ func NormalizeForPythonJSON(v any) any {
 }
 
 func WriteJSONLikePython(w io.Writer, v any, indent string) error {
-	enc := json.NewEncoder(w)
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
 	if indent != "" {
 		enc.SetIndent("", indent)
 	}
-	return enc.Encode(NormalizeForPythonJSON(v))
+	if err := enc.Encode(NormalizeForPythonJSON(v)); err != nil {
+		return err
+	}
+	_, err := w.Write(unescapeHTMLJSON(buf.Bytes()))
+	return err
+}
+
+func marshalJSONLikePython(v any) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := WriteJSONLikePython(&buf, v, ""); err != nil {
+		return nil, err
+	}
+	return unescapeHTMLJSON([]byte(strings.TrimSuffix(buf.String(), "\n"))), nil
+}
+
+func unescapeHTMLJSON(data []byte) []byte {
+	out := string(data)
+	out = strings.ReplaceAll(out, `\u0026`, "&")
+	out = strings.ReplaceAll(out, `\u003c`, "<")
+	out = strings.ReplaceAll(out, `\u003e`, ">")
+	return []byte(out)
 }
