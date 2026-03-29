@@ -14,7 +14,12 @@ import (
 type Counter struct {
 	k      int
 	counts map[uint64]uint32
-	allow  map[uint64]struct{}
+	allow  *KmerAllowSet
+}
+
+type KmerAllowSet struct {
+	mask  uint64
+	table []uint64
 }
 
 func NewCounter(k int) (*Counter, error) {
@@ -24,13 +29,67 @@ func NewCounter(k int) (*Counter, error) {
 	return &Counter{k: k, counts: make(map[uint64]uint32)}, nil
 }
 
-func NewFilteredCounter(k int, allow map[uint64]struct{}) (*Counter, error) {
+func NewFilteredCounter(k int, allow *KmerAllowSet) (*Counter, error) {
 	c, err := NewCounter(k)
 	if err != nil {
 		return nil, err
 	}
 	c.allow = allow
 	return c, nil
+}
+
+func NewKmerAllowSet(kmers []uint64) *KmerAllowSet {
+	if len(kmers) == 0 {
+		return &KmerAllowSet{}
+	}
+	size := 1
+	needed := len(kmers) * 2
+	for size < needed {
+		size <<= 1
+	}
+	s := &KmerAllowSet{
+		mask:  uint64(size - 1),
+		table: make([]uint64, size),
+	}
+	for i := range s.table {
+		s.table[i] = invalidPanelKmer
+	}
+	for _, kmer := range kmers {
+		s.insert(kmer)
+	}
+	return s
+}
+
+func (s *KmerAllowSet) insert(kmer uint64) {
+	i := s.slot(kmer)
+	for {
+		if s.table[i] == invalidPanelKmer || s.table[i] == kmer {
+			s.table[i] = kmer
+			return
+		}
+		i = (i + 1) & int(s.mask)
+	}
+}
+
+func (s *KmerAllowSet) Contains(kmer uint64) bool {
+	if s == nil || len(s.table) == 0 {
+		return false
+	}
+	i := s.slot(kmer)
+	for {
+		v := s.table[i]
+		if v == invalidPanelKmer {
+			return false
+		}
+		if v == kmer {
+			return true
+		}
+		i = (i + 1) & int(s.mask)
+	}
+}
+
+func (s *KmerAllowSet) slot(kmer uint64) int {
+	return int((kmer * 11400714819323198485) & s.mask)
 }
 
 func (c *Counter) K() int {
@@ -90,7 +149,7 @@ func (c *Counter) AddSequence(seq []byte) {
 			key = rev
 		}
 		if c.allow != nil {
-			if _, ok := c.allow[key]; !ok {
+			if !c.allow.Contains(key) {
 				continue
 			}
 		}

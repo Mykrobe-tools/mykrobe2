@@ -74,7 +74,7 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 		if err != nil {
 			return nil, err
 		}
-		counter, err := mccortex.NewFilteredCounter(k, idx.KmerSet())
+		counter, err := mccortex.NewFilteredCounter(k, mccortex.NewKmerAllowSet(idx.KmerList()))
 		if err != nil {
 			return nil, err
 		}

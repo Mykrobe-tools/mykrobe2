@@ -13,14 +13,16 @@ import (
 )
 
 const (
-	panelIndexFormat = "mykrobe2-panel-index-v1"
+	panelIndexFormatV1 = "mykrobe2-panel-index-v1"
+	panelIndexFormat   = "mykrobe2-panel-index-v2"
 	invalidPanelKmer = ^uint64(0)
 )
 
 type PanelIndex struct {
-	Format string
-	K      int
-	Probes []IndexedProbe
+	Format      string
+	K           int
+	Probes      []IndexedProbe
+	UniqueKmers []uint64
 }
 
 type IndexedProbe struct {
@@ -31,6 +33,7 @@ type IndexedProbe struct {
 
 func BuildPanelIndex(k int, paths []string) (*PanelIndex, error) {
 	idx := &PanelIndex{Format: panelIndexFormat, K: k}
+	seen := make(map[uint64]struct{})
 	for _, path := range paths {
 		reader, err := seqio.OpenPath(path)
 		if err != nil {
@@ -50,10 +53,21 @@ func BuildPanelIndex(k int, paths []string) (*PanelIndex, error) {
 				closeIfPossible(reader)
 				return nil, err
 			}
+			for _, kmer := range probe.Kmers {
+				if kmer == invalidPanelKmer {
+					continue
+				}
+				if _, ok := seen[kmer]; ok {
+					continue
+				}
+				seen[kmer] = struct{}{}
+				idx.UniqueKmers = append(idx.UniqueKmers, kmer)
+			}
 			idx.Probes = append(idx.Probes, probe)
 		}
 		closeIfPossible(reader)
 	}
+	slices.Sort(idx.UniqueKmers)
 	return idx, nil
 }
 
@@ -113,7 +127,13 @@ func LoadPanelIndex(path string) (*PanelIndex, error) {
 	if err := gob.NewDecoder(gr).Decode(&idx); err != nil {
 		return nil, err
 	}
-	if idx.Format != panelIndexFormat {
+	switch idx.Format {
+	case panelIndexFormat:
+		// nothing
+	case panelIndexFormatV1:
+		idx.Format = panelIndexFormat
+		idx.UniqueKmers = idx.KmerList()
+	default:
 		return nil, fmt.Errorf("unsupported panel index format %q", idx.Format)
 	}
 	return &idx, nil
@@ -130,16 +150,25 @@ func (c *Counter) SummarizePanelIndex(idx *PanelIndex) ([]CoverageSummary, error
 	return out, nil
 }
 
-func (idx *PanelIndex) KmerSet() map[uint64]struct{} {
-	out := make(map[uint64]struct{})
+func (idx *PanelIndex) KmerList() []uint64 {
+	if len(idx.UniqueKmers) > 0 {
+		return idx.UniqueKmers
+	}
+	out := make([]uint64, 0)
+	seen := make(map[uint64]struct{})
 	for _, probe := range idx.Probes {
 		for _, kmer := range probe.Kmers {
 			if kmer == invalidPanelKmer {
 				continue
 			}
-			out[kmer] = struct{}{}
+			if _, ok := seen[kmer]; ok {
+				continue
+			}
+			seen[kmer] = struct{}{}
+			out = append(out, kmer)
 		}
 	}
+	slices.Sort(out)
 	return out
 }
 
