@@ -14,6 +14,7 @@ import (
 type Counter struct {
 	k      int
 	counts map[uint64]uint32
+	allow  map[uint64]struct{}
 }
 
 func NewCounter(k int) (*Counter, error) {
@@ -21,6 +22,15 @@ func NewCounter(k int) (*Counter, error) {
 		return nil, fmt.Errorf("k must be in range 1..31, got %d", k)
 	}
 	return &Counter{k: k, counts: make(map[uint64]uint32)}, nil
+}
+
+func NewFilteredCounter(k int, allow map[uint64]struct{}) (*Counter, error) {
+	c, err := NewCounter(k)
+	if err != nil {
+		return nil, err
+	}
+	c.allow = allow
+	return c, nil
 }
 
 func (c *Counter) K() int {
@@ -78,6 +88,11 @@ func (c *Counter) AddSequence(seq []byte) {
 		key := fwd
 		if rev < key {
 			key = rev
+		}
+		if c.allow != nil {
+			if _, ok := c.allow[key]; !ok {
+				continue
+			}
 		}
 		c.counts[key]++
 	}

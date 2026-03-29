@@ -130,6 +130,19 @@ func (c *Counter) SummarizePanelIndex(idx *PanelIndex) ([]CoverageSummary, error
 	return out, nil
 }
 
+func (idx *PanelIndex) KmerSet() map[uint64]struct{} {
+	out := make(map[uint64]struct{})
+	for _, probe := range idx.Probes {
+		for _, kmer := range probe.Kmers {
+			if kmer == invalidPanelKmer {
+				continue
+			}
+			out[kmer] = struct{}{}
+		}
+	}
+	return out
+}
+
 func (c *Counter) SummarizeIndexedProbe(probe IndexedProbe) CoverageSummary {
 	summary := CoverageSummary{Name: probe.Name, Colour: 0, KmerLength: probe.KmerLength}
 	if probe.KmerLength <= 1 {

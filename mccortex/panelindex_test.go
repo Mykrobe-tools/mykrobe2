@@ -53,3 +53,36 @@ func TestPanelIndexRoundTripAndSummarizeMatchesPath(t *testing.T) {
 		}
 	}
 }
+
+func TestFilteredCounterOnlyStoresPanelKmers(t *testing.T) {
+	dir := t.TempDir()
+	panel := filepath.Join(dir, "panel.fa")
+	reads := filepath.Join(dir, "reads.fa")
+	if err := os.WriteFile(panel, []byte(">p1\nACGTGCACTA\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(reads, []byte(">r1\nACGTGCACTATTTTTTTTTT\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	idx, err := BuildPanelIndex(5, []string{panel})
+	if err != nil {
+		t.Fatal(err)
+	}
+	allowed := idx.KmerSet()
+	counter, err := NewFilteredCounter(5, allowed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := counter.AddPath(reads); err != nil {
+		t.Fatal(err)
+	}
+	if len(counter.counts) == 0 {
+		t.Fatal("expected some panel kmer counts")
+	}
+	for key := range counter.counts {
+		if _, ok := allowed[key]; !ok {
+			t.Fatalf("counted non-panel kmer %d", key)
+		}
+	}
+}

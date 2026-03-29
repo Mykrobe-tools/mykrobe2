@@ -68,26 +68,35 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 		}
 	}
 
-	counter, err := mccortex.NewCounter(k)
-	if err != nil {
-		return nil, err
-	}
-	for _, seqPath := range opts.SeqPaths {
-		if err := counter.AddPath(seqPath); err != nil {
-			return nil, err
-		}
-	}
 	var summaries []mccortex.CoverageSummary
 	if inputs.PanelIndexPath != "" {
 		idx, err := mccortex.LoadPanelIndex(inputs.PanelIndexPath)
 		if err != nil {
 			return nil, err
 		}
+		counter, err := mccortex.NewFilteredCounter(k, idx.KmerSet())
+		if err != nil {
+			return nil, err
+		}
+		for _, seqPath := range opts.SeqPaths {
+			if err := counter.AddPath(seqPath); err != nil {
+				return nil, err
+			}
+		}
 		summaries, err = counter.SummarizePanelIndex(idx)
 		if err != nil {
 			return nil, err
 		}
 	} else {
+		counter, err := mccortex.NewCounter(k)
+		if err != nil {
+			return nil, err
+		}
+		for _, seqPath := range opts.SeqPaths {
+			if err := counter.AddPath(seqPath); err != nil {
+				return nil, err
+			}
+		}
 		summaries, err = summarizePanels(counter, inputs.PanelPaths)
 		if err != nil {
 			return nil, err
