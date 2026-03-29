@@ -15,7 +15,7 @@ func PercentCoverageFromExpectedCoverage(coverage float64) float64 {
 
 func LogLikProbabilityOfNGaps(depth, percentCoverage float64, length int) float64 {
 	pc := percentCoverage / 100.0
-	nGaps := int(math.Round(float64(length) - (float64(length) * pc)))
+	nGaps := pythonRoundToInt(float64(length) - (float64(length) * pc))
 	expectedNGaps := math.Exp(-depth) * float64(length)
 	if expectedNGaps <= 0 {
 		expectedNGaps = 1e-308
@@ -54,4 +54,20 @@ func LogLikRScoverage(observedAlt, observedRef, expectedAlt, expectedRef float64
 
 func LogLikRSkmerCount(observedRef, observedAlt, expectedRef, expectedAlt float64) float64 {
 	return LogPoissonProb(expectedRef, observedRef) + LogPoissonProb(expectedAlt, observedAlt)
+}
+
+func pythonRoundToInt(v float64) int {
+	floor := math.Floor(v)
+	frac := v - floor
+	switch {
+	case frac < 0.5:
+		return int(floor)
+	case frac > 0.5:
+		return int(floor + 1)
+	default:
+		if int(floor)%2 == 0 {
+			return int(floor)
+		}
+		return int(floor + 1)
+	}
 }

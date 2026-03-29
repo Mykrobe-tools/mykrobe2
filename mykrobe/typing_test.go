@@ -1,6 +1,9 @@
 package mykrobe
 
-import "testing"
+import (
+	"math"
+	"testing"
+)
 
 func TestPresenceTyperBaseCaseNoCoverage(t *testing.T) {
 	pt := NewPresenceTyper([]float64{100}, nil, 1)
@@ -67,5 +70,16 @@ func TestVariantTyperLowMinimumCases(t *testing.T) {
 	}
 	if call.Info["conf"].(int) >= 150 {
 		t.Fatalf("conf=%v", call.Info["conf"])
+	}
+}
+
+func TestLogLikProbabilityOfNGapsMatchesPythonRounding(t *testing.T) {
+	if got := pythonRoundToInt(20.5); got != 20 {
+		t.Fatalf("pythonRoundToInt(20.5)=%d want 20", got)
+	}
+	got := LogLikProbabilityOfNGaps(4, 50, 41)
+	want := -48.81511632110543
+	if math.Abs(got-want) > 1e-12 {
+		t.Fatalf("got=%v want=%v", got, want)
 	}
 }

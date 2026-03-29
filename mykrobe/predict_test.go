@@ -118,6 +118,9 @@ func TestTBPredictorAddsCalledByForResistanceCalls(t *testing.T) {
 	if contam, ok := call.Info["contamination_depths"].([]float64); !ok || len(contam) != 0 {
 		t.Fatalf("unexpected contamination depths: %#v", call.Info["contamination_depths"])
 	}
+	if got := variantCalls["inhA_I21T-ATC1674262ACT"].Variant; got != nil {
+		t.Fatalf("expected source variant call to be mutated to null variant, got %#v", got)
+	}
 }
 
 func TestTBPredictorNamesForAlleleKeepsMutationPrefixesWithHyphens(t *testing.T) {

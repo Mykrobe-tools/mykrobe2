@@ -86,7 +86,7 @@ func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "mykrobe2",
 	}
-	cmd.AddCommand(newPredictCmd(), newPanelsCmd(), newMakeProbesCmd())
+	cmd.AddCommand(newPredictCmd(), newPanelsCmd(), newMakeProbesCmd(), newCompareOutputCmd())
 	return cmd
 }
 

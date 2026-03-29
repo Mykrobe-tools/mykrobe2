@@ -193,6 +193,15 @@ func (p *TBPredictor) updateResistancePrediction(alleleName string, call Call) {
 				}
 			}
 			if pred == "r" || pred == "R" {
+				if original, ok := p.VariantCalls[alleleName]; ok {
+					original.Variant = nil
+					p.VariantCalls[alleleName] = original
+					call = original
+				} else if original, ok := p.CalledGenes[alleleName]; ok {
+					original.Variant = nil
+					p.CalledGenes[alleleName] = original
+					call = original
+				}
 				stored := call
 				stored.Variant = nil
 				calledBy, ok := p.ResistancePredictions[drug]["called_by"].(map[string]Call)
