@@ -336,7 +336,7 @@ func TestPredictCommandWithPanelsDirUsesPanelIndex(t *testing.T) {
 	if sdir == nil {
 		t.Fatal("expected installed species dir")
 	}
-	if err := sdir.BuildPanelIndex(); err != nil {
+	if err := sdir.BuildRuntimeIndex(); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Remove(panelFile); err != nil {

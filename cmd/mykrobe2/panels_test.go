@@ -48,8 +48,8 @@ func TestPanelsCommands(t *testing.T) {
 	if sdir == nil || sdir.DefaultPanel() != "202010" {
 		t.Fatalf("unexpected species dir after install: %#v", sdir)
 	}
-	if _, err := os.Stat(sdir.PanelIndexFile()); err != nil {
-		t.Fatalf("expected panel index to be built: %v", err)
+	if _, err := os.Stat(sdir.RuntimeIndexFile()); err != nil {
+		t.Fatalf("expected runtime index to be built: %v", err)
 	}
 }
 
@@ -110,8 +110,8 @@ func TestPanelsCommandsUseDefaultPanelsDir(t *testing.T) {
 	if sdir == nil {
 		t.Fatal("expected species dir in default panels dir")
 	}
-	if _, err := os.Stat(sdir.PanelIndexFile()); err != nil {
-		t.Fatalf("expected panel index in default panels dir: %v", err)
+	if _, err := os.Stat(sdir.RuntimeIndexFile()); err != nil {
+		t.Fatalf("expected runtime index in default panels dir: %v", err)
 	}
 }
 

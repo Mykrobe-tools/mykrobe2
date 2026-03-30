@@ -41,7 +41,7 @@ type PredictRunResult struct {
 
 type predictInputs struct {
 	PanelPaths        []string
-	PanelIndexPath    string
+	RuntimeIndexPath  string
 	K                 int
 	MapPath           string
 	LineagePath       string
@@ -69,12 +69,13 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 	}
 
 	var summaries []mccortex.CoverageSummary
-	if inputs.PanelIndexPath != "" {
-		idx, err := mccortex.LoadPanelIndex(inputs.PanelIndexPath)
+	if inputs.RuntimeIndexPath != "" {
+		idx, err := mccortex.LoadRuntimeIndex(inputs.RuntimeIndexPath)
 		if err != nil {
 			return nil, err
 		}
-		counter, err := mccortex.NewFilteredCounter(k, mccortex.NewKmerAllowSet(idx.KmerList()))
+		defer idx.Close()
+		counter, err := mccortex.NewRuntimeCounter(idx)
 		if err != nil {
 			return nil, err
 		}
@@ -83,10 +84,7 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 				return nil, err
 			}
 		}
-		summaries, err = counter.SummarizePanelIndex(idx)
-		if err != nil {
-			return nil, err
-		}
+		summaries = counter.Summaries()
 	} else {
 		counter, err := mccortex.NewCounter(k)
 		if err != nil {
@@ -228,9 +226,9 @@ func resolvePredictInputs(panelArg, mapPath, lineagePath, panelsDir, species str
 			return predictInputs{}, err
 		}
 	}
-	if _, err := os.Stat(sdir.PanelIndexFile()); err != nil {
+	if _, err := os.Stat(sdir.RuntimeIndexFile()); err != nil {
 		if os.IsNotExist(err) {
-			if err := sdir.BuildPanelIndex(); err != nil {
+			if err := sdir.BuildRuntimeIndex(); err != nil {
 				return predictInputs{}, err
 			}
 		} else {
@@ -245,7 +243,7 @@ func resolvePredictInputs(panelArg, mapPath, lineagePath, panelsDir, species str
 	}
 	return predictInputs{
 		PanelPaths:        sdir.FASTAFiles(),
-		PanelIndexPath:    sdir.PanelIndexFile(),
+		RuntimeIndexPath:  sdir.RuntimeIndexFile(),
 		K:                 sdir.Kmer(),
 		MapPath:           mapPath,
 		LineagePath:       lineagePath,
