@@ -148,7 +148,7 @@ func (s *SpeciesDir) JSONFile(kind string) string {
 }
 
 func (s *SpeciesDir) RuntimeIndexFile() string {
-	return filepath.Join(s.RootDir, s.PanelName+".runtimeidx.bin")
+	return filepath.Join(s.RootDir, s.PanelName+".panelindex")
 }
 
 func (s *SpeciesDir) BuildRuntimeIndex() error {

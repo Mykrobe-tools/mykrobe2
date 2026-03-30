@@ -21,7 +21,7 @@ func TestRuntimeIndexRoundTripAndSummariesMatchPanelPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	rtPath := filepath.Join(dir, "panel.runtimeidx.bin")
+	rtPath := filepath.Join(dir, "panel.panelindex")
 	if err := SaveRuntimeIndex(rtPath, rtIdx); err != nil {
 		t.Fatal(err)
 	}
