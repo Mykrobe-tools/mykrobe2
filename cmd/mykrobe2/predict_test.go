@@ -270,7 +270,7 @@ func TestPredictCommandWithPanelsDir(t *testing.T) {
 	}
 }
 
-func TestPredictCommandWithPanelsDirUsesPanelIndex(t *testing.T) {
+func TestPredictCommandWithPanelsDirUsesRuntimeIndex(t *testing.T) {
 	dir := t.TempDir()
 	reads := filepath.Join(dir, "reads.fa")
 	out := filepath.Join(dir, "out.json")

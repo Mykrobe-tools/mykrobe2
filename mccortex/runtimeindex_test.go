@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestRuntimeIndexRoundTripAndSummariesMatchPanelIndex(t *testing.T) {
+func TestRuntimeIndexRoundTripAndSummariesMatchPanelPath(t *testing.T) {
 	dir := t.TempDir()
 	panel := filepath.Join(dir, "panel.fa")
 	reads := filepath.Join(dir, "reads.fa")
@@ -17,11 +17,7 @@ func TestRuntimeIndexRoundTripAndSummariesMatchPanelIndex(t *testing.T) {
 	if err := os.WriteFile(reads, []byte(">read1\nAACCGGTT\n>read2\nAACCGGTA\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	panelIdx, err := BuildPanelIndex(5, []string{panel})
-	if err != nil {
-		t.Fatal(err)
-	}
-	rtIdx, err := BuildRuntimeIndexFromPanelIndex(panelIdx)
+	rtIdx, err := BuildRuntimeIndex(5, []string{panel})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +46,7 @@ func TestRuntimeIndexRoundTripAndSummariesMatchPanelIndex(t *testing.T) {
 	if err := counter.AddPath(reads); err != nil {
 		t.Fatal(err)
 	}
-	want, err := counter.SummarizePanelIndex(panelIdx)
+	want, err := counter.SummarizePanelPath(panel)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -15,6 +15,8 @@ import (
 
 const runtimeIndexMagic = "MYKROBE2RT2"
 
+const invalidPanelKmer = ^uint64(0)
+
 type RuntimeIndex struct {
 	K            int
 	TableKeys    []uint64
@@ -431,36 +433,6 @@ func createRuntimeTableFile(dir string, count int) (*os.File, string, error) {
 		return nil, "", err
 	}
 	return f, path, nil
-}
-
-func BuildRuntimeIndexFromPanelIndex(idx *PanelIndex) (*RuntimeIndex, error) {
-	keys := idx.KmerList()
-	tableKeys, mask := buildRuntimeTable(keys)
-	rt := &RuntimeIndex{
-		K:            idx.K,
-		TableKeys:    tableKeys,
-		ProbeOffsets: make([]uint32, 0, len(idx.Probes)+1),
-		ProbeSlots:   make([]uint32, 0),
-		NameOffsets:  make([]uint32, 0, len(idx.Probes)+1),
-		NameBytes:    make([]byte, 0),
-		KmerLengths:  make([]uint32, 0, len(idx.Probes)),
-	}
-	rt.ProbeOffsets = append(rt.ProbeOffsets, 0)
-	rt.NameOffsets = append(rt.NameOffsets, 0)
-	for _, probe := range idx.Probes {
-		rt.KmerLengths = append(rt.KmerLengths, uint32(probe.KmerLength))
-		for _, kmer := range probe.Kmers {
-			if kmer == invalidPanelKmer {
-				rt.ProbeSlots = append(rt.ProbeSlots, ^uint32(0))
-				continue
-			}
-			rt.ProbeSlots = append(rt.ProbeSlots, lookupRuntimeSlot(tableKeys, mask, kmer))
-		}
-		rt.ProbeOffsets = append(rt.ProbeOffsets, uint32(len(rt.ProbeSlots)))
-		rt.NameBytes = append(rt.NameBytes, probe.Name...)
-		rt.NameOffsets = append(rt.NameOffsets, uint32(len(rt.NameBytes)))
-	}
-	return rt, nil
 }
 
 func SaveRuntimeIndex(path string, idx *RuntimeIndex) error {
