@@ -1,13 +1,13 @@
 package mccortex
 
 import (
+	"bufio"
 	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"slices"
-	"strings"
 	"unsafe"
 
 	"github.com/martinghunt/faqt/seqio"
@@ -65,9 +65,8 @@ func collectRuntimeBuildCounts(k int, paths []string) (runtimeBuildCounts, error
 			if klen <= 1 {
 				continue
 			}
-			upper := strings.ToUpper(string(rec.Seq))
 			for i := 1; i < klen; i++ {
-				_, ok, err := canonicalKmer([]byte(upper[i : i+k]))
+				_, ok, err := canonicalKmer(rec.Seq[i : i+k])
 				if err != nil {
 					closeIfPossible(reader)
 					return counts, err
@@ -106,9 +105,8 @@ func buildRuntimeTableFromPaths(k int, paths []string, totalValidKmers int) ([]u
 			if klen <= 1 {
 				continue
 			}
-			upper := strings.ToUpper(string(rec.Seq))
 			for i := 1; i < klen; i++ {
-				key, ok, err := canonicalKmer([]byte(upper[i : i+k]))
+				key, ok, err := canonicalKmer(rec.Seq[i : i+k])
 				if err != nil {
 					closeIfPossible(reader)
 					return nil, 0, err
@@ -170,10 +168,9 @@ func BuildRuntimeIndex(k int, paths []string) (*RuntimeIndex, error) {
 				rt.ProbeOffsets = append(rt.ProbeOffsets, uint32(len(rt.ProbeSlots)))
 				continue
 			}
-			upper := strings.ToUpper(string(rec.Seq))
 			rt.ProbeSlots = append(rt.ProbeSlots, ^uint32(0))
 			for i := 1; i < klen; i++ {
-				key, ok, err := canonicalKmer([]byte(upper[i : i+k]))
+				key, ok, err := canonicalKmer(rec.Seq[i : i+k])
 				if err != nil {
 					closeIfPossible(reader)
 					return nil, err
@@ -245,9 +242,8 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 				if klen <= 1 {
 					continue
 				}
-				upper := strings.ToUpper(string(rec.Seq))
 				for i := 1; i < klen; i++ {
-					key, ok, err := canonicalKmer([]byte(upper[i : i+k]))
+					key, ok, err := canonicalKmer(rec.Seq[i : i+k])
 					if err != nil {
 						closeIfPossible(reader)
 						return err
@@ -269,6 +265,7 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 	slotsPath := slotsFile.Name()
 	defer os.Remove(slotsPath)
 	defer slotsFile.Close()
+	slotsBuf := bufio.NewWriterSize(slotsFile, 1<<20)
 	probeOffsets := make([]uint32, 0, counts.probeCount+1)
 	probeOffsets = append(probeOffsets, 0)
 	nameOffsets := make([]uint32, 0, counts.probeCount+1)
@@ -303,15 +300,14 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 				probeOffsets = append(probeOffsets, probeSlotPos)
 				continue
 			}
-			if err := binary.Write(slotsFile, binary.LittleEndian, ^uint32(0)); err != nil {
+			if err := binary.Write(slotsBuf, binary.LittleEndian, ^uint32(0)); err != nil {
 				closeIfPossible(reader)
 				return err
 			}
 			probeSlotPos++
-			upper := strings.ToUpper(string(rec.Seq))
 			for i := 1; i < klen; i++ {
 				slot := ^uint32(0)
-				key, ok, err := canonicalKmer([]byte(upper[i : i+k]))
+				key, ok, err := canonicalKmer(rec.Seq[i : i+k])
 				if err != nil {
 					closeIfPossible(reader)
 					return err
@@ -319,7 +315,7 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 				if ok {
 					slot = lookupRuntimeSlot(tableKeys, mask, key)
 				}
-				if err := binary.Write(slotsFile, binary.LittleEndian, slot); err != nil {
+				if err := binary.Write(slotsBuf, binary.LittleEndian, slot); err != nil {
 					closeIfPossible(reader)
 					return err
 				}
@@ -328,6 +324,9 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 			probeOffsets = append(probeOffsets, probeSlotPos)
 		}
 		closeIfPossible(reader)
+	}
+	if err := slotsBuf.Flush(); err != nil {
+		return err
 	}
 	if err := slotsFile.Sync(); err != nil {
 		return err
@@ -341,7 +340,8 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 		return err
 	}
 	defer out.Close()
-	if _, err := out.Write([]byte(runtimeIndexMagic)); err != nil {
+	outBuf := bufio.NewWriterSize(out, 1<<20)
+	if _, err := outBuf.Write([]byte(runtimeIndexMagic)); err != nil {
 		return err
 	}
 	header := [6]uint32{
@@ -352,10 +352,10 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 		uint32(counts.probeCount + 1),
 		uint32(counts.totalNameBytes),
 	}
-	if err := binary.Write(out, binary.LittleEndian, header[:]); err != nil {
+	if err := binary.Write(outBuf, binary.LittleEndian, header[:]); err != nil {
 		return err
 	}
-	if _, err := out.Write(make([]byte, alignPad(len(runtimeIndexMagic)+len(header)*4, 8))); err != nil {
+	if _, err := outBuf.Write(make([]byte, alignPad(len(runtimeIndexMagic)+len(header)*4, 8))); err != nil {
 		return err
 	}
 	if size > 0 {
@@ -369,29 +369,32 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 		if _, err := tableFile.Seek(0, io.SeekStart); err != nil {
 			return err
 		}
-		if _, err := io.Copy(out, tableFile); err != nil {
+		if _, err := io.Copy(outBuf, tableFile); err != nil {
 			return err
 		}
 	}
-	if _, err := out.Write(make([]byte, alignPad(size*8, 4))); err != nil {
+	if _, err := outBuf.Write(make([]byte, alignPad(size*8, 4))); err != nil {
 		return err
 	}
-	if err := binary.Write(out, binary.LittleEndian, probeOffsets); err != nil {
+	if err := binary.Write(outBuf, binary.LittleEndian, probeOffsets); err != nil {
 		return err
 	}
-	if _, err := io.Copy(out, slotsFile); err != nil {
+	if _, err := io.Copy(outBuf, slotsFile); err != nil {
 		return err
 	}
-	if err := binary.Write(out, binary.LittleEndian, nameOffsets); err != nil {
+	if err := binary.Write(outBuf, binary.LittleEndian, nameOffsets); err != nil {
 		return err
 	}
-	if _, err := out.Write(nameBytes); err != nil {
+	if _, err := outBuf.Write(nameBytes); err != nil {
 		return err
 	}
-	if _, err := out.Write(make([]byte, alignPad(counts.totalNameBytes, 4))); err != nil {
+	if _, err := outBuf.Write(make([]byte, alignPad(counts.totalNameBytes, 4))); err != nil {
 		return err
 	}
-	return binary.Write(out, binary.LittleEndian, kmerLengths)
+	if err := binary.Write(outBuf, binary.LittleEndian, kmerLengths); err != nil {
+		return err
+	}
+	return outBuf.Flush()
 }
 
 func runtimeTableSize(count int) int {
