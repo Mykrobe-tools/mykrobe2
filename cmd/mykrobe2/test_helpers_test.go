@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/martinghunt/mykrobe2/mykrobe"
 	"github.com/martinghunt/mykrobe2/mykrobe/speciesdata"
 )
 
@@ -129,6 +130,13 @@ func writeGzipFile(t *testing.T, path string, data []byte) {
 		t.Fatal(err)
 	}
 	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func buildCustomIndexFile(t *testing.T, outputPath string, k int, fastaPaths []string, amrPath, lineagePath string) {
+	t.Helper()
+	if err := mykrobe.BuildCustomIndex(outputPath, k, fastaPaths, amrPath, lineagePath); err != nil {
 		t.Fatal(err)
 	}
 }

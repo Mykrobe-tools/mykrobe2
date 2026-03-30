@@ -11,6 +11,7 @@ import (
 type PredictRunOptions struct {
 	Sample               string
 	SeqPaths             []string
+	IndexPath            string
 	PanelArg             string
 	MapPath              string
 	LineagePath          string
@@ -44,20 +45,23 @@ type predictInputs struct {
 	RuntimeIndexPath  string
 	K                 int
 	MapPath           string
+	MapData           []byte
 	LineagePath       string
+	LineageData       []byte
 	HierarchyPath     string
 	NCBINamesPath     string
 	SpeciesPhyloGroup string
 	PanelVersion      string
+	IsCustom          bool
 }
 
 func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
-	inputs, err := resolvePredictInputs(opts.PanelArg, opts.MapPath, opts.LineagePath, opts.PanelsDir, opts.Species)
+	inputs, err := resolvePredictInputs(opts.IndexPath, opts.PanelArg, opts.MapPath, opts.LineagePath, opts.PanelsDir, opts.Species)
 	if err != nil {
 		return nil, err
 	}
-	if len(opts.SeqPaths) == 0 || len(inputs.PanelPaths) == 0 || inputs.MapPath == "" {
-		return nil, fmt.Errorf("predict requires --seq, a panel source, and variant-to-resistance data")
+	if len(opts.SeqPaths) == 0 || inputs.RuntimeIndexPath == "" {
+		return nil, fmt.Errorf("predict requires --seq and a panel source")
 	}
 	k := opts.K
 	if k == 0 {
@@ -68,38 +72,21 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 		}
 	}
 
-	var summaries []mccortex.CoverageSummary
-	if inputs.RuntimeIndexPath != "" {
-		idx, err := mccortex.LoadRuntimeIndex(inputs.RuntimeIndexPath)
-		if err != nil {
-			return nil, err
-		}
-		defer idx.Close()
-		counter, err := mccortex.NewRuntimeCounter(idx)
-		if err != nil {
-			return nil, err
-		}
-		for _, seqPath := range opts.SeqPaths {
-			if err := counter.AddPath(seqPath); err != nil {
-				return nil, err
-			}
-		}
-		summaries = counter.Summaries()
-	} else {
-		counter, err := mccortex.NewCounter(k)
-		if err != nil {
-			return nil, err
-		}
-		for _, seqPath := range opts.SeqPaths {
-			if err := counter.AddPath(seqPath); err != nil {
-				return nil, err
-			}
-		}
-		summaries, err = summarizePanels(counter, inputs.PanelPaths)
-		if err != nil {
+	idx, err := mccortex.LoadRuntimeIndex(inputs.RuntimeIndexPath)
+	if err != nil {
+		return nil, err
+	}
+	defer idx.Close()
+	counter, err := mccortex.NewRuntimeCounter(idx)
+	if err != nil {
+		return nil, err
+	}
+	for _, seqPath := range opts.SeqPaths {
+		if err := counter.AddPath(seqPath); err != nil {
 			return nil, err
 		}
 	}
+	summaries := counter.Summaries()
 
 	coverageSet := CoverageSetFromSummaries(summaries)
 	phylo, depths, err := DetectSpeciesAndGetDepths(coverageSet, inputs.HierarchyPath, inputs.SpeciesPhyloGroup)
@@ -125,7 +112,9 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 	analysisOpts := AnalysisOptions{
 		ExpectedDepth:               expectedDepth,
 		VariantToResistancePath:     inputs.MapPath,
+		VariantToResistanceData:     inputs.MapData,
 		LineagePath:                 inputs.LineagePath,
+		LineageData:                 inputs.LineageData,
 		ErrorRate:                   errorRate,
 		MinorFreq:                   opts.MinorFreq,
 		VariantConfidenceThreshold:  opts.MinVariantConf,
@@ -157,6 +146,7 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 		phylo["lineage"] = result.Lineage
 	}
 	susceptibility := FixAminoAcidXVariantKeysInSusceptibility(result.Predictor.Susceptibility)
+	reportAllCalls := opts.ReportAllCalls || (inputs.IsCustom && inputs.MapPath == "" && len(inputs.MapData) == 0 && inputs.LineagePath == "" && len(inputs.LineageData) == 0)
 	sampleOut := map[string]any{
 		"susceptibility": susceptibility,
 		"phylogenetics":  phylo,
@@ -170,7 +160,7 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 		},
 		"genotype_model": opts.Model,
 	}
-	if opts.ReportAllCalls {
+	if reportAllCalls {
 		sampleOut["variant_calls"] = FixAminoAcidXVariantKeys(result.VariantCalls)
 		sampleOut["sequence_calls"] = result.GeneCalls
 		sampleOut["lineage_calls"] = result.LineageCalls
@@ -181,33 +171,28 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 	}, nil
 }
 
-type panelSummarizer interface {
-	SummarizePanelPath(path string) ([]mccortex.CoverageSummary, error)
-}
-
-func summarizePanels(s panelSummarizer, paths []string) ([]mccortex.CoverageSummary, error) {
-	out := make([]mccortex.CoverageSummary, 0)
-	for _, path := range paths {
-		summaries, err := s.SummarizePanelPath(path)
+func resolvePredictInputs(indexPath, panelArg, mapPath, lineagePath, panelsDir, species string) (predictInputs, error) {
+	if indexPath != "" {
+		bundle, err := LoadCustomIndex(indexPath)
 		if err != nil {
-			return nil, err
+			return predictInputs{}, err
 		}
-		out = append(out, summaries...)
-	}
-	return out, nil
-}
-
-func resolvePredictInputs(panelArg, mapPath, lineagePath, panelsDir, species string) (predictInputs, error) {
-	if panelsDir == "" || species == "" {
-		if panelArg == "" {
-			return predictInputs{}, fmt.Errorf("predict requires --panel or --panels_dir with --species")
-		}
+		defer bundle.Close()
 		return predictInputs{
-			PanelPaths:   []string{panelArg},
-			MapPath:      mapPath,
-			LineagePath:  lineagePath,
-			PanelVersion: "custom",
+			PanelPaths:       append([]string(nil), bundle.ProbeSets...),
+			RuntimeIndexPath: indexPath,
+			K:                bundle.RuntimeIndex.K,
+			MapData:          append([]byte(nil), bundle.VariantToResistance...),
+			LineageData:      append([]byte(nil), bundle.Lineage...),
+			PanelVersion:     bundle.PanelVersion,
+			IsCustom:         true,
 		}, nil
+	}
+	if species == "custom" {
+		return predictInputs{}, fmt.Errorf("predict with --species custom requires --index")
+	}
+	if panelsDir == "" || species == "" {
+		return predictInputs{}, fmt.Errorf("predict requires --index, or --panels_dir with --species")
 	}
 
 	dataDir, err := speciesdata.NewDataDir(panelsDir)

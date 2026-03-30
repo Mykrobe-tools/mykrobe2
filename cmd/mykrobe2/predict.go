@@ -13,11 +13,12 @@ import (
 
 func runPredict(opts *predictOptions) error {
 	if opts.output == "" {
-		return fmt.Errorf("predict requires --seq, a panel source, variant-to-resistance data, and --output")
+		return fmt.Errorf("predict requires --seq, a panel source, and --output")
 	}
 	result, err := mykrobe.RunTBPredict(mykrobe.PredictRunOptions{
 		Sample:               opts.sample,
 		SeqPaths:             opts.seqPaths,
+		IndexPath:            opts.indexPath,
 		PanelArg:             opts.panelArg,
 		MapPath:              opts.mapPath,
 		LineagePath:          opts.lineagePath,

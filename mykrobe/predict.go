@@ -59,10 +59,14 @@ func NewTBPredictor(variantCalls map[string]Call, calledGenes map[string]Call, v
 	if err := LoadJSON(variantToResistancePath, &m); err != nil {
 		return nil, err
 	}
+	return NewTBPredictorFromMap(variantCalls, calledGenes, m), nil
+}
+
+func NewTBPredictorFromMap(variantCalls map[string]Call, calledGenes map[string]Call, variantToResistance map[string][]string) *TBPredictor {
 	p := &TBPredictor{
 		VariantCalls:            variantCalls,
 		CalledGenes:             calledGenes,
-		VariantToResistanceDrug: m,
+		VariantToResistanceDrug: variantToResistance,
 		DepthThreshold:          3,
 		IgnoreFiltered:          true,
 		copyNumberThresholds: map[string]float64{
@@ -71,7 +75,7 @@ func NewTBPredictor(variantCalls map[string]Call, calledGenes map[string]Call, v
 		},
 	}
 	p.initPredictions()
-	return p, nil
+	return p
 }
 
 func (p *TBPredictor) initPredictions() {

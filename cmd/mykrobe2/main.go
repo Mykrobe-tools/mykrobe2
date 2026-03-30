@@ -29,6 +29,7 @@ func run(args []string) error {
 type predictOptions struct {
 	sample               string
 	seqPaths             []string
+	indexPath            string
 	panelArg             string
 	mapPath              string
 	lineagePath          string
@@ -82,11 +83,19 @@ type makeProbesOptions struct {
 	lineagePath    string
 }
 
+type indexOptions struct {
+	fastaPaths   []string
+	amrPath      string
+	lineagePath  string
+	outputPath   string
+	kmer         int
+}
+
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "mykrobe2",
 	}
-	cmd.AddCommand(newPredictCmd(), newPanelsCmd(), newMakeProbesCmd(), newCompareOutputCmd())
+	cmd.AddCommand(newPredictCmd(), newPanelsCmd(), newMakeProbesCmd(), newIndexCmd(), newCompareOutputCmd())
 	return cmd
 }
 
@@ -102,6 +111,7 @@ func newPredictCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&opts.sample, "sample", "sample", "")
 	cmd.Flags().StringSliceVarP(&opts.seqPaths, "seq", "i", nil, "")
+	cmd.Flags().StringVar(&opts.indexPath, "index", "", "Custom bundled panel index file")
 	cmd.Flags().StringVar(&opts.panelArg, "panel", "", "")
 	cmd.Flags().StringVar(&opts.mapPath, "variant_to_resistance_json", "", "")
 	cmd.Flags().StringVar(&opts.lineagePath, "lineage_json", "", "")
@@ -126,6 +136,23 @@ func newPredictCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&opts.guessSequenceMethod, "guess_sequence_method", false, "")
 	cmd.Flags().Float64Var(&opts.confPercentCutoff, "conf_percent_cutoff", 100, "")
 	cmd.Flags().StringVar(&opts.writeCovgs, "write_covgs", "", "Write intermediate coverage summary TSV to file")
+	return cmd
+}
+
+func newIndexCmd() *cobra.Command {
+	opts := &indexOptions{}
+	cmd := &cobra.Command{
+		Use:   "index",
+		Short: "Build a bundled custom panel index",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runIndex(opts)
+		},
+	}
+	cmd.Flags().StringSliceVar(&opts.fastaPaths, "fasta", nil, "Probe FASTA file(s)")
+	cmd.Flags().StringVar(&opts.amrPath, "variant_to_resistance_json", "", "Variant-to-resistance JSON file")
+	cmd.Flags().StringVar(&opts.lineagePath, "lineage_json", "", "Lineage JSON file")
+	cmd.Flags().StringVar(&opts.outputPath, "output", "", "Output .panelindex file")
+	cmd.Flags().IntVar(&opts.kmer, "k", mykrobe.DefaultKmerSize, "kmer length")
 	return cmd
 }
 

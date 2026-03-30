@@ -14,6 +14,7 @@ func TestPredictCommand(t *testing.T) {
 	dir := t.TempDir()
 	panel := filepath.Join(dir, "panel.fa")
 	reads := filepath.Join(dir, "reads.fa")
+	index := filepath.Join(dir, "custom.panelindex")
 	out := filepath.Join(dir, "out.json")
 	covgs := filepath.Join(dir, "out.covgs")
 	lineage := filepath.Join(dir, "lineage.json")
@@ -31,17 +32,16 @@ func TestPredictCommand(t *testing.T) {
 	if err := os.WriteFile(lineage, []byte(`{"A123T":{"name":"lineage1","use_ref_allele":true}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	buildCustomIndexFile(t, index, 5, []string{panel}, "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json", lineage)
 
 	err := run([]string{
 		"predict",
 		"--sample", "S1",
+		"--species", "custom",
 		"--seq", reads,
-		"--panel", panel,
-		"--variant_to_resistance_json", "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json",
-		"--lineage_json", lineage,
+		"--index", index,
 		"--output", out,
 		"--write_covgs", covgs,
-		"--k", "5",
 		"--expected_depth", "100",
 		"--report_all_calls",
 	})
@@ -85,6 +85,7 @@ func TestPredictCommandWithMultipleSeqFiles(t *testing.T) {
 	panel := filepath.Join(dir, "panel.fa")
 	reads1 := filepath.Join(dir, "reads1.fa")
 	reads2 := filepath.Join(dir, "reads2.fa")
+	index := filepath.Join(dir, "custom.panelindex")
 	out := filepath.Join(dir, "out.json")
 
 	panelData := "" +
@@ -100,16 +101,16 @@ func TestPredictCommandWithMultipleSeqFiles(t *testing.T) {
 	if err := os.WriteFile(reads2, []byte(">r2\nTTTTTCACTA\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	buildCustomIndexFile(t, index, 5, []string{panel}, "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json", "")
 
 	err := run([]string{
 		"predict",
 		"--sample", "S1",
+		"--species", "custom",
 		"--seq", reads1,
 		"--seq", reads2,
-		"--panel", panel,
-		"--variant_to_resistance_json", "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json",
+		"--index", index,
 		"--output", out,
-		"--k", "5",
 		"--expected_depth", "100",
 		"--report_all_calls",
 	})
@@ -139,6 +140,7 @@ func TestPredictCommandWithONTAndConfThresholdFlags(t *testing.T) {
 	dir := t.TempDir()
 	panel := filepath.Join(dir, "panel.fa")
 	reads := filepath.Join(dir, "reads.fa")
+	index := filepath.Join(dir, "custom.panelindex")
 	out := filepath.Join(dir, "out.json")
 	lineage := filepath.Join(dir, "lineage.json")
 
@@ -155,16 +157,15 @@ func TestPredictCommandWithONTAndConfThresholdFlags(t *testing.T) {
 	if err := os.WriteFile(lineage, []byte(`{"A123T":{"name":"lineage1","use_ref_allele":true}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	buildCustomIndexFile(t, index, 5, []string{panel}, "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json", lineage)
 
 	err := run([]string{
 		"predict",
 		"--sample", "S1",
+		"--species", "custom",
 		"--seq", reads,
-		"--panel", panel,
-		"--variant_to_resistance_json", "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json",
-		"--lineage_json", lineage,
+		"--index", index,
 		"--output", out,
-		"--k", "5",
 		"--expected_depth", "100",
 		"--ont",
 		"--guess_sequence_method",
@@ -173,6 +174,208 @@ func TestPredictCommandWithONTAndConfThresholdFlags(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestPredictCommandWithCustomIndexGenotypingOnly(t *testing.T) {
+	dir := t.TempDir()
+	panel := filepath.Join(dir, "panel.fa")
+	reads := filepath.Join(dir, "reads.fa")
+	index := filepath.Join(dir, "custom.panelindex")
+	out := filepath.Join(dir, "out.json")
+
+	panelData := "" +
+		">katG?name=katG&panel_type=presence&version=1\nACGTGCACTA\n" +
+		">ref-A123T?var_name=A123T&gene=katG&mut=A123T\nACGTGCACTA\n" +
+		">alt-A123T?var_name=A123T&gene=katG&mut=A123T\nTTTTTCACTA\n"
+	if err := os.WriteFile(panel, []byte(panelData), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(reads, []byte(">r1\nACGTGCACTA\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := run([]string{
+		"index",
+		"--fasta", panel,
+		"--output", index,
+		"--k", "5",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := run([]string{
+		"predict",
+		"--sample", "S1",
+		"--species", "custom",
+		"--seq", reads,
+		"--index", index,
+		"--output", out,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	got := map[string]map[string]any{}
+	f, err := os.Open(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	if err := json.NewDecoder(f).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	s1 := got["S1"]
+	if _, ok := s1["variant_calls"]; !ok {
+		t.Fatalf("expected variant_calls in genotyping-only custom output: %v", s1)
+	}
+	susc, ok := s1["susceptibility"].(map[string]any)
+	if !ok || len(susc) != 0 {
+		t.Fatalf("expected empty susceptibility for genotyping-only custom output: %#v", s1["susceptibility"])
+	}
+}
+
+func TestPredictCommandWithCustomIndexAndAMR(t *testing.T) {
+	dir := t.TempDir()
+	panel := filepath.Join(dir, "panel.fa")
+	reads := filepath.Join(dir, "reads.fa")
+	amr := filepath.Join(dir, "amr.json")
+	index := filepath.Join(dir, "custom.panelindex")
+	out := filepath.Join(dir, "out.json")
+
+	panelData := "" +
+		">katG?name=katG&panel_type=presence&version=1\nACGTGCACTA\n" +
+		">ref-A123T?var_name=A123T&gene=katG&mut=A123T\nACGTGCACTA\n" +
+		">alt-A123T?var_name=A123T&gene=katG&mut=A123T\nTTTTTCACTA\n"
+	if err := os.WriteFile(panel, []byte(panelData), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(reads, []byte(">r1\nTTTTTCACTA\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(amr, []byte(`{"katG_A123T-A123T":["Isoniazid"]}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := run([]string{
+		"index",
+		"--fasta", panel,
+		"--variant_to_resistance_json", amr,
+		"--output", index,
+		"--k", "5",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := run([]string{
+		"predict",
+		"--sample", "S1",
+		"--species", "custom",
+		"--seq", reads,
+		"--index", index,
+		"--output", out,
+		"--report_all_calls",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	got := map[string]map[string]any{}
+	f, err := os.Open(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	if err := json.NewDecoder(f).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	s1 := got["S1"]
+	susc, ok := s1["susceptibility"].(map[string]any)
+	if !ok || len(susc) == 0 {
+		t.Fatalf("expected susceptibility predictions in custom indexed output: %#v", s1["susceptibility"])
+	}
+}
+
+func TestCustomWorkflowMakeProbesToIndexToPredictWithLineage(t *testing.T) {
+	dir := t.TempDir()
+	refPath := filepath.Join(dir, "ref.fa")
+	varsPath := filepath.Join(dir, "vars.tsv")
+	probesPath := filepath.Join(dir, "probes.fa")
+	lineagePath := filepath.Join(dir, "lineage.json")
+	indexPath := filepath.Join(dir, "custom.panelindex")
+	readsPath := filepath.Join(dir, "reads.fa")
+	outPath := filepath.Join(dir, "out.json")
+
+	refSeq := []byte(strings.Repeat("A", 80))
+	refSeq[41] = 'G'
+	if err := os.WriteFile(refPath, []byte(">ref\n"+string(refSeq)+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(varsPath, []byte("ref\t42\tG\tA\tDNA\t*lineage1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	oldStdout := os.Stdout
+	f, err := os.Create(probesPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stdout = f
+	err = run([]string{
+		"make-probes",
+		refPath,
+		"--text_file", varsPath,
+		"--lineage", lineagePath,
+		"--kmer", "5",
+	})
+	os.Stdout = oldStdout
+	if closeErr := f.Close(); closeErr != nil && err == nil {
+		err = closeErr
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := run([]string{
+		"index",
+		"--fasta", probesPath,
+		"--lineage_json", lineagePath,
+		"--output", indexPath,
+		"--k", "5",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(readsPath, []byte(">r1\n"+string(refSeq[37:47])+"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := run([]string{
+		"predict",
+		"--sample", "S1",
+		"--species", "custom",
+		"--seq", readsPath,
+		"--index", indexPath,
+		"--output", outPath,
+		"--report_all_calls",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	got := map[string]map[string]any{}
+	fh, err := os.Open(outPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fh.Close()
+	if err := json.NewDecoder(fh).Decode(&got); err != nil {
+		t.Fatal(err)
+	}
+	s1 := got["S1"]
+	phylo, ok := s1["phylogenetics"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing phylogenetics: %#v", s1)
+	}
+	lineage, ok := phylo["lineage"].(map[string]any)
+	if !ok || len(lineage) == 0 {
+		t.Fatalf("expected lineage call in custom workflow output: %#v", phylo)
 	}
 }
 
@@ -376,6 +579,7 @@ func TestPredictCommandCSV(t *testing.T) {
 	dir := t.TempDir()
 	panel := filepath.Join(dir, "panel.fa")
 	reads := filepath.Join(dir, "reads.fa")
+	index := filepath.Join(dir, "custom.panelindex")
 	out := filepath.Join(dir, "out.csv")
 	panelData := "" +
 		">katG?name=katG&panel_type=presence&version=1\nACGTGCACTA\n" +
@@ -387,14 +591,14 @@ func TestPredictCommandCSV(t *testing.T) {
 	if err := os.WriteFile(reads, []byte(">r1\nACGTGCACTA\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	buildCustomIndexFile(t, index, 5, []string{panel}, "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json", "")
 	if err := run([]string{
 		"predict",
 		"--sample", "S1",
+		"--species", "custom",
 		"--seq", reads,
-		"--panel", panel,
-		"--variant_to_resistance_json", "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json",
+		"--index", index,
 		"--output", out,
-		"--k", "5",
 		"--expected_depth", "100",
 		"--format", "csv",
 	}); err != nil {

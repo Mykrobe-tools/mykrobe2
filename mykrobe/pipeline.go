@@ -15,7 +15,9 @@ type AnalysisResult struct {
 type AnalysisOptions struct {
 	ExpectedDepth               float64
 	VariantToResistancePath     string
+	VariantToResistanceData     []byte
 	LineagePath                 string
+	LineageData                 []byte
 	ErrorRate                   float64
 	MinorFreq                   float64
 	VariantConfidenceThreshold  int
@@ -71,9 +73,20 @@ func AnalyzeCoverageSetTBWithOptions(set *CoverageSet, opts AnalysisOptions) (*A
 		}
 	}
 
-	predictor, err := NewTBPredictor(variantCalls, flatGeneCalls, opts.VariantToResistancePath)
-	if err != nil {
-		return nil, err
+	predictor := NewTBPredictorFromMap(variantCalls, flatGeneCalls, map[string][]string{})
+	if len(opts.VariantToResistanceData) > 0 || opts.VariantToResistancePath != "" {
+		var variantToResistance map[string][]string
+		switch {
+		case len(opts.VariantToResistanceData) > 0:
+			if err := LoadJSONBytes(opts.VariantToResistanceData, &variantToResistance); err != nil {
+				return nil, err
+			}
+		default:
+			if err := LoadJSON(opts.VariantToResistancePath, &variantToResistance); err != nil {
+				return nil, err
+			}
+		}
+		predictor = NewTBPredictorFromMap(variantCalls, flatGeneCalls, variantToResistance)
 	}
 	predictor.DepthThreshold = opts.MinDepth
 	predictor.IgnoreMinorCalls = opts.IgnoreMinorCalls
@@ -88,10 +101,17 @@ func AnalyzeCoverageSetTBWithOptions(set *CoverageSet, opts AnalysisOptions) (*A
 	}
 	lineageCalls := map[string]map[string]Call{}
 	lineageResult := map[string]any(nil)
-	if opts.LineagePath != "" {
+	if opts.LineagePath != "" || len(opts.LineageData) > 0 {
 		var variantToLineage map[string]LineageVariant
-		if err := LoadJSON(opts.LineagePath, &variantToLineage); err != nil {
-			return nil, err
+		switch {
+		case len(opts.LineageData) > 0:
+			if err := LoadJSONBytes(opts.LineageData, &variantToLineage); err != nil {
+				return nil, err
+			}
+		default:
+			if err := LoadJSON(opts.LineagePath, &variantToLineage); err != nil {
+				return nil, err
+			}
 		}
 		for varName, call := range variantCalls {
 			for _, key := range lineageLookupKeys(varName) {

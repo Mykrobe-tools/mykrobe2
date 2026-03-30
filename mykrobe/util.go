@@ -68,6 +68,10 @@ func LoadJSON(path string, dst any) error {
 	return json.NewDecoder(r).Decode(dst)
 }
 
+func LoadJSONBytes(data []byte, dst any) error {
+	return json.Unmarshal(data, dst)
+}
+
 var xVariantPattern = regexp.MustCompile(`^(?P<prefix>.*_)(?P<aa1>[A-Z])(?P<pos1>[0-9]+)(?P<aa2>[A-Z])-(?P<codon1>[ACGT]{3})(?P<pos2>[0-9]+)(?P<codon2>[ACGT]{3})$`)
 
 func XMutationFixedVarName(varName string) (string, bool) {

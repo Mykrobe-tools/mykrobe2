@@ -556,6 +556,15 @@ func parseRuntimeIndex(data []byte) (*RuntimeIndex, error) {
 	}, nil
 }
 
+func LoadRuntimeIndexBytes(data []byte) (*RuntimeIndex, error) {
+	idx, err := parseRuntimeIndex(data)
+	if err != nil {
+		return nil, err
+	}
+	idx.mappedData = nil
+	return idx, nil
+}
+
 func alignPad(size, align int) int {
 	rem := size % align
 	if rem == 0 {
