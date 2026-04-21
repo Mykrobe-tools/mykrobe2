@@ -107,6 +107,7 @@ func loadGenbankMutations(opts RunOptions, reference string) ([]Mutation, error)
 					VarName:           varName,
 					InputMutationName: row.mutation,
 					ProteinCodingVar:  proteinCodingVar,
+					Gene:              row.gene,
 				})
 			}
 		}
@@ -129,6 +130,7 @@ func loadGenbankMutations(opts RunOptions, reference string) ([]Mutation, error)
 				VarName:           varName,
 				InputMutationName: parts[1],
 				ProteinCodingVar:  true,
+				Gene:              parts[0],
 			})
 		}
 	}
@@ -174,6 +176,9 @@ func loadBackgroundContextIndex(opts RunOptions, reference string) (*ContextInde
 
 func writeProbePanel(w io.Writer, mut Mutation, panel Panel) error {
 	geneName := "NA"
+	if mut.Gene != "" {
+		geneName = mut.Gene
+	}
 	for i, ref := range panel.Refs {
 		if _, err := fmt.Fprintf(w, ">ref-%s?var_name=%s&num_alts=%d&ref=%s&enum=%d&gene=%s&mut=%s\n%s\n",
 			mut.MutationOutputName(), mut.VarName, len(panel.Alts), mut.Reference, i, geneName, mut.MutationOutputName(), ref); err != nil {

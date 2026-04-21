@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/martinghunt/faqt/seqio"
@@ -126,13 +125,9 @@ func NewGeneAminoAcidChangeToDNAVariants(referencePath, genbankPath string) (*Ge
 func (g *GeneAminoAcidChangeToDNAVariants) GetAlts(aminoAcid string) []string {
 	if aminoAcid == "X" {
 		var out []string
-		for aa, codons := range g.backwardCodonByAA {
-			if aa == "*" {
-				continue
-			}
-			out = append(out, codons...)
+		for _, aa := range []string{"K", "N", "I", "M", "T", "R", "S", "Y", "L", "F", "C", "W", "Q", "H", "P", "E", "D", "V", "A", "G"} {
+			out = append(out, g.backwardCodonByAA[aa]...)
 		}
-		sort.Strings(out)
 		return out
 	}
 	return append([]string(nil), g.backwardCodonByAA[aminoAcid]...)

@@ -127,6 +127,45 @@ func TestMakeProbesCommandWithGenbankVariant(t *testing.T) {
 	}
 }
 
+func TestMakeProbesCommandWithGenbankTextFileIncludesGeneName(t *testing.T) {
+	dir := t.TempDir()
+	out := filepath.Join(dir, "probes.fa")
+	textFile := filepath.Join(dir, "vars.tsv")
+	if err := os.WriteFile(textFile, []byte("rpoB\tS450L\tPROT\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	oldStdout := os.Stdout
+	f, err := os.Create(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	os.Stdout = f
+	defer func() { os.Stdout = oldStdout }()
+
+	err = run([]string{
+		"make-probes",
+		filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "NC_000962.3.fasta"),
+		"--genbank", filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "NC_000962.3.gb"),
+		"--text_file", textFile,
+		"--kmer", "31",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(data)
+	if !strings.Contains(text, "&gene=rpoB&mut=S450L") {
+		t.Fatalf("missing expected genbank gene metadata: %s", text)
+	}
+}
+
 func TestMakeProbesCommandWithVCF(t *testing.T) {
 	dir := t.TempDir()
 	out := filepath.Join(dir, "probes.fa")

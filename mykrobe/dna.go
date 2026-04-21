@@ -1,7 +1,5 @@
 package mykrobe
 
-import "sort"
-
 func RevcompDNA(seq string) string {
 	out := make([]byte, len(seq))
 	for i := range seq {
@@ -44,11 +42,18 @@ func TranslateDNA(seq string) string {
 
 func BackwardCodonTable() map[string][]string {
 	table := map[string][]string{}
-	for codon, aa := range codonTable {
-		table[aa] = append(table[aa], codon)
-	}
-	for aa := range table {
-		sort.Strings(table[aa])
+	bases := []byte{'A', 'T', 'C', 'G'}
+	for _, b1 := range bases {
+		for _, b2 := range bases {
+			for _, b3 := range bases {
+				codon := string([]byte{b1, b2, b3})
+				aa, ok := codonTable[codon]
+				if !ok {
+					continue
+				}
+				table[aa] = append(table[aa], codon)
+			}
+		}
 	}
 	return table
 }

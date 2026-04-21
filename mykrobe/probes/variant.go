@@ -47,6 +47,9 @@ func (v Variant) IsDeletion() bool {
 }
 
 func (v Variant) IsIndel() bool {
+	if len(v.ReferenceBases) > 1 {
+		return true
+	}
 	return v.IsInsertion() || v.IsDeletion()
 }
 
@@ -69,6 +72,7 @@ type Mutation struct {
 	Reference         string
 	InputMutationName string
 	ProteinCodingVar  bool
+	Gene              string
 }
 
 func (m Mutation) MutationOutputName() string {

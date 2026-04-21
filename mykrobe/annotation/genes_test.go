@@ -160,6 +160,34 @@ func TestGetVariantNamesStopCodon(t *testing.T) {
 	}
 }
 
+func TestGetAltsMatchesPythonCodonOrder(t *testing.T) {
+	gm := mustAA2DNA(t)
+	got := gm.GetAlts("L")
+	want := []string{"TTA", "TTG", "CTA", "CTT", "CTC", "CTG"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("got %v want %v", got, want)
+	}
+}
+
+func TestGetAltsAnyAAMatchesPythonOrder(t *testing.T) {
+	gm := mustAA2DNA(t)
+	got := gm.GetAlts("X")
+	wantPrefix := []string{
+		"AAA", "AAG",
+		"AAT", "AAC",
+		"ATA", "ATT", "ATC",
+		"ATG",
+		"ACA", "ACT", "ACC", "ACG",
+		"AGA", "AGG", "CGA", "CGT", "CGC", "CGG",
+		"AGT", "AGC", "TCA", "TCT", "TCC", "TCG",
+		"TAT", "TAC",
+		"TTA", "TTG", "CTA", "CTT", "CTC", "CTG",
+	}
+	if !slices.Equal(got[:len(wantPrefix)], wantPrefix) {
+		t.Fatalf("got prefix %v want %v", got[:len(wantPrefix)], wantPrefix)
+	}
+}
+
 func mustAA2DNA(t *testing.T) *GeneAminoAcidChangeToDNAVariants {
 	t.Helper()
 	gm, err := NewGeneAminoAcidChangeToDNAVariants(

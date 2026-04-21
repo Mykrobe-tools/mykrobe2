@@ -145,6 +145,31 @@ func TestSimpleVariantWithMultipleNearbySNPs(t *testing.T) {
 	}
 }
 
+func TestThreeBaseSubstitutionTrimsLikePythonIndelLogic(t *testing.T) {
+	ag := mustAlleleGenerator(t, "/Users/martin/Work/flexit_probes/AE005674.fasta", 21)
+	v := mustVariant(t, "AE005674", "CGA2354611CAA")
+	context := []Variant{
+		mustVariant(t, "AE005674", "T2354600C"),
+		mustVariant(t, "AE005674", "C2354601A"),
+		mustVariant(t, "AE005674", "C2354601T"),
+	}
+	panel, err := ag.Create(v, context)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantAlts := []string{
+		"CGATCGTGTCATAAACCGCCAAGTCACCATGGGGATGGTA",
+		"CGATCGTGCCATAAACCGCCAAGTCACCATGGGGATGGTA",
+		"CGATCGTGTTATAAACCGCCAAGTCACCATGGGGATGGTA",
+		"CGATCGTGCTATAAACCGCCAAGTCACCATGGGGATGGTA",
+		"CGATCGTGTAATAAACCGCCAAGTCACCATGGGGATGGTA",
+		"CGATCGTGCAATAAACCGCCAAGTCACCATGGGGATGGTA",
+	}
+	if !slices.Equal(panel.Alts, wantAlts) {
+		t.Fatalf("unexpected trimmed alts\ngot  %v\nwant %v", panel.Alts, wantAlts)
+	}
+}
+
 func TestSplitContext(t *testing.T) {
 	v := mustVariant(t, "ref", "A31T")
 	v3 := mustVariant(t, "ref", "C30G")
