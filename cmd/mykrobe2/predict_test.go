@@ -17,6 +17,7 @@ func TestPredictCommand(t *testing.T) {
 	index := filepath.Join(dir, "custom.panelindex")
 	out := filepath.Join(dir, "out.json")
 	covgs := filepath.Join(dir, "out.covgs")
+	progressPath := filepath.Join(dir, "gui-progress.jsonl")
 	lineage := filepath.Join(dir, "lineage.json")
 
 	panelData := "" +
@@ -42,6 +43,7 @@ func TestPredictCommand(t *testing.T) {
 		"--index", index,
 		"--output", out,
 		"--write_covgs", covgs,
+		"--gui-progress-file", progressPath,
 		"--expected_depth", "100",
 		"--report_all_calls",
 	})
@@ -77,6 +79,32 @@ func TestPredictCommand(t *testing.T) {
 	}
 	if !strings.Contains(string(covgsData), "katG?name=katG&panel_type=presence&version=1\t0\t1\t1\t1.000000\t7\t6") {
 		t.Fatalf("unexpected covgs output: %s", string(covgsData))
+	}
+	progressData, err := os.ReadFile(progressPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var events []map[string]any
+	for _, line := range strings.Split(strings.TrimSpace(string(progressData)), "\n") {
+		var event map[string]any
+		if err := json.Unmarshal([]byte(line), &event); err != nil {
+			t.Fatalf("decode progress event %q: %v", line, err)
+		}
+		events = append(events, event)
+	}
+	wantStages := []string{"loading_panel", "processing_reads", "calculating_coverage", "identifying_species", "predicting_resistance", "preparing_results", "complete"}
+	stageIndex := 0
+	for _, event := range events {
+		if stageIndex < len(wantStages) && event["stage"] == wantStages[stageIndex] {
+			stageIndex++
+		}
+	}
+	if stageIndex != len(wantStages) {
+		t.Fatalf("progress stages = %#v, missing ordered stage %q", events, wantStages[stageIndex])
+	}
+	last := events[len(events)-1]
+	if last["stage"] != "complete" || last["fraction"] != 1.0 || last["determinate"] != true {
+		t.Fatalf("final progress event = %#v", last)
 	}
 }
 

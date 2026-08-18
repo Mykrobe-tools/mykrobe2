@@ -57,6 +57,7 @@ type predictOptions struct {
 	guessSequenceMethod  bool
 	confPercentCutoff    float64
 	writeCovgs           string
+	guiProgressFile      string
 }
 
 type panelsUpdateMetadataOptions struct {
@@ -153,6 +154,8 @@ func newPredictCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&opts.guessSequenceMethod, "guess-sequence-method", false, "")
 	cmd.Flags().Float64Var(&opts.confPercentCutoff, "conf-percent-cutoff", 100, "")
 	cmd.Flags().StringVar(&opts.writeCovgs, "write-covgs", "", "Write intermediate coverage summary TSV to file")
+	cmd.Flags().StringVar(&opts.guiProgressFile, "gui-progress-file", "", "Write JSON progress events for the desktop GUI")
+	_ = cmd.Flags().MarkHidden("gui-progress-file")
 	return cmd
 }
 

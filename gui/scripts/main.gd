@@ -11,16 +11,10 @@ const DEFAULT_SAMPLE_NAME := "sample"
 
 @onready var background_rect: ColorRect = $Background
 @onready var animated_background: Control = $AnimatedBackground
-@onready var processing_circle: PanelContainer = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingCircle
 @onready var landing_view: LandingView = $LandingView
 @onready var bootstrap_view: BootstrapView = $BootstrapView
 @onready var results_view: ResultsView = $ResultsView
-@onready var processing_overlay: Control = $ProcessingOverlay
-@onready var processing_label: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingLabel
-@onready var dot_1: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots/Dot1
-@onready var dot_2: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots/Dot2
-@onready var dot_3: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots/Dot3
-@onready var cancel_button: Button = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/CancelButton
+@onready var processing_overlay: ProcessingOverlay = $ProcessingOverlay
 @onready var status_label: Label = $StatusLabel
 @onready var choose_panel_dialog: ChoosePanelDialog = $ChoosePanelDialog
 @onready var reads_dialog: FileDialog = $ReadsDialog
@@ -43,7 +37,6 @@ var _pending_run_after_reads_selection := false
 var _sample_name := DEFAULT_SAMPLE_NAME
 var _panels_dir := ""
 var _output_dialog_mode := ""
-var _processing_elapsed := 0.0
 var _pending_result_path := ""
 var _pending_result_attempts := 0
 
@@ -75,27 +68,20 @@ func _apply_theme(theme_name: String) -> void:
 	bootstrap_view.set_logo_texture(icon_texture)
 	results_view.set_logo_texture(icon_texture)
 	modulate = Color(1, 1, 1, 1)
-	var processing_style := StyleBoxFlat.new()
-	processing_style.bg_color = _palette.get("circle_bg", Color(1, 1, 1, 0.92))
-	processing_style.set_corner_radius_all(400)
-	processing_circle.add_theme_stylebox_override("panel", processing_style)
 	landing_view.apply_palette(_palette)
 	bootstrap_view.apply_palette(_palette)
+	processing_overlay.apply_palette(_palette)
 	choose_panel_dialog.apply_palette(_palette)
 	results_view.apply_palette(_palette)
 	_apply_palette_overrides()
 
 func _apply_palette_overrides() -> void:
 	var text: Color = _palette.get("text", Color("6d6a65"))
-	var dot: Color = _palette.get("dot", Color("c9c4bc"))
-	processing_label.add_theme_color_override("font_color", text)
-	for label in [dot_1, dot_2, dot_3]:
-		label.add_theme_color_override("font_color", dot)
 	status_label.add_theme_color_override("font_color", text)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	_poll_panels_setup()
-	_poll_predict_run(delta)
+	_poll_predict_run()
 
 func _poll_panels_setup() -> void:
 	var result: Dictionary = _panels_setup.poll()
@@ -113,42 +99,38 @@ func _poll_panels_setup() -> void:
 	_refresh_setup_state()
 	_set_notice(str(result.get("error", "Panel setup failed.")))
 
-func _poll_predict_run(delta: float) -> void:
+func _poll_predict_run() -> void:
 	if _pending_result_path != "":
 		if _load_json_result(_pending_result_path, _current_result_sample, true):
 			_pending_result_path = ""
 			_pending_result_attempts = 0
-			processing_overlay.visible = false
-			cancel_button.disabled = false
+			processing_overlay.stop()
 			_set_notice("")
 			return
 		_pending_result_attempts += 1
-		processing_overlay.visible = true
-		processing_label.text = "Loading results"
+		processing_overlay.show_loading_results()
 		if _pending_result_attempts >= 40:
 			var failed_path := _pending_result_path
 			_pending_result_path = ""
 			_pending_result_attempts = 0
-			processing_overlay.visible = false
+			processing_overlay.stop()
 			_show_landing_view()
 			_set_notice("Analysis finished but the result JSON could not be loaded from %s." % failed_path)
 			_set_window_title_default()
 		return
-	if _predict_run.is_running():
-		_processing_elapsed += delta
-		_update_processing_dots()
 	var result: Dictionary = _predict_run.poll()
 	if result.get("running", false):
+		var progress_variant: Variant = result.get("progress", {})
+		if typeof(progress_variant) == TYPE_DICTIONARY:
+			processing_overlay.set_progress(Dictionary(progress_variant))
 		return
 	if not result.get("finished", false):
 		return
-	processing_overlay.visible = false
-	cancel_button.disabled = false
+	processing_overlay.stop()
 	if result.get("success", false):
 		_pending_result_path = str(result.get("output_path", _current_result_path))
 		_pending_result_attempts = 0
-		processing_overlay.visible = true
-		processing_label.text = "Loading results"
+		processing_overlay.show_loading_results()
 		return
 	_show_landing_view()
 	_set_notice("%s\n%s" % [str(result.get("error", "Analysis failed.")), str(result.get("log", ""))])
@@ -210,12 +192,12 @@ func _on_results_tab_changed(tab_name: String) -> void:
 	if _current_result_sample != "":
 		_set_window_title_results(_current_result_sample, tab_name)
 
-func _on_cancel_button_pressed() -> void:
+func _on_cancel_requested() -> void:
 	if not _predict_run.is_running():
 		return
-	cancel_button.disabled = true
+	processing_overlay.set_cancel_enabled(false)
 	_predict_run.cancel()
-	processing_overlay.visible = false
+	processing_overlay.stop()
 	_show_landing_view()
 	_set_notice("Analysis cancelled.")
 	_set_window_title_default()
@@ -264,11 +246,7 @@ func _start_predict(reads_path: String) -> void:
 
 	_current_result_sample = sample
 	_current_result_path = output_path
-	_processing_elapsed = 0.0
-	_update_processing_dots()
-	processing_label.text = "Analysing"
-	processing_overlay.visible = true
-	cancel_button.disabled = false
+	processing_overlay.start()
 	_set_notice("")
 	_set_window_title_processing(sample)
 
@@ -459,13 +437,6 @@ func _set_window_title_processing(sample: String) -> void:
 
 func _set_window_title_results(sample: String, tab_name: String) -> void:
 	get_window().title = "%s - Resistance - %s - Mykrobe" % [sample, tab_name]
-
-func _update_processing_dots() -> void:
-	var active_index := int(floor(_processing_elapsed * 2.0)) % 4
-	var active_count := 0 if active_index == 3 else active_index + 1
-	var dots := [dot_1, dot_2, dot_3]
-	for i in range(dots.size()):
-		dots[i].modulate = Color(1, 1, 1, 1) if i < active_count else Color(1, 1, 1, 0.25)
 
 func _on_files_dropped(files: PackedStringArray) -> void:
 	if files.is_empty():

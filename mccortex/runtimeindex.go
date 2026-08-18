@@ -638,11 +638,34 @@ func NewRuntimeCounter(idx *RuntimeIndex) (*RuntimeCounter, error) {
 }
 
 func (c *RuntimeCounter) AddPath(path string) error {
-	reader, err := seqio.OpenPath(path)
+	return c.AddPathWithProgress(path, nil)
+}
+
+// AddPathWithProgress counts matching kmers and reports cumulative compressed
+// or uncompressed bytes read from a regular input file.
+func (c *RuntimeCounter) AddPathWithProgress(path string, progress func(bytesRead int64)) error {
+	if progress == nil || path == "-" {
+		reader, err := seqio.OpenPath(path)
+		if err != nil {
+			return err
+		}
+		defer closeIfPossible(reader)
+		return c.addReader(reader)
+	}
+	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}
+	reader, err := seqio.OpenReader(&byteProgressReader{file: file, progress: progress})
+	if err != nil {
+		_ = file.Close()
+		return err
+	}
 	defer closeIfPossible(reader)
+	return c.addReader(reader)
+}
+
+func (c *RuntimeCounter) addReader(reader seqio.Reader) error {
 	for {
 		rec, err := reader.Read()
 		if err == io.EOF {
@@ -653,6 +676,25 @@ func (c *RuntimeCounter) AddPath(path string) error {
 		}
 		c.AddSequence(rec.Seq)
 	}
+}
+
+type byteProgressReader struct {
+	file     *os.File
+	progress func(int64)
+	read     int64
+}
+
+func (r *byteProgressReader) Read(p []byte) (int, error) {
+	n, err := r.file.Read(p)
+	r.read += int64(n)
+	if n > 0 {
+		r.progress(r.read)
+	}
+	return n, err
+}
+
+func (r *byteProgressReader) Close() error {
+	return r.file.Close()
 }
 
 func (c *RuntimeCounter) AddSequence(seq []byte) {

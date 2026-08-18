@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -14,6 +15,17 @@ import (
 func runPredict(opts *predictOptions) error {
 	if opts.output == "" {
 		return fmt.Errorf("predict requires --seq, a panel source, and --output")
+	}
+	progressWriter, err := openGUIProgressWriter(opts.guiProgressFile)
+	if err != nil {
+		return err
+	}
+	if progressWriter != nil {
+		defer progressWriter.Close()
+	}
+	var progress mykrobe.PredictProgressFunc
+	if progressWriter != nil {
+		progress = progressWriter.Report
 	}
 	result, err := mykrobe.RunTBPredict(mykrobe.PredictRunOptions{
 		Sample:               opts.sample,
@@ -40,9 +52,13 @@ func runPredict(opts *predictOptions) error {
 		ONT:                  opts.ont,
 		GuessSequenceMethod:  opts.guessSequenceMethod,
 		ConfPercentCutoff:    opts.confPercentCutoff,
+		Progress:             progress,
 	})
 	if err != nil {
 		return err
+	}
+	if progress != nil {
+		progress(mykrobe.PredictProgressEvent{Stage: mykrobe.PredictStagePreparingResults, Message: "Preparing results"})
 	}
 	if opts.writeCovgs != "" {
 		f, err := os.Create(opts.writeCovgs)
@@ -58,6 +74,14 @@ func runPredict(opts *predictOptions) error {
 		}
 	}
 
+	err = writePredictOutput(opts, result.Output)
+	if err == nil && progress != nil {
+		progress(mykrobe.PredictProgressEvent{Stage: mykrobe.PredictStageComplete, Message: "Analysis complete", Fraction: 1, Determinate: true})
+	}
+	return err
+}
+
+func writePredictOutput(opts *predictOptions, output map[string]any) error {
 	f, err := os.Create(opts.output)
 	if err != nil {
 		return err
@@ -65,18 +89,42 @@ func runPredict(opts *predictOptions) error {
 	defer f.Close()
 	switch opts.outputFormat {
 	case "json":
-		return mykrobe.WriteJSONLikePython(f, result.Output, "  ")
+		return mykrobe.WriteJSONLikePython(f, output, "  ")
 	case "csv":
-		_, err := f.WriteString(formatCSV(result.Output))
+		_, err := f.WriteString(formatCSV(output))
 		return err
 	case "json_and_csv":
-		if err := mykrobe.WriteJSONLikePython(f, result.Output, "  "); err != nil {
+		if err := mykrobe.WriteJSONLikePython(f, output, "  "); err != nil {
 			return err
 		}
-		return os.WriteFile(opts.output+".csv", []byte(formatCSV(result.Output)), 0o644)
+		return os.WriteFile(opts.output+".csv", []byte(formatCSV(output)), 0o644)
 	default:
 		return fmt.Errorf("output format must be one of csv,json,json_and_csv")
 	}
+}
+
+type guiProgressWriter struct {
+	file    *os.File
+	encoder *json.Encoder
+}
+
+func openGUIProgressWriter(path string) (*guiProgressWriter, error) {
+	if path == "" {
+		return nil, nil
+	}
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+	if err != nil {
+		return nil, fmt.Errorf("open GUI progress file: %w", err)
+	}
+	return &guiProgressWriter{file: file, encoder: json.NewEncoder(file)}, nil
+}
+
+func (w *guiProgressWriter) Report(event mykrobe.PredictProgressEvent) {
+	_ = w.encoder.Encode(event)
+}
+
+func (w *guiProgressWriter) Close() error {
+	return w.file.Close()
 }
 
 func formatCSV(out map[string]any) string {

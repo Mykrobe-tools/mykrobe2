@@ -7,7 +7,9 @@ var _log_path := ""
 var _result_path := ""
 var _script_path := ""
 var _child_pid_path := ""
+var _progress_path := ""
 var _last_log_text := ""
+var _last_progress: Dictionary = {}
 
 func is_running() -> bool:
 	return _task_running
@@ -23,10 +25,14 @@ func start(binary_path: String, args: PackedStringArray, output_path: String) ->
 	_log_path = run_prefix + ".log"
 	_result_path = run_prefix + ".result"
 	_child_pid_path = run_prefix + ".pid"
+	_progress_path = run_prefix + ".progress.jsonl"
 	_script_path = run_prefix + (".cmd" if OS.get_name() == "Windows" else ".sh")
 	_last_log_text = ""
+	_last_progress = {"stage": "starting", "message": "Starting analysis", "fraction": 0.0, "determinate": false}
+	var process_args := args.duplicate()
+	process_args.append_array(["--gui-progress-file", _progress_path])
 	_task_running = true
-	_task_pid = _start_process(binary_path, args, output_path, _log_path, _result_path)
+	_task_pid = _start_process(binary_path, process_args, output_path, _log_path, _result_path)
 	if _task_pid == -1:
 		_task_running = false
 		_cleanup_run_files()
@@ -45,8 +51,9 @@ func poll() -> Dictionary:
 	if not _task_running:
 		return {"running": false}
 	_refresh_log_from_disk()
+	_refresh_progress_from_disk()
 	if not FileAccess.file_exists(_result_path):
-		return {"running": true, "log": _last_log_text}
+		return {"running": true, "log": _last_log_text, "progress": _last_progress}
 	_task_running = false
 	_task_pid = -1
 	_refresh_log_from_disk()
@@ -54,6 +61,7 @@ func poll() -> Dictionary:
 	result["running"] = false
 	result["finished"] = true
 	result["log"] = _last_log_text
+	result["progress"] = _last_progress
 	_cleanup_run_files()
 	return result
 
@@ -148,6 +156,23 @@ func _refresh_log_from_disk() -> void:
 	_last_log_text = file.get_as_text()
 	file.close()
 
+func _refresh_progress_from_disk() -> void:
+	if _progress_path == "" or not FileAccess.file_exists(_progress_path):
+		return
+	var file := FileAccess.open(_progress_path, FileAccess.READ)
+	if file == null:
+		return
+	var lines := file.get_as_text().split("\n", false)
+	file.close()
+	for index in range(lines.size() - 1, -1, -1):
+		var json := JSON.new()
+		if json.parse(lines[index]) != OK:
+			continue
+		var parsed: Variant = json.data
+		if typeof(parsed) == TYPE_DICTIONARY:
+			_last_progress = Dictionary(parsed)
+			return
+
 func _kill_process_tree() -> void:
 	if _task_pid <= 0:
 		return
@@ -170,7 +195,7 @@ func _read_child_pid() -> int:
 	return pid_text.to_int()
 
 func _cleanup_run_files() -> void:
-	for path in [_log_path, _result_path, _script_path, _child_pid_path]:
+	for path in [_log_path, _result_path, _script_path, _child_pid_path, _progress_path]:
 		if path != "" and FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 

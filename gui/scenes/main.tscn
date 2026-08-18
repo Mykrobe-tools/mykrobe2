@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://h6ubkubw2gwv"]
+[gd_scene load_steps=8 format=3 uid="uid://h6ubkubw2gwv"]
 
 [ext_resource type="Script" uid="uid://fkihy2arg2jh" path="res://scripts/main.gd" id="1_2p1fg"]
 [ext_resource type="PackedScene" path="res://scenes/BackgroundPills.tscn" id="2_pills"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ResultsView.tscn" id="4_results"]
 [ext_resource type="PackedScene" path="res://scenes/LandingView.tscn" id="5_landing"]
 [ext_resource type="PackedScene" path="res://scenes/BootstrapView.tscn" id="6_bootstrap"]
+[ext_resource type="PackedScene" path="res://scenes/ProcessingOverlay.tscn" id="7_processing"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -32,93 +33,7 @@ color = Color(0.972549, 0.960784, 0.933333, 1)
 [node name="BootstrapView" parent="." instance=ExtResource("6_bootstrap")]
 
 [node name="ResultsView" parent="." instance=ExtResource("4_results")]
-[node name="ProcessingOverlay" type="Control" parent="."]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ProcessingCenter" type="CenterContainer" parent="ProcessingOverlay"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ProcessingCard" type="Control" parent="ProcessingOverlay/ProcessingCenter"]
-custom_minimum_size = Vector2(560, 560)
-layout_mode = 2
-
-[node name="ProcessingCircle" type="PanelContainer" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -280.0
-offset_top = -280.0
-offset_right = 280.0
-offset_bottom = 280.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ProcessingMargin" type="MarginContainer" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 120.0
-offset_top = 150.0
-offset_right = -120.0
-offset_bottom = -130.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ProcessingVBox" type="VBoxContainer" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin"]
-layout_mode = 2
-theme_override_constants/separation = 20
-alignment = 1
-
-[node name="ProcessingDots" type="HBoxContainer" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox"]
-layout_mode = 2
-theme_override_constants/separation = 24
-alignment = 1
-
-[node name="Dot1" type="Label" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.77, 0.75, 1)
-theme_override_font_sizes/font_size = 74
-text = "•"
-
-[node name="Dot2" type="Label" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.77, 0.75, 1)
-theme_override_font_sizes/font_size = 74
-text = "•"
-
-[node name="Dot3" type="Label" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.77, 0.75, 1)
-theme_override_font_sizes/font_size = 74
-text = "•"
-
-[node name="ProcessingLabel" type="Label" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
-theme_override_font_sizes/font_size = 28
-text = "Analysing"
-horizontal_alignment = 1
-
-[node name="CancelButton" type="Button" parent="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox"]
-custom_minimum_size = Vector2(150, 44)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "CANCEL"
+[node name="ProcessingOverlay" parent="." instance=ExtResource("7_processing")]
 
 [node name="StatusLabel" type="Label" parent="."]
 visible = false
@@ -155,7 +70,7 @@ use_native_dialog = true
 [connection signal="save_requested" from="ResultsView" to="." method="_on_save_requested"]
 [connection signal="new_requested" from="ResultsView" to="." method="_on_new_requested"]
 [connection signal="tab_changed" from="ResultsView" to="." method="_on_results_tab_changed"]
-[connection signal="pressed" from="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/CancelButton" to="." method="_on_cancel_button_pressed"]
+[connection signal="cancel_requested" from="ProcessingOverlay" to="." method="_on_cancel_requested"]
 [connection signal="panel_selected" from="ChoosePanelDialog" to="." method="_on_panel_selected"]
 [connection signal="file_selected" from="ReadsDialog" to="." method="_on_reads_dialog_file_selected"]
 [connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]

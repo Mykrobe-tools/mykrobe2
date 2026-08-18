@@ -33,6 +33,7 @@ type PredictRunOptions struct {
 	ONT                  bool
 	GuessSequenceMethod  bool
 	ConfPercentCutoff    float64
+	Progress             PredictProgressFunc
 }
 
 type PredictRunResult struct {
@@ -56,6 +57,7 @@ type predictInputs struct {
 }
 
 func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
+	reportPredictProgress(opts.Progress, PredictStageLoadingPanel, "Loading panel data", 0, false)
 	inputs, err := resolvePredictInputs(opts.IndexPath, opts.PanelArg, opts.MapPath, opts.LineagePath, opts.PanelsDir, opts.Species)
 	if err != nil {
 		return nil, err
@@ -81,14 +83,39 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 	if err != nil {
 		return nil, err
 	}
+	totalBytes, hasTotalBytes := sequenceInputSize(opts.SeqPaths)
+	reportPredictProgress(opts.Progress, PredictStageProcessingReads, "Processing reads", 0, hasTotalBytes)
+	var completedBytes int64
+	lastReportedFraction := -1.0
 	for _, seqPath := range opts.SeqPaths {
-		if err := counter.AddPath(seqPath); err != nil {
+		pathStart := completedBytes
+		var progress func(int64)
+		if hasTotalBytes {
+			progress = func(pathBytes int64) {
+				fraction := float64(pathStart+pathBytes) / float64(totalBytes)
+				if fraction-lastReportedFraction >= 0.005 || fraction >= 1 {
+					lastReportedFraction = fraction
+					reportPredictProgress(opts.Progress, PredictStageProcessingReads, "Processing reads", fraction, true)
+				}
+			}
+		}
+		if err := counter.AddPathWithProgress(seqPath, progress); err != nil {
 			return nil, err
 		}
+		if hasTotalBytes {
+			info, err := os.Stat(seqPath)
+			if err != nil {
+				return nil, err
+			}
+			completedBytes += info.Size()
+		}
 	}
+	reportPredictProgress(opts.Progress, PredictStageProcessingReads, "Processing reads", 1, hasTotalBytes)
+	reportPredictProgress(opts.Progress, PredictStageCalculatingCoverage, "Calculating coverage", 0, false)
 	summaries := counter.Summaries()
 
 	coverageSet := CoverageSetFromSummaries(summaries)
+	reportPredictProgress(opts.Progress, PredictStageIdentifyingSpecies, "Identifying species", 0, false)
 	phylo, depths, err := DetectSpeciesAndGetDepths(coverageSet, inputs.HierarchyPath, inputs.SpeciesPhyloGroup)
 	if err != nil {
 		return nil, err
@@ -126,6 +153,7 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 		IgnoreMinorCalls:            opts.IgnoreMinorCalls,
 		MinDepth:                    opts.MinDepth,
 	}
+	reportPredictProgress(opts.Progress, PredictStagePredictingResistance, "Predicting resistance", 0, false)
 	result, err := AnalyzeCoverageSetTBWithOptions(coverageSet, analysisOpts)
 	if err != nil {
 		return nil, err
@@ -169,6 +197,21 @@ func RunTBPredict(opts PredictRunOptions) (*PredictRunResult, error) {
 		Output:            map[string]any{opts.Sample: sampleOut},
 		CoverageSummaries: summaries,
 	}, nil
+}
+
+func sequenceInputSize(paths []string) (int64, bool) {
+	var total int64
+	for _, path := range paths {
+		if path == "-" {
+			return 0, false
+		}
+		info, err := os.Stat(path)
+		if err != nil || !info.Mode().IsRegular() || info.Size() <= 0 {
+			return 0, false
+		}
+		total += info.Size()
+	}
+	return total, total > 0
 }
 
 func resolvePredictInputs(indexPath, panelArg, mapPath, lineagePath, panelsDir, species string) (predictInputs, error) {
