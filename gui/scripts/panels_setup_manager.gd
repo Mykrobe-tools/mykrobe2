@@ -5,6 +5,7 @@ var _task_running := false
 var _task_pid := -1
 var _log_path := ""
 var _result_path := ""
+var _script_path := ""
 var _last_log_text := ""
 
 func is_running() -> bool:
@@ -16,17 +17,17 @@ func log_text() -> String:
 func start(binary_path: String, commands: Array, success_status: String) -> Dictionary:
 	if _task_running:
 		return {"started": false, "error": "Panel setup is already running."}
-	_log_path = OS.get_user_data_dir().path_join("panels-setup.log")
-	if FileAccess.file_exists(_log_path):
-		DirAccess.remove_absolute(_log_path)
-	_result_path = OS.get_user_data_dir().path_join("panels-setup.result")
-	if FileAccess.file_exists(_result_path):
-		DirAccess.remove_absolute(_result_path)
+	var run_id := "%s-%s" % [OS.get_process_id(), Time.get_ticks_usec()]
+	var run_prefix := OS.get_user_data_dir().path_join("panels-setup-%s" % run_id)
+	_log_path = run_prefix + ".log"
+	_result_path = run_prefix + ".result"
+	_script_path = run_prefix + (".cmd" if OS.get_name() == "Windows" else ".sh")
 	_last_log_text = ""
 	_task_running = true
 	_task_pid = _start_process(binary_path, commands, success_status, _log_path, _result_path)
 	if _task_pid == -1:
 		_task_running = false
+		_cleanup_run_files()
 		return {"started": false, "error": "Could not start background panel setup."}
 	return {"started": true}
 
@@ -43,17 +44,15 @@ func poll() -> Dictionary:
 	result["running"] = false
 	result["finished"] = true
 	result["log"] = _last_log_text
+	_cleanup_run_files()
 	return result
 
 func _start_process(binary_path: String, commands: Array, success_status: String, log_path: String, result_path: String) -> int:
-	var script_path := OS.get_user_data_dir().path_join("panels-setup-script")
 	if OS.get_name() == "Windows":
-		script_path += ".cmd"
-		_write_windows_setup_script(script_path, binary_path, commands, success_status, log_path, result_path)
-		return OS.create_process("cmd.exe", PackedStringArray(["/C", script_path]), false)
-	script_path += ".sh"
-	_write_posix_setup_script(script_path, binary_path, commands, success_status, log_path, result_path)
-	return OS.create_process("/bin/bash", PackedStringArray([script_path]), false)
+		_write_windows_setup_script(_script_path, binary_path, commands, success_status, log_path, result_path)
+		return OS.create_process("cmd.exe", PackedStringArray(["/C", _script_path]), false)
+	_write_posix_setup_script(_script_path, binary_path, commands, success_status, log_path, result_path)
+	return OS.create_process("/bin/bash", PackedStringArray([_script_path]), false)
 
 func _write_posix_setup_script(script_path: String, binary_path: String, commands: Array, success_status: String, log_path: String, result_path: String) -> void:
 	var lines: PackedStringArray = [
@@ -76,7 +75,6 @@ func _write_posix_setup_script(script_path: String, binary_path: String, command
 	lines.append("echo %s >> %s" % [_shell_quote("status=%s" % success_status), _shell_quote(result_path)])
 	lines.append("echo %s >> %s" % [_shell_quote("error="), _shell_quote(result_path)])
 	_write_text_file(script_path, "\n".join(lines) + "\n")
-	OS.execute("/bin/chmod", PackedStringArray(["+x", script_path]), [], true)
 
 func _write_windows_setup_script(script_path: String, binary_path: String, commands: Array, success_status: String, log_path: String, result_path: String) -> void:
 	var lines: PackedStringArray = [
@@ -139,6 +137,11 @@ func _refresh_log_from_disk() -> void:
 		return
 	_last_log_text = file.get_as_text()
 	file.close()
+
+func _cleanup_run_files() -> void:
+	for path in [_log_path, _result_path, _script_path]:
+		if path != "" and FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
 
 func _join_shell_args(args: PackedStringArray) -> String:
 	var parts: PackedStringArray = []

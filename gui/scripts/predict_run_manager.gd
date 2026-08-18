@@ -5,6 +5,8 @@ var _task_running := false
 var _task_pid := -1
 var _log_path := ""
 var _result_path := ""
+var _script_path := ""
+var _child_pid_path := ""
 var _last_log_text := ""
 
 func is_running() -> bool:
@@ -16,28 +18,28 @@ func log_text() -> String:
 func start(binary_path: String, args: PackedStringArray, output_path: String) -> Dictionary:
 	if _task_running:
 		return {"started": false, "error": "Analysis is already running."}
-	_log_path = OS.get_user_data_dir().path_join("predict-run.log")
-	if FileAccess.file_exists(_log_path):
-		DirAccess.remove_absolute(_log_path)
-	_result_path = OS.get_user_data_dir().path_join("predict-run.result")
-	if FileAccess.file_exists(_result_path):
-		DirAccess.remove_absolute(_result_path)
+	var run_id := "%s-%s" % [OS.get_process_id(), Time.get_ticks_usec()]
+	var run_prefix := OS.get_user_data_dir().path_join("predict-run-%s" % run_id)
+	_log_path = run_prefix + ".log"
+	_result_path = run_prefix + ".result"
+	_child_pid_path = run_prefix + ".pid"
+	_script_path = run_prefix + (".cmd" if OS.get_name() == "Windows" else ".sh")
 	_last_log_text = ""
 	_task_running = true
 	_task_pid = _start_process(binary_path, args, output_path, _log_path, _result_path)
 	if _task_pid == -1:
 		_task_running = false
+		_cleanup_run_files()
 		return {"started": false, "error": "Could not start background analysis."}
 	return {"started": true}
 
 func cancel() -> void:
 	if not _task_running:
 		return
-	if _task_pid > 0:
-		OS.kill(_task_pid)
+	_kill_process_tree()
 	_task_running = false
 	_task_pid = -1
-	_write_result_file(false, "Analysis cancelled.", "Analysis cancelled.")
+	_cleanup_run_files()
 
 func poll() -> Dictionary:
 	if not _task_running:
@@ -52,24 +54,26 @@ func poll() -> Dictionary:
 	result["running"] = false
 	result["finished"] = true
 	result["log"] = _last_log_text
+	_cleanup_run_files()
 	return result
 
 func _start_process(binary_path: String, args: PackedStringArray, output_path: String, log_path: String, result_path: String) -> int:
-	var script_path := OS.get_user_data_dir().path_join("predict-runner")
 	if OS.get_name() == "Windows":
-		script_path += ".cmd"
-		_write_windows_script(script_path, binary_path, args, output_path, log_path, result_path)
-		return OS.create_process("cmd.exe", PackedStringArray(["/C", script_path]), false)
-	script_path += ".sh"
-	_write_posix_script(script_path, binary_path, args, output_path, log_path, result_path)
-	return OS.create_process("/bin/bash", PackedStringArray([script_path]), false)
+		_write_windows_script(_script_path, binary_path, args, output_path, log_path, result_path)
+		return OS.create_process("cmd.exe", PackedStringArray(["/C", _script_path]), false)
+	_write_posix_script(_script_path, binary_path, args, output_path, log_path, result_path)
+	return OS.create_process("/bin/bash", PackedStringArray([_script_path]), false)
 
 func _write_posix_script(script_path: String, binary_path: String, args: PackedStringArray, output_path: String, log_path: String, result_path: String) -> void:
 	var lines: PackedStringArray = [
 		"#!/usr/bin/env bash",
 		"set -u",
-		"%s %s >> %s 2>&1" % [_shell_quote(binary_path), _join_shell_args(args), _shell_quote(log_path)],
+		"%s %s >> %s 2>&1 &" % [_shell_quote(binary_path), _join_shell_args(args), _shell_quote(log_path)],
+		"child_pid=$!",
+		"echo \"$child_pid\" > %s" % _shell_quote(_child_pid_path),
+		"wait \"$child_pid\" 2>/dev/null",
 		"status=$?",
+		"rm -f %s" % _shell_quote(_child_pid_path),
 		"if [ \"$status\" -eq 0 ]; then",
 		"  echo %s > %s" % [_shell_quote("success=1"), _shell_quote(result_path)],
 		"  echo %s >> %s" % [_shell_quote("status=Analysis complete."), _shell_quote(result_path)],
@@ -83,7 +87,6 @@ func _write_posix_script(script_path: String, binary_path: String, args: PackedS
 		"fi",
 	]
 	_write_text_file(script_path, "\n".join(lines) + "\n")
-	OS.execute("/bin/chmod", PackedStringArray(["+x", script_path]), [], true)
 
 func _write_windows_script(script_path: String, binary_path: String, args: PackedStringArray, output_path: String, log_path: String, result_path: String) -> void:
 	var lines: PackedStringArray = [
@@ -108,15 +111,6 @@ func _write_text_file(path: String, text: String) -> void:
 	if file == null:
 		return
 	file.store_string(text)
-	file.close()
-
-func _write_result_file(success: bool, status: String, error_text: String) -> void:
-	var file := FileAccess.open(_result_path, FileAccess.WRITE)
-	if file == null:
-		return
-	file.store_line("success=%s" % ("1" if success else "0"))
-	file.store_line("status=%s" % status)
-	file.store_line("error=%s" % error_text)
 	file.close()
 
 func _read_result(path: String) -> Dictionary:
@@ -153,6 +147,32 @@ func _refresh_log_from_disk() -> void:
 		return
 	_last_log_text = file.get_as_text()
 	file.close()
+
+func _kill_process_tree() -> void:
+	if _task_pid <= 0:
+		return
+	if OS.get_name() == "Windows":
+		var exit_code := OS.execute("taskkill", PackedStringArray(["/PID", str(_task_pid), "/T", "/F"]), [], true)
+		if exit_code != 0:
+			OS.kill(_task_pid)
+		return
+	var child_pid := _read_child_pid()
+	if child_pid > 0:
+		OS.execute("/bin/kill", PackedStringArray(["-KILL", str(child_pid)]), [], true)
+	OS.kill(_task_pid)
+
+func _read_child_pid() -> int:
+	if _child_pid_path == "" or not FileAccess.file_exists(_child_pid_path):
+		return -1
+	var pid_text := FileAccess.get_file_as_string(_child_pid_path).strip_edges()
+	if not pid_text.is_valid_int():
+		return -1
+	return pid_text.to_int()
+
+func _cleanup_run_files() -> void:
+	for path in [_log_path, _result_path, _script_path, _child_pid_path]:
+		if path != "" and FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
 
 func _join_shell_args(args: PackedStringArray) -> String:
 	var parts: PackedStringArray = []
