@@ -476,7 +476,7 @@ func _refresh_setup_state() -> void:
 	var panels_dir := panels_dir_edit.text.strip_edges()
 	var manifest_exists := FileAccess.file_exists(panels_dir.path_join("manifest.json"))
 	if _panels_setup.is_running() or not manifest_exists:
-		bootstrap_status_label.text = "Panel data is missing. Downloading and processing data. This may take a few minutes"
+		bootstrap_status_label.text = "Panel data missing. Downloading and processing data. This may take a few minutes"
 		_show_bootstrap_view()
 		return
 	if _current_result_text != "":
