@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://h6ubkubw2gwv"]
+[gd_scene load_steps=4 format=3 uid="uid://h6ubkubw2gwv"]
 
 [ext_resource type="Script" uid="uid://fkihy2arg2jh" path="res://scripts/main.gd" id="1_2p1fg"]
 [ext_resource type="PackedScene" path="res://scenes/BackgroundPills.tscn" id="2_pills"]
+[ext_resource type="PackedScene" path="res://scenes/ChoosePanelDialog.tscn" id="3_panel_dialog"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -648,93 +649,7 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.3, 0.3, 0.3, 1)
 
-[node name="OptionsDialog" type="Control" parent="."]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="OptionsScrim" type="ColorRect" parent="OptionsDialog"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.972549, 0.960784, 0.933333, 0.55)
-
-[node name="OptionsCenter" type="CenterContainer" parent="OptionsDialog"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="OptionsCard" type="PanelContainer" parent="OptionsDialog/OptionsCenter"]
-custom_minimum_size = Vector2(500, 260)
-layout_mode = 2
-
-[node name="OptionsMargin" type="MarginContainer" parent="OptionsDialog/OptionsCenter/OptionsCard"]
-layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 18
-
-[node name="OptionsVBox" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="OptionsHeader" type="HBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="OptionsTitle" type="Label" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsHeader"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
-text = "Choose panel"
-
-[node name="SpeciesRow" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
-layout_mode = 2
-
-[node name="SpeciesLabel" type="Label" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SpeciesRow"]
-layout_mode = 2
-text = "Species"
-
-[node name="SpeciesOption" type="OptionButton" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SpeciesRow"]
-layout_mode = 2
-disabled = true
-
-[node name="PanelRow" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
-layout_mode = 2
-
-[node name="PanelLabel" type="Label" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelRow"]
-layout_mode = 2
-text = "Panel"
-
-[node name="PanelOption" type="OptionButton" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelRow"]
-layout_mode = 2
-disabled = true
-
-[node name="PanelDialogButtons" type="HBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
-layout_mode = 2
-theme_override_constants/separation = 8
-alignment = 2
-
-[node name="CancelPanelButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelDialogButtons"]
-custom_minimum_size = Vector2(90, 36)
-layout_mode = 2
-text = "Cancel"
-
-[node name="SetPanelButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelDialogButtons"]
-custom_minimum_size = Vector2(110, 36)
-layout_mode = 2
-text = "Set panel"
+[node name="ChoosePanelDialog" parent="." instance=ExtResource("3_panel_dialog")]
 
 [node name="ReadsDialog" type="FileDialog" parent="."]
 title = "Open a File"
@@ -758,9 +673,6 @@ use_native_dialog = true
 [connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/SaveButton" to="." method="_on_save_button_pressed"]
 [connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/NewButton" to="." method="_on_new_button_pressed"]
 [connection signal="pressed" from="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/CancelButton" to="." method="_on_cancel_button_pressed"]
-[connection signal="item_selected" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SpeciesRow/SpeciesOption" to="." method="_on_species_option_item_selected"]
-[connection signal="item_selected" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelRow/PanelOption" to="." method="_on_panel_option_item_selected"]
-[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelDialogButtons/CancelPanelButton" to="." method="_on_cancel_panel_button_pressed"]
-[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelDialogButtons/SetPanelButton" to="." method="_on_set_panel_button_pressed"]
+[connection signal="panel_selected" from="ChoosePanelDialog" to="." method="_on_panel_selected"]
 [connection signal="file_selected" from="ReadsDialog" to="." method="_on_reads_dialog_file_selected"]
 [connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]
