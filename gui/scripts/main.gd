@@ -1,17 +1,12 @@
 extends Control
 
 const LocalMykrobe2ManagerScript = preload("res://scripts/local_mykrobe2_manager.gd")
-const ResultFormatterScript = preload("res://scripts/result_formatter.gd")
 const GUIHelpersScript = preload("res://scripts/gui_helpers.gd")
 const PanelsSetupManagerScript = preload("res://scripts/panels_setup_manager.gd")
 const PredictRunManagerScript = preload("res://scripts/predict_run_manager.gd")
 const ThemesLibScript = preload("res://scripts/themes.gd")
 const LOGO_ICON_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
 
-const TAB_ALL := 0
-const TAB_DRUGS := 1
-const TAB_EVIDENCE := 2
-const TAB_SPECIES := 3
 const DEFAULT_SAMPLE_NAME := "sample"
 
 @onready var background_rect: ColorRect = $Background
@@ -22,29 +17,12 @@ const DEFAULT_SAMPLE_NAME := "sample"
 @onready var landing_logo_icon: TextureRect = $LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo/LandingLogoIcon
 @onready var landing_selection: Label = $LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow/LandingSelection
 @onready var bootstrap_logo_icon: TextureRect = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo/BootstrapLogoIcon
-@onready var header_logo_icon: TextureRect = $AppView/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo/HeaderLogoIcon
 @onready var landing_view: Control = $LandingView
 @onready var bootstrap_view: Control = $BootstrapView
 @onready var bootstrap_status_label: Label = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapStatus
 @onready var bootstrap_log_text: RichTextLabel = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLog
-@onready var app_view: Control = $AppView
+@onready var results_view: ResultsView = $ResultsView
 @onready var analyse_button: Button = $LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/AnalyseButton
-@onready var all_tab_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/AllTabButton
-@onready var drugs_tab_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/DrugsTabButton
-@onready var evidence_tab_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/EvidenceTabButton
-@onready var species_tab_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/SpeciesTabButton
-@onready var save_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/SaveButton
-@onready var new_button: Button = $AppView/HeaderBar/HeaderMargin/HeaderHBox/NewButton
-@onready var all_view: Control = $AppView/ResultsMargin/ResultsStack/AllView
-@onready var drugs_view: Control = $AppView/ResultsMargin/ResultsStack/DrugsView
-@onready var evidence_view: Control = $AppView/ResultsMargin/ResultsStack/EvidenceView
-@onready var species_view: Control = $AppView/ResultsMargin/ResultsStack/SpeciesView
-@onready var all_susceptible_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn/AllSusceptibleText
-@onready var all_resistant_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn/AllResistantText
-@onready var first_line_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn/FirstLineText
-@onready var second_line_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn/SecondLineText
-@onready var evidence_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox/EvidenceText
-@onready var species_text: RichTextLabel = $AppView/ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox/SpeciesText
 @onready var processing_overlay: Control = $ProcessingOverlay
 @onready var processing_label: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingLabel
 @onready var dot_1: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots/Dot1
@@ -57,7 +35,6 @@ const DEFAULT_SAMPLE_NAME := "sample"
 @onready var output_dialog: FileDialog = $OutputDialog
 
 var _local_mykrobe2_manager: RefCounted
-var _formatter: RefCounted
 var _helpers: RefCounted
 var _panels_setup: RefCounted
 var _predict_run: RefCounted
@@ -70,7 +47,6 @@ var _selected_panel_name := ""
 var _current_result_text := ""
 var _current_result_sample := ""
 var _current_result_path := ""
-var _current_tab := TAB_ALL
 var _pending_run_after_reads_selection := false
 var _sample_name := DEFAULT_SAMPLE_NAME
 var _panels_dir := ""
@@ -80,7 +56,6 @@ var _pending_result_path := ""
 var _pending_result_attempts := 0
 
 func _ready() -> void:
-	_formatter = ResultFormatterScript.new()
 	_helpers = GUIHelpersScript.new()
 	_panels_setup = PanelsSetupManagerScript.new()
 	_predict_run = PredictRunManagerScript.new()
@@ -89,11 +64,8 @@ func _ready() -> void:
 	_local_mykrobe2_manager.configure("bin")
 	_apply_theme(_theme_name)
 	_panels_dir = _helpers.default_panels_dir()
-	_apply_tab_styles()
-	_set_results_tab(TAB_ALL)
 	_set_notice("")
 	_set_window_title_default()
-	save_button.disabled = true
 	get_viewport().files_dropped.connect(_on_files_dropped)
 	_refresh_species_options()
 	_refresh_setup_state()
@@ -109,7 +81,7 @@ func _apply_theme(theme_name: String) -> void:
 	var icon_texture: Texture2D = _helpers.load_texture(LOGO_ICON_PATH)
 	landing_logo_icon.texture = icon_texture
 	bootstrap_logo_icon.texture = icon_texture
-	header_logo_icon.texture = icon_texture
+	results_view.set_logo_texture(icon_texture)
 	modulate = Color(1, 1, 1, 1)
 	for panel in [landing_circle, bootstrap_circle, processing_circle]:
 		var style := StyleBoxFlat.new()
@@ -120,48 +92,23 @@ func _apply_theme(theme_name: String) -> void:
 		style.corner_radius_bottom_right = 400
 		panel.add_theme_stylebox_override("panel", style)
 	choose_panel_dialog.apply_palette(_palette)
-	var header_style := StyleBoxFlat.new()
-	header_style.bg_color = _palette.get("header_bg", Color(0.97, 0.96, 0.93, 0.95))
-	$AppView/HeaderBar.add_theme_stylebox_override("panel", header_style)
-	$AppView/HeaderBar.color = _palette.get("header_bg", Color(0.97, 0.96, 0.93, 0.95))
+	results_view.apply_palette(_palette)
 	_apply_palette_overrides()
 
 func _apply_palette_overrides() -> void:
 	var accent: Color = _palette.get("accent", Color("3987b5"))
 	var text: Color = _palette.get("text", Color("6d6a65"))
 	var muted: Color = _palette.get("text_muted", Color("8b8478"))
-	var success: Color = _palette.get("success", Color("78b13f"))
-	var danger: Color = _palette.get("danger", Color("f55a32"))
 	var dot: Color = _palette.get("dot", Color("c9c4bc"))
 	$LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo/LandingLogoText.add_theme_color_override("font_color", accent)
 	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo/BootstrapLogoText.add_theme_color_override("font_color", accent)
-	$AppView/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo/HeaderLogoText.add_theme_color_override("font_color", accent)
 	$LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingTagline.add_theme_color_override("font_color", text)
 	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapTitle.add_theme_color_override("font_color", text)
 	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapStatus.add_theme_color_override("font_color", muted)
 	processing_label.add_theme_color_override("font_color", text)
 	for label in [dot_1, dot_2, dot_3]:
 		label.add_theme_color_override("font_color", dot)
-	$AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn/AllSusceptibleHeading.add_theme_color_override("font_color", success)
-	$AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn/AllResistantHeading.add_theme_color_override("font_color", danger)
-	for label in [
-		$AppView/ResultsMargin/ResultsStack/AllView/AllVBox/AllTitle,
-		$AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn/FirstLineTitle,
-		$AppView/ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn/SecondLineTitle,
-		$AppView/ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox/EvidenceTitle,
-		$AppView/ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox/SpeciesTitle,
-	]:
-		label.add_theme_color_override("font_color", accent)
-	for rich_text in [
-		all_susceptible_text,
-		all_resistant_text,
-		first_line_text,
-		second_line_text,
-		evidence_text,
-		species_text,
-		bootstrap_log_text,
-	]:
-		rich_text.add_theme_color_override("default_color", text)
+	bootstrap_log_text.add_theme_color_override("default_color", text)
 	status_label.add_theme_color_override("font_color", text)
 
 func _process(delta: float) -> void:
@@ -260,34 +207,26 @@ func _on_output_dialog_file_selected(path: String) -> void:
 	file.close()
 	_set_notice("Saved %s." % path)
 
-func _on_all_tab_button_pressed() -> void:
-	_set_results_tab(TAB_ALL)
-
-func _on_drugs_tab_button_pressed() -> void:
-	_set_results_tab(TAB_DRUGS)
-
-func _on_evidence_tab_button_pressed() -> void:
-	_set_results_tab(TAB_EVIDENCE)
-
-func _on_species_tab_button_pressed() -> void:
-	_set_results_tab(TAB_SPECIES)
-
-func _on_save_button_pressed() -> void:
+func _on_save_requested() -> void:
 	if _current_result_text == "":
 		_set_notice("No result is loaded.")
 		return
 	_output_dialog_mode = "save_result"
 	output_dialog.popup_centered_ratio(0.7)
 
-func _on_new_button_pressed() -> void:
+func _on_new_requested() -> void:
 	_current_result_text = ""
 	_current_result_sample = ""
 	_current_result_path = ""
 	_sample_name = DEFAULT_SAMPLE_NAME
-	save_button.disabled = true
+	results_view.clear()
 	_show_landing_view()
 	_set_notice("")
 	_set_window_title_default()
+
+func _on_results_tab_changed(tab_name: String) -> void:
+	if _current_result_sample != "":
+		_set_window_title_results(_current_result_sample, tab_name)
 
 func _on_cancel_button_pressed() -> void:
 	if not _predict_run.is_running():
@@ -386,35 +325,25 @@ func _resolve_result_sample(preferred_sample: String, parsed: Variant) -> String
 	return str(root.keys()[0])
 
 func _display_results(sample: String, parsed: Variant) -> void:
-	var all_tab: Dictionary = _formatter.format_all_tab(sample, parsed)
-	all_susceptible_text.text = str(all_tab.get("susceptible", ""))
-	all_resistant_text.text = str(all_tab.get("resistant", ""))
-	var drugs_tab: Dictionary = _formatter.format_drugs_tab(sample, parsed)
-	first_line_text.text = str(drugs_tab.get("first_line", ""))
-	second_line_text.text = str(drugs_tab.get("second_line", ""))
-	evidence_text.text = _formatter.format_evidence_tab(sample, parsed)
-	species_text.text = _formatter.format_species_tab(sample, parsed)
-	save_button.disabled = false
+	results_view.display(sample, parsed)
 	_show_results_view()
-	_set_results_tab(TAB_ALL)
-	_set_window_title_results(sample, TAB_ALL)
 
 func _show_landing_view() -> void:
 	landing_view.visible = true
 	bootstrap_view.visible = false
-	app_view.visible = false
+	results_view.visible = false
 	animated_background.visible = true
 
 func _show_bootstrap_view() -> void:
 	landing_view.visible = false
 	bootstrap_view.visible = true
-	app_view.visible = false
+	results_view.visible = false
 	animated_background.visible = true
 
 func _show_results_view() -> void:
 	landing_view.visible = false
 	bootstrap_view.visible = false
-	app_view.visible = true
+	results_view.visible = true
 	animated_background.visible = false
 
 func _show_options_dialog() -> void:
@@ -544,60 +473,6 @@ func _resolve_binary_path() -> String:
 		return _local_mykrobe2_manager.installed_binary_path()
 	return ""
 
-func _set_results_tab(tab_index: int) -> void:
-	_current_tab = tab_index
-	all_view.visible = tab_index == TAB_ALL
-	drugs_view.visible = tab_index == TAB_DRUGS
-	evidence_view.visible = tab_index == TAB_EVIDENCE
-	species_view.visible = tab_index == TAB_SPECIES
-	all_tab_button.button_pressed = tab_index == TAB_ALL
-	drugs_tab_button.button_pressed = tab_index == TAB_DRUGS
-	evidence_tab_button.button_pressed = tab_index == TAB_EVIDENCE
-	species_tab_button.button_pressed = tab_index == TAB_SPECIES
-	_apply_tab_styles()
-	if _current_result_sample != "":
-		_set_window_title_results(_current_result_sample, tab_index)
-
-func _apply_tab_styles() -> void:
-	var selected_bg := Color(0.23, 0.53, 0.70, 1.0)
-	if _palette.has("accent"):
-		selected_bg = _palette["accent"]
-	var selected_fg := Color(1, 1, 1, 1)
-	var unselected_fg := Color(0.23, 0.53, 0.70, 1)
-	if _palette.has("accent"):
-		unselected_fg = _palette["accent"]
-	for button in [all_tab_button, drugs_tab_button, evidence_tab_button, species_tab_button]:
-		button.flat = not button.button_pressed
-		button.add_theme_color_override("font_color", selected_fg if button.button_pressed else unselected_fg)
-		button.add_theme_color_override("font_hover_color", selected_fg if button.button_pressed else unselected_fg)
-		button.add_theme_color_override("font_pressed_color", selected_fg)
-		var style := StyleBoxFlat.new()
-		style.corner_radius_top_left = 20
-		style.corner_radius_top_right = 20
-		style.corner_radius_bottom_left = 20
-		style.corner_radius_bottom_right = 20
-		style.content_margin_left = 16
-		style.content_margin_right = 16
-		style.content_margin_top = 3
-		style.content_margin_bottom = 3
-		if button.button_pressed:
-			style.bg_color = selected_bg
-			style.border_width_left = 0
-			style.border_width_top = 0
-			style.border_width_right = 0
-			style.border_width_bottom = 0
-		else:
-			style.bg_color = Color(1, 1, 1, 0)
-			style.border_color = Color(0.23, 0.53, 0.70, 0.18)
-			style.border_width_left = 0
-			style.border_width_top = 0
-			style.border_width_right = 0
-			style.border_width_bottom = 0
-		button.add_theme_stylebox_override("normal", style)
-		button.add_theme_stylebox_override("hover", style)
-		button.add_theme_stylebox_override("pressed", style)
-		button.add_theme_stylebox_override("focus", style)
-
 func _set_notice(message: String) -> void:
 	status_label.visible = message.strip_edges() != ""
 	status_label.text = message
@@ -608,15 +483,7 @@ func _set_window_title_default() -> void:
 func _set_window_title_processing(sample: String) -> void:
 	get_window().title = "%s - Analysing - Mykrobe" % sample
 
-func _set_window_title_results(sample: String, tab_index: int) -> void:
-	var tab_name := "All"
-	match tab_index:
-		TAB_DRUGS:
-			tab_name = "Drugs"
-		TAB_EVIDENCE:
-			tab_name = "Evidence"
-		TAB_SPECIES:
-			tab_name = "Species"
+func _set_window_title_results(sample: String, tab_name: String) -> void:
 	get_window().title = "%s - Resistance - %s - Mykrobe" % [sample, tab_name]
 
 func _update_processing_dots() -> void:

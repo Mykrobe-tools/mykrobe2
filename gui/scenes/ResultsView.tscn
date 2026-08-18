@@ -1,0 +1,337 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/results_view.gd" id="1_results"]
+
+[node name="ResultsView" type="Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_results")
+
+[node name="HeaderBar" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 86.0
+grow_horizontal = 2
+color = Color(0.97, 0.96, 0.93, 0.95)
+
+[node name="HeaderMargin" type="MarginContainer" parent="HeaderBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 12.0
+offset_right = -28.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeaderHBox" type="HBoxContainer" parent="HeaderBar/HeaderMargin"]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="HeaderLogo" type="HBoxContainer" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+custom_minimum_size = Vector2(160, 40)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderLogoIcon" type="TextureRect" parent="HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo"]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HeaderLogoText" type="Label" parent="HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 24
+text = "MYKROBE"
+
+[node name="HeaderSpacerLeft" type="Control" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TabsRow" type="HBoxContainer" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AllTabButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_vertical = 4
+toggle_mode = true
+text = "ALL"
+
+[node name="DrugsTabButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_vertical = 4
+toggle_mode = true
+text = "DRUGS"
+
+[node name="EvidenceTabButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_vertical = 4
+toggle_mode = true
+text = "EVIDENCE"
+
+[node name="SpeciesTabButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_vertical = 4
+toggle_mode = true
+text = "SPECIES"
+
+[node name="HeaderSpacerRight" type="Control" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SaveButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_vertical = 4
+text = "SAVE"
+
+[node name="NewButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_vertical = 4
+text = "NEW"
+
+[node name="ResultsMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 112.0
+offset_right = -30.0
+offset_bottom = -34.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ResultsStack" type="Control" parent="ResultsMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AllView" type="Control" parent="ResultsMargin/ResultsStack"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AllVBox" type="VBoxContainer" parent="ResultsMargin/ResultsStack/AllView"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="AllTitle" type="Label" parent="ResultsMargin/ResultsStack/AllView/AllVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 18
+text = "RESISTANCE PROFILE"
+
+[node name="AllColumns" type="HBoxContainer" parent="ResultsMargin/ResultsStack/AllView/AllVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="AllSusceptibleColumn" type="VBoxContainer" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="AllSusceptibleHeading" type="Label" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.458824, 0.694118, 0.243137, 1)
+theme_override_font_sizes/font_size = 18
+text = "● SUSCEPTIBLE"
+
+[node name="AllSusceptibleSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn"]
+layout_mode = 2
+
+[node name="AllSusceptibleText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="AllResistantColumn" type="VBoxContainer" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="AllResistantHeading" type="Label" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.960784, 0.341176, 0.196078, 1)
+theme_override_font_sizes/font_size = 18
+text = "▲ RESISTANT"
+
+[node name="AllResistantSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn"]
+layout_mode = 2
+
+[node name="AllResistantText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="DrugsView" type="Control" parent="ResultsMargin/ResultsStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DrugsVBox" type="VBoxContainer" parent="ResultsMargin/ResultsStack/DrugsView"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="DrugsColumns" type="HBoxContainer" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="FirstLineColumn" type="VBoxContainer" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="FirstLineTitle" type="Label" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 18
+text = "FIRST LINE DRUGS"
+
+[node name="FirstLineSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn"]
+layout_mode = 2
+
+[node name="FirstLineText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="SecondLineColumn" type="VBoxContainer" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="SecondLineTitle" type="Label" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 18
+text = "SECOND LINE DRUGS"
+
+[node name="SecondLineSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn"]
+layout_mode = 2
+
+[node name="SecondLineText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="EvidenceView" type="Control" parent="ResultsMargin/ResultsStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EvidenceVBox" type="VBoxContainer" parent="ResultsMargin/ResultsStack/EvidenceView"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="EvidenceTitle" type="Label" parent="ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 18
+text = "EVIDENCE"
+
+[node name="EvidenceSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
+layout_mode = 2
+
+[node name="EvidenceText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+selection_enabled = true
+
+[node name="SpeciesView" type="Control" parent="ResultsMargin/ResultsStack"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SpeciesVBox" type="VBoxContainer" parent="ResultsMargin/ResultsStack/SpeciesView"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="SpeciesTitle" type="Label" parent="ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 18
+text = "SPECIES"
+
+[node name="SpeciesSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
+layout_mode = 2
+
+[node name="SpeciesText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+selection_enabled = true
+
+[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/TabsRow/AllTabButton" to="." method="_on_all_tab_button_pressed"]
+[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/TabsRow/DrugsTabButton" to="." method="_on_drugs_tab_button_pressed"]
+[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/TabsRow/EvidenceTabButton" to="." method="_on_evidence_tab_button_pressed"]
+[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/TabsRow/SpeciesTabButton" to="." method="_on_species_tab_button_pressed"]
+[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/NewButton" to="." method="_on_new_button_pressed"]
