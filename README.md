@@ -4,6 +4,10 @@ Experimental Go reimplementation of mykrobe.
 
 This is an alpha release and is not yet recommended for production use.
 
+It was developed with substantial coding assistance from
+[OpenAI Codex](https://openai.com/codex), which helped with implementation,
+tests, documentation, and benchmarking under human direction and review.
+
 ## Install
 
 ### Desktop app
