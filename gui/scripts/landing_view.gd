@@ -18,6 +18,7 @@ signal change_requested
 
 var _paths := PackedStringArray()
 var _panel_available := false
+var _last_input_directory := ""
 
 func set_logo_texture(texture: Texture2D) -> void:
 	logo_icon.texture = texture
@@ -40,6 +41,7 @@ func add_files(paths: PackedStringArray) -> void:
 		if clean_path == "" or not FileAccess.file_exists(clean_path) or _paths.has(clean_path):
 			continue
 		_paths.append(clean_path)
+		_last_input_directory = clean_path.get_base_dir()
 	_refresh_files()
 
 func clear_files() -> void:
@@ -63,7 +65,20 @@ func _on_change_button_pressed() -> void:
 	change_requested.emit()
 
 func _on_add_file_button_pressed() -> void:
+	var starting_directory := _last_input_directory
+	if starting_directory == "":
+		starting_directory = _default_input_directory()
+	if DirAccess.dir_exists_absolute(starting_directory):
+		file_dialog.current_dir = starting_directory
 	file_dialog.popup_centered_ratio(0.75)
+
+func _default_input_directory() -> String:
+	if OS.get_name() == "Windows":
+		return OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
+	var home_directory := OS.get_environment("HOME")
+	if home_directory != "":
+		return home_directory
+	return OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
 
 func _on_files_selected(paths: PackedStringArray) -> void:
 	add_files(paths)
