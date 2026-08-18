@@ -49,10 +49,10 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 	var muted_panel_style: StyleBoxFlat = _panel_style(palette_map["panel_alt"], palette_map["border"], 10, 1)
 	var line_style: StyleBoxFlat = _line_style(palette_map)
 	var focused_line_style: StyleBoxFlat = _line_style(palette_map, true)
-	var button_normal: StyleBoxFlat = _button_style(palette_map["button_bg"], palette_map["button_border"], palette_map["text"], false)
-	var button_hover: StyleBoxFlat = _button_style(palette_map["button_hover"], palette_map["button_border"], palette_map["accent"], false)
-	var button_pressed: StyleBoxFlat = _button_style(palette_map["button_pressed"], palette_map["accent"], palette_map["text_inverse"], true)
-	var button_flat: StyleBoxFlat = _button_style(Color(1, 1, 1, 0), Color(1, 1, 1, 0), palette_map["accent"], false)
+	var button_normal: StyleBoxFlat = _button_style(palette_map["button_bg"], palette_map["button_border"], false)
+	var button_hover: StyleBoxFlat = _button_style(palette_map["button_hover"], palette_map["button_border"], false)
+	var button_pressed: StyleBoxFlat = _button_style(palette_map["button_pressed"], palette_map["accent"], true)
+	var button_flat: StyleBoxFlat = _button_style(Color(1, 1, 1, 0), Color(1, 1, 1, 0), false)
 	var popup_panel_style: StyleBoxFlat = _panel_style(palette_map["field_bg"], palette_map["field_border"], 8, 1)
 	var popup_hover_style := StyleBoxFlat.new()
 	popup_hover_style.bg_color = palette_map["button_hover"]
@@ -137,12 +137,13 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 func _make_arrow_icon(width: int, height: int, color: Color) -> Texture2D:
 	var image := Image.create(width, height, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 0))
+	var midpoint := floori(height / 2.0)
 	for y in range(height):
 		var inset := mini(y, height - 1 - y)
 		var start_x := inset
 		var end_x := width - inset - 1
 		for x in range(start_x, end_x + 1):
-			if y >= height / 2:
+			if y >= midpoint:
 				image.set_pixel(x, y, color)
 	return ImageTexture.create_from_image(image)
 
@@ -166,7 +167,7 @@ func _line_style(palette_map: Dictionary, focused: bool = false) -> StyleBoxFlat
 	style.content_margin_bottom = 7
 	return style
 
-func _button_style(bg: Color, border: Color, font_color: Color, filled: bool) -> StyleBoxFlat:
+func _button_style(bg: Color, border: Color, filled: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = bg
 	style.border_color = border

@@ -20,10 +20,10 @@ func load_texture(path: String) -> Texture2D:
 	var loaded: Variant = load(path)
 	if loaded is Texture2D:
 		return loaded
-	var image := Image.load_from_file(path)
-	if image == null:
+	var loaded_image := Image.load_from_file(path)
+	if loaded_image == null:
 		return null
-	return ImageTexture.create_from_image(image)
+	return ImageTexture.create_from_image(loaded_image)
 
 func temporary_output_path(sample: String) -> String:
 	var base := sample.strip_edges()
