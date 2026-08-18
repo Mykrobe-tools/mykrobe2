@@ -12,6 +12,8 @@ config_version=5
 
 config/name="mykrobe2 GUI"
 run/main_scene="res://scenes/main.tscn"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="mykrobe2"
 config/features=PackedStringArray("4.7")
 config/icon="res://assets/mykrobe-predictor-tb-icon.png"
 

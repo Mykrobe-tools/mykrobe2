@@ -13,9 +13,10 @@ The project is designed to work in two modes:
 2. In an exported app
    - it installs a local copy from the bundled `res://bin/mykrobe2` or `res://bin/mykrobe2.exe`
 
-At runtime the GUI executes the installed copy from Godot user data:
-- macOS/Linux: `user://bin/mykrobe2`
-- Windows: `user://bin/mykrobe2.exe`
+At runtime the GUI executes the installed copy from its custom Godot user data directory:
+- macOS: `~/Library/Application Support/mykrobe2/bin/mykrobe2`
+- Linux: `~/.local/share/mykrobe2/bin/mykrobe2`
+- Windows: `%APPDATA%\mykrobe2\bin\mykrobe2.exe`
 
 This matches the `seqhiker` pattern: bundled binary in the app, installed executable copy in Godot user data.
 
