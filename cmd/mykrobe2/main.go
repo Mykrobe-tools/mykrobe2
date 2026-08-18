@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/martinghunt/mykrobe2/internal/buildinfo"
-	"github.com/martinghunt/mykrobe2/mykrobe"
-	"github.com/martinghunt/mykrobe2/mykrobe/speciesdata"
+	"github.com/Mykrobe-tools/mykrobe2/internal/buildinfo"
+	"github.com/Mykrobe-tools/mykrobe2/mykrobe"
+	"github.com/Mykrobe-tools/mykrobe2/mykrobe/speciesdata"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

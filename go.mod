@@ -1,4 +1,4 @@
-module github.com/martinghunt/mykrobe2
+module github.com/Mykrobe-tools/mykrobe2
 
 go 1.25.0
 

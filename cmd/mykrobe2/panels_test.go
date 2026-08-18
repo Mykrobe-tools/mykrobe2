@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/martinghunt/mykrobe2/mykrobe/speciesdata"
+	"github.com/Mykrobe-tools/mykrobe2/mykrobe/speciesdata"
 )
 
 func TestPanelsCommands(t *testing.T) {

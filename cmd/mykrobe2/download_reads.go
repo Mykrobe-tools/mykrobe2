@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/martinghunt/mykrobe2/mykrobe"
+	"github.com/Mykrobe-tools/mykrobe2/mykrobe"
 	"github.com/spf13/cobra"
 )
 

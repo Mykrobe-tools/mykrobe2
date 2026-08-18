@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/martinghunt/mykrobe2/mykrobe/annotation"
+	"github.com/Mykrobe-tools/mykrobe2/mykrobe/annotation"
 )
 
 type RunOptions struct {

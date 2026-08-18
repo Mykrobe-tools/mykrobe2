@@ -196,7 +196,7 @@ build_one() {
 		cd "$ROOT_DIR"
 		CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" \
 			go build -trimpath \
-				-ldflags "-X github.com/martinghunt/mykrobe2/internal/buildinfo.Version=${build_version}" \
+				-ldflags "-X github.com/Mykrobe-tools/mykrobe2/internal/buildinfo.Version=${build_version}" \
 				-o "$outfile" "$CMD_PATH"
 	)
 

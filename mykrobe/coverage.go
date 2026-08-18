@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/martinghunt/mykrobe2/mccortex"
+	"github.com/Mykrobe-tools/mykrobe2/mccortex"
 )
 
 type ProbeCoverage struct {

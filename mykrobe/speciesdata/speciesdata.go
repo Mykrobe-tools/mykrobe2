@@ -15,7 +15,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/martinghunt/mykrobe2/mccortex"
+	"github.com/Mykrobe-tools/mykrobe2/mccortex"
 )
 
 const DefaultManifestURL = "https://raw.githubusercontent.com/Mykrobe-tools/mykrobe-data/main/mykrobe_panels_manifest.json"

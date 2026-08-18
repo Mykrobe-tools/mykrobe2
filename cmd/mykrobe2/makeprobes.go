@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/martinghunt/mykrobe2/mykrobe/probes"
+	"github.com/Mykrobe-tools/mykrobe2/mykrobe/probes"
 )
 
 func runMakeProbes(opts *makeProbesOptions, out io.Writer) error {

@@ -5,7 +5,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/martinghunt/mykrobe2/internal/testutil"
+	"github.com/Mykrobe-tools/mykrobe2/internal/testutil"
 )
 
 var annotationRefData = testutil.MykrobePath("tests", "ref_data")

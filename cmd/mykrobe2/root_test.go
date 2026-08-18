@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/martinghunt/mykrobe2/internal/buildinfo"
+	"github.com/Mykrobe-tools/mykrobe2/internal/buildinfo"
 )
 
 func TestRootVersionFlag(t *testing.T) {

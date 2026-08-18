@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/martinghunt/mykrobe2/mccortex"
-	"github.com/martinghunt/mykrobe2/mykrobe/speciesdata"
+	"github.com/Mykrobe-tools/mykrobe2/mccortex"
+	"github.com/Mykrobe-tools/mykrobe2/mykrobe/speciesdata"
 )
 
 type PredictRunOptions struct {

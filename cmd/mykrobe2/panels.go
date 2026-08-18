@@ -1,6 +1,6 @@
 package main
 
-import "github.com/martinghunt/mykrobe2/mykrobe/speciesdata"
+import "github.com/Mykrobe-tools/mykrobe2/mykrobe/speciesdata"
 
 func runPanelsUpdateMetadata(opts *panelsUpdateMetadataOptions) error {
 	ddir, err := speciesdata.NewDataDir(opts.panelsDir)

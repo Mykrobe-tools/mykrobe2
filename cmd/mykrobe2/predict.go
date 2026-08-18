@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/martinghunt/mykrobe2/mccortex"
-	"github.com/martinghunt/mykrobe2/mykrobe"
+	"github.com/Mykrobe-tools/mykrobe2/mccortex"
+	"github.com/Mykrobe-tools/mykrobe2/mykrobe"
 )
 
 func runPredict(opts *predictOptions) error {

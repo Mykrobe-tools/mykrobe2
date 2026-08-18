@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Mykrobe-tools/mykrobe2/mykrobe"
 	"github.com/martinghunt/faqt/seqio"
-	"github.com/martinghunt/mykrobe2/mykrobe"
 )
 
 var splitVarRe = regexp.MustCompile(`^([A-Z]+)([-0-9]+)([A-Z/*]+)$`)

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/martinghunt/mykrobe2/internal/testutil"
+	"github.com/Mykrobe-tools/mykrobe2/internal/testutil"
 )
 
 var mykrobeTestRefData = testutil.MykrobePath("tests", "ref_data")

@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/martinghunt/mykrobe2/mccortex"
+	"github.com/Mykrobe-tools/mykrobe2/mccortex"
 )
 
 const customIndexMagic = "MYKROBE2IDX1"
