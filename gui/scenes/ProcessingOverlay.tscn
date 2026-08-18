@@ -57,7 +57,6 @@ alignment = 1
 
 [node name="ProcessingLabel" type="Label" parent="ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
 theme_override_font_sizes/font_size = 28
 text = "Starting analysis"
 horizontal_alignment = 1
@@ -73,6 +72,6 @@ indeterminate = true
 custom_minimum_size = Vector2(150, 44)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "CANCEL"
+text = "Cancel"
 
 [connection signal="pressed" from="ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/CancelButton" to="." method="_on_cancel_button_pressed"]

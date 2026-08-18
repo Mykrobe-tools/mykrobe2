@@ -15,15 +15,20 @@ const THEMES := {
 		"button_hover": Color("f4fbff"),
 		"button_pressed": Color("3987b5"),
 		"button_border": Color("b9d6ea"),
+		"button_disabled_bg": Color("ffffff"),
+		"button_disabled_border": Color("c9c4bc"),
 		"field_bg": Color("ffffff"),
 		"field_border": Color("d8d2c4"),
 		"field_focus": Color("3987b5"),
+		"selection_bg": Color("e9f3f8"),
+		"selection_border": Color("b9d6ea"),
 		"status_error": Color("d95b33"),
 		"success": Color("78b13f"),
 		"danger": Color("f55a32"),
 		"dot": Color("c9c4bc"),
 		"header_bg": Color("f7f4ed"),
 		"circle_bg": Color(1, 1, 1, 0.92),
+		"scrim": Color(0.972549, 0.960784, 0.933333, 0.55),
 	}
 }
 
@@ -52,7 +57,9 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 	var button_normal: StyleBoxFlat = _button_style(palette_map["button_bg"], palette_map["button_border"], false)
 	var button_hover: StyleBoxFlat = _button_style(palette_map["button_hover"], palette_map["button_border"], false)
 	var button_pressed: StyleBoxFlat = _button_style(palette_map["button_pressed"], palette_map["accent"], true)
+	var button_disabled: StyleBoxFlat = _button_style(palette_map["button_disabled_bg"], palette_map["button_disabled_border"], false)
 	var button_flat: StyleBoxFlat = _button_style(Color(1, 1, 1, 0), Color(1, 1, 1, 0), false)
+	var list_selected: StyleBoxFlat = _panel_style(palette_map["selection_bg"], palette_map["selection_border"], 6, 1)
 	var popup_panel_style: StyleBoxFlat = _panel_style(palette_map["field_bg"], palette_map["field_border"], 8, 1)
 	var popup_hover_style := StyleBoxFlat.new()
 	popup_hover_style.bg_color = palette_map["button_hover"]
@@ -105,12 +112,24 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 	theme.set_stylebox("hover", "Button", button_hover)
 	theme.set_stylebox("pressed", "Button", button_pressed)
 	theme.set_stylebox("focus", "Button", button_hover)
+	theme.set_stylebox("disabled", "Button", button_disabled)
 	theme.set_color("font_color", "Button", palette_map["text"])
 	theme.set_color("font_hover_color", "Button", palette_map["accent"])
 	theme.set_color("font_pressed_color", "Button", palette_map["text_inverse"])
 	theme.set_color("font_focus_color", "Button", palette_map["text"])
 	theme.set_color("font_disabled_color", "Button", palette_map["text_muted"])
 	theme.set_constant("h_separation", "Button", 8)
+
+	theme.set_stylebox("panel", "ItemList", line_style)
+	theme.set_stylebox("focus", "ItemList", focused_line_style)
+	theme.set_stylebox("selected", "ItemList", list_selected)
+	theme.set_stylebox("selected_focus", "ItemList", list_selected)
+	theme.set_color("font_color", "ItemList", palette_map["text"])
+	theme.set_color("font_hovered_color", "ItemList", palette_map["text"])
+	theme.set_color("font_selected_color", "ItemList", palette_map["text"])
+	theme.set_color("font_hovered_selected_color", "ItemList", palette_map["text"])
+	theme.set_color("guide_color", "ItemList", palette_map["border"])
+	theme.set_constant("v_separation", "ItemList", 4)
 
 	theme.set_color("font_color", "Label", palette_map["text"])
 	theme.set_color("font_color", "RichTextLabel", palette_map["text"])

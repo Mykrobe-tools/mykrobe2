@@ -20,7 +20,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="LandingCard" type="Control" parent="LandingCenter"]
-custom_minimum_size = Vector2(560, 560)
+custom_minimum_size = Vector2(620, 620)
 layout_mode = 2
 
 [node name="LandingCircle" type="PanelContainer" parent="LandingCenter/LandingCard"]
@@ -30,10 +30,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -280.0
-offset_top = -280.0
-offset_right = 280.0
-offset_bottom = 280.0
+offset_left = -310.0
+offset_top = -310.0
+offset_right = 310.0
+offset_bottom = 310.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -42,16 +42,16 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 92.0
-offset_top = 110.0
-offset_right = -92.0
-offset_bottom = -92.0
+offset_left = 100.0
+offset_top = 72.0
+offset_right = -100.0
+offset_bottom = -64.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="LandingVBox" type="VBoxContainer" parent="LandingCenter/LandingCard/LandingMargin"]
 layout_mode = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 14
 alignment = 1
 
 [node name="LandingSpacerTop" type="Control" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
@@ -71,13 +71,11 @@ stretch_mode = 5
 
 [node name="LandingLogoText" type="Label" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
 theme_override_font_sizes/font_size = 30
 text = "MYKROBE"
 
 [node name="LandingTagline" type="Label" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
 theme_override_font_sizes/font_size = 26
 text = "Antimicrobial resistance information
 within minutes"
@@ -90,14 +88,55 @@ alignment = 1
 
 [node name="LandingSelection" type="Label" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
 theme_override_font_sizes/font_size = 16
 text = "No panel selected"
 
 [node name="ChangeButton" type="Button" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-text = "CHANGE"
+text = "Change"
+
+[node name="InputFiles" type="VBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EmptyFilesRow" type="HBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="EmptyFilesLabel" type="Label" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/EmptyFilesRow"]
+layout_mode = 2
+text = "No files. Drag and drop or:"
+
+[node name="AddFileButton" type="Button" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/EmptyFilesRow"]
+custom_minimum_size = Vector2(90, 34)
+layout_mode = 2
+text = "Add file"
+
+[node name="FilesList" type="ItemList" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles"]
+visible = false
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+select_mode = 1
+allow_reselect = true
+
+[node name="FilesActions" type="HBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="AddFileButton" type="Button" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions"]
+custom_minimum_size = Vector2(90, 32)
+layout_mode = 2
+text = "Add file"
+
+[node name="RemoveFileButton" type="Button" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions"]
+custom_minimum_size = Vector2(90, 32)
+layout_mode = 2
+disabled = true
+text = "Remove"
 
 [node name="LandingButtons" type="VBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
 layout_mode = 2
@@ -108,7 +147,20 @@ alignment = 1
 custom_minimum_size = Vector2(220, 46)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "ANALYSE SAMPLE"
+disabled = true
+text = "Analyse sample"
+
+[node name="FileDialog" type="FileDialog" parent="."]
+title = "Add read files"
+ok_button_text = "Add"
+file_mode = 1
+access = 2
+use_native_dialog = true
 
 [connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow/ChangeButton" to="." method="_on_change_button_pressed"]
+[connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/EmptyFilesRow/AddFileButton" to="." method="_on_add_file_button_pressed"]
+[connection signal="multi_selected" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesList" to="." method="_on_files_list_multi_selected"]
+[connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions/AddFileButton" to="." method="_on_add_file_button_pressed"]
+[connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions/RemoveFileButton" to="." method="_on_remove_file_button_pressed"]
 [connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/AnalyseButton" to="." method="_on_analyse_button_pressed"]
+[connection signal="files_selected" from="FileDialog" to="." method="_on_files_selected"]

@@ -17,7 +17,6 @@ const DEFAULT_SAMPLE_NAME := "sample"
 @onready var processing_overlay: ProcessingOverlay = $ProcessingOverlay
 @onready var status_label: Label = $StatusLabel
 @onready var choose_panel_dialog: ChoosePanelDialog = $ChoosePanelDialog
-@onready var reads_dialog: FileDialog = $ReadsDialog
 @onready var output_dialog: FileDialog = $OutputDialog
 
 var _local_mykrobe2_manager: RefCounted
@@ -33,7 +32,6 @@ var _selected_panel_name := ""
 var _current_result_text := ""
 var _current_result_sample := ""
 var _current_result_path := ""
-var _pending_run_after_reads_selection := false
 var _sample_name := DEFAULT_SAMPLE_NAME
 var _panels_dir := ""
 var _output_dialog_mode := ""
@@ -136,11 +134,11 @@ func _poll_predict_run() -> void:
 	_set_notice("%s\n%s" % [str(result.get("error", "Analysis failed.")), str(result.get("log", ""))])
 	_set_window_title_default()
 
-func _on_analyse_requested() -> void:
+func _on_analyse_requested(paths: PackedStringArray) -> void:
 	if bootstrap_view.visible:
 		return
-	_pending_run_after_reads_selection = true
-	reads_dialog.popup_centered_ratio(0.7)
+	_sample_name = _sample_name_from_reads(paths)
+	_start_predict(paths)
 
 func _on_change_requested() -> void:
 	_show_options_dialog()
@@ -149,12 +147,6 @@ func _on_panel_selected(species: String, panel: String) -> void:
 	_selected_species_name = species
 	_selected_panel_name = panel
 	_update_landing_selection()
-
-func _on_reads_dialog_file_selected(path: String) -> void:
-	_sample_name = _sample_name_from_reads(path)
-	if _pending_run_after_reads_selection:
-		_pending_run_after_reads_selection = false
-		_start_predict(path)
 
 func _on_output_dialog_file_selected(path: String) -> void:
 	if _output_dialog_mode != "save_result":
@@ -183,6 +175,7 @@ func _on_new_requested() -> void:
 	_current_result_sample = ""
 	_current_result_path = ""
 	_sample_name = DEFAULT_SAMPLE_NAME
+	landing_view.clear_files()
 	results_view.clear()
 	_show_landing_view()
 	_set_notice("")
@@ -202,7 +195,7 @@ func _on_cancel_requested() -> void:
 	_set_notice("Analysis cancelled.")
 	_set_window_title_default()
 
-func _start_predict(reads_path: String) -> void:
+func _start_predict(reads_paths: PackedStringArray) -> void:
 	var sample := _sample_name.strip_edges()
 	var panels_dir := _panels_dir.strip_edges()
 	var species := _selected_species()
@@ -210,9 +203,13 @@ func _start_predict(reads_path: String) -> void:
 	if sample == "":
 		_set_notice("Sample name is required.")
 		return
-	if reads_path.strip_edges() == "":
-		_set_notice("Reads file is required.")
+	if reads_paths.is_empty():
+		_set_notice("At least one read file is required.")
 		return
+	for path in reads_paths:
+		if path.strip_edges() == "" or not FileAccess.file_exists(path):
+			_set_notice("Read file was not found: %s." % path)
+			return
 	if panels_dir == "":
 		_set_notice("Panels directory is required.")
 		return
@@ -229,12 +226,13 @@ func _start_predict(reads_path: String) -> void:
 	var args := PackedStringArray([
 		"predict",
 		"--sample", sample,
-		"--seq", reads_path,
 		"--species", species,
 		"--panels-dir", panels_dir,
 		"--output", output_path,
 		"--format", "json",
 	])
+	for path in reads_paths:
+		args.append_array(["--seq", path])
 	if panel_name != "":
 		args.append_array(["--panel", panel_name])
 	args.append("--guess-sequence-method")
@@ -441,14 +439,20 @@ func _set_window_title_results(sample: String, tab_name: String) -> void:
 func _on_files_dropped(files: PackedStringArray) -> void:
 	if files.is_empty():
 		return
-	var path := files[0]
-	if path.to_lower().ends_with(".json"):
-		if _load_json_result(path, _sample_name):
-			_set_notice("Loaded result JSON from %s." % path)
+	if files.size() == 1 and files[0].to_lower().ends_with(".json"):
+		if _load_json_result(files[0], _sample_name):
+			_set_notice("Loaded result JSON from %s." % files[0])
 		return
-	_sample_name = _sample_name_from_reads(path)
-	_start_predict(path)
+	for path in files:
+		if path.to_lower().ends_with(".json"):
+			_set_notice("Drop a result JSON by itself, or add only read files.")
+			return
+	landing_view.add_files(files)
+	_show_landing_view()
+	_set_notice("")
 
-func _sample_name_from_reads(path: String) -> String:
-	var sample := path.get_file().get_basename().strip_edges()
+func _sample_name_from_reads(paths: PackedStringArray) -> String:
+	if paths.is_empty():
+		return DEFAULT_SAMPLE_NAME
+	var sample := paths[0].get_file().get_basename().strip_edges()
 	return DEFAULT_SAMPLE_NAME if sample == "" else sample

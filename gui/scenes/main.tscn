@@ -48,16 +48,8 @@ offset_right = -30.0
 offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_colors/font_color = Color(0.3, 0.3, 0.3, 1)
 
 [node name="ChoosePanelDialog" parent="." instance=ExtResource("3_panel_dialog")]
-
-[node name="ReadsDialog" type="FileDialog" parent="."]
-title = "Open a File"
-ok_button_text = "Open"
-file_mode = 0
-access = 2
-use_native_dialog = true
 
 [node name="OutputDialog" type="FileDialog" parent="."]
 title = "Save result JSON"
@@ -72,5 +64,4 @@ use_native_dialog = true
 [connection signal="tab_changed" from="ResultsView" to="." method="_on_results_tab_changed"]
 [connection signal="cancel_requested" from="ProcessingOverlay" to="." method="_on_cancel_requested"]
 [connection signal="panel_selected" from="ChoosePanelDialog" to="." method="_on_panel_selected"]
-[connection signal="file_selected" from="ReadsDialog" to="." method="_on_reads_dialog_file_selected"]
 [connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]

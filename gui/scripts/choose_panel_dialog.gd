@@ -4,6 +4,7 @@ class_name ChoosePanelDialog
 signal panel_selected(species: String, panel: String)
 
 @onready var options_card: PanelContainer = $OptionsCenter/OptionsCard
+@onready var options_scrim: ColorRect = $OptionsScrim
 @onready var species_option: OptionButton = $OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SpeciesRow/SpeciesOption
 @onready var panel_option: OptionButton = $OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelRow/PanelOption
 
@@ -21,6 +22,7 @@ func open_dialog(species_entries: Array, selected_species: String, selected_pane
 	visible = true
 
 func apply_palette(palette: Dictionary) -> void:
+	options_scrim.color = palette.get("scrim", Color(0.972549, 0.960784, 0.933333, 0.55))
 	var modal_style := StyleBoxFlat.new()
 	modal_style.bg_color = palette.get("panel_alt", Color("fbf9f3"))
 	modal_style.border_color = palette.get("border", Color("ddd7ca"))

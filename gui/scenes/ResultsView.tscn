@@ -50,7 +50,6 @@ stretch_mode = 5
 
 [node name="HeaderLogoText" type="Label" parent="HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
 theme_override_font_sizes/font_size = 24
 text = "MYKROBE"
 
@@ -67,28 +66,28 @@ custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
 toggle_mode = true
-text = "ALL"
+text = "All"
 
 [node name="DrugsTabButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
 toggle_mode = true
-text = "DRUGS"
+text = "Drugs"
 
 [node name="EvidenceTabButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
 toggle_mode = true
-text = "EVIDENCE"
+text = "Evidence"
 
 [node name="SpeciesTabButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
 toggle_mode = true
-text = "SPECIES"
+text = "Species"
 
 [node name="HeaderSpacerRight" type="Control" parent="HeaderBar/HeaderMargin/HeaderHBox"]
 layout_mode = 2
@@ -98,13 +97,13 @@ size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
-text = "SAVE"
+text = "Save"
 
 [node name="NewButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
-text = "NEW"
+text = "New"
 
 [node name="ResultsMargin" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -141,7 +140,6 @@ theme_override_constants/separation = 10
 
 [node name="AllTitle" type="Label" parent="ResultsMargin/ResultsStack/AllView/AllVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
 theme_override_font_sizes/font_size = 18
 text = "RESISTANCE PROFILE"
 
@@ -157,7 +155,6 @@ theme_override_constants/separation = 8
 
 [node name="AllSusceptibleHeading" type="Label" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.458824, 0.694118, 0.243137, 1)
 theme_override_font_sizes/font_size = 18
 text = "● SUSCEPTIBLE"
 
@@ -178,7 +175,6 @@ theme_override_constants/separation = 8
 
 [node name="AllResistantHeading" type="Label" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.960784, 0.341176, 0.196078, 1)
 theme_override_font_sizes/font_size = 18
 text = "▲ RESISTANT"
 
@@ -222,7 +218,6 @@ theme_override_constants/separation = 8
 
 [node name="FirstLineTitle" type="Label" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
 theme_override_font_sizes/font_size = 18
 text = "FIRST LINE DRUGS"
 
@@ -243,7 +238,6 @@ theme_override_constants/separation = 8
 
 [node name="SecondLineTitle" type="Label" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
 theme_override_font_sizes/font_size = 18
 text = "SECOND LINE DRUGS"
 
@@ -277,7 +271,6 @@ theme_override_constants/separation = 10
 
 [node name="EvidenceTitle" type="Label" parent="ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
 theme_override_font_sizes/font_size = 18
 text = "EVIDENCE"
 
@@ -313,7 +306,6 @@ theme_override_constants/separation = 10
 
 [node name="SpeciesTitle" type="Label" parent="ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
 theme_override_font_sizes/font_size = 18
 text = "SPECIES"
 

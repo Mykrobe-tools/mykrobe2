@@ -67,20 +67,17 @@ stretch_mode = 5
 
 [node name="BootstrapLogoText" type="Label" parent="BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
 theme_override_font_sizes/font_size = 28
 text = "MYKROBE"
 
 [node name="BootstrapTitle" type="Label" parent="BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
 theme_override_font_sizes/font_size = 28
 text = "Preparing Mykrobe data"
 horizontal_alignment = 1
 
 [node name="BootstrapStatus" type="Label" parent="BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
 text = "Downloading panel metadata and species data."
 horizontal_alignment = 1
 autowrap_mode = 3
