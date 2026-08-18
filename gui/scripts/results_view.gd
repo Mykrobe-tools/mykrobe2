@@ -41,6 +41,8 @@ const TAB_SPECIES := 3
 var _formatter: RefCounted
 var _palette: Dictionary = {}
 var _sample := ""
+var _parsed_result: Variant = null
+var _active_tab := TAB_ALL
 
 func _ready() -> void:
 	_formatter = ResultFormatterScript.new()
@@ -51,19 +53,26 @@ func set_logo_texture(texture: Texture2D) -> void:
 
 func display(sample: String, parsed: Variant) -> void:
 	_sample = sample
-	var all_tab: Dictionary = _formatter.format_all_tab(sample, parsed)
-	all_susceptible_text.text = str(all_tab.get("susceptible", ""))
-	all_resistant_text.text = str(all_tab.get("resistant", ""))
-	var drugs_tab: Dictionary = _formatter.format_drugs_tab(sample, parsed)
-	first_line_text.text = str(drugs_tab.get("first_line", ""))
-	second_line_text.text = str(drugs_tab.get("second_line", ""))
-	evidence_text.text = _formatter.format_evidence_tab(sample, parsed)
-	species_text.text = _formatter.format_species_tab(sample, parsed)
+	_parsed_result = parsed
+	_render_result()
 	save_button.disabled = false
 	_set_results_tab(TAB_ALL)
 
+func _render_result() -> void:
+	if _sample == "" or _parsed_result == null:
+		return
+	var all_tab: Dictionary = _formatter.format_all_tab(_sample, _parsed_result)
+	all_susceptible_text.text = str(all_tab.get("susceptible", ""))
+	all_resistant_text.text = str(all_tab.get("resistant", ""))
+	var drugs_tab: Dictionary = _formatter.format_drugs_tab(_sample, _parsed_result)
+	first_line_text.text = str(drugs_tab.get("first_line", ""))
+	second_line_text.text = str(drugs_tab.get("second_line", ""))
+	evidence_text.text = _formatter.format_evidence_tab(_sample, _parsed_result)
+	species_text.text = _formatter.format_species_tab(_sample, _parsed_result)
+
 func clear() -> void:
 	_sample = ""
+	_parsed_result = null
 	all_susceptible_text.text = ""
 	all_resistant_text.text = ""
 	first_line_text.text = ""
@@ -75,6 +84,8 @@ func clear() -> void:
 
 func apply_palette(palette: Dictionary) -> void:
 	_palette = palette
+	if _formatter != null:
+		_formatter.set_palette(palette)
 	var accent: Color = palette.get("accent", Color("3987b5"))
 	var text: Color = palette.get("text", Color("6d6a65"))
 	header_bar.color = palette.get("header_bg", Color(0.97, 0.96, 0.93, 0.95))
@@ -86,8 +97,10 @@ func apply_palette(palette: Dictionary) -> void:
 	for rich_text in [all_susceptible_text, all_resistant_text, first_line_text, second_line_text, evidence_text, species_text]:
 		rich_text.add_theme_color_override("default_color", text)
 	_apply_tab_styles()
+	_render_result()
 
 func _set_results_tab(tab_index: int) -> void:
+	_active_tab = tab_index
 	all_view.visible = tab_index == TAB_ALL
 	drugs_view.visible = tab_index == TAB_DRUGS
 	evidence_view.visible = tab_index == TAB_EVIDENCE
@@ -101,8 +114,8 @@ func _set_results_tab(tab_index: int) -> void:
 		tab_changed.emit(_tab_name(tab_index))
 
 func _apply_tab_styles() -> void:
-	var selected_bg: Color = _palette.get("accent", Color("3987b5"))
-	var selected_fg := Color(1, 1, 1, 1)
+	var selected_bg: Color = _palette.get("button_pressed", Color("3987b5"))
+	var selected_fg: Color = _palette.get("text_inverse", Color(1, 1, 1, 1))
 	var unselected_fg: Color = _palette.get("accent", Color("3987b5"))
 	for button in [all_tab_button, drugs_tab_button, evidence_tab_button, species_tab_button]:
 		button.flat = not button.button_pressed

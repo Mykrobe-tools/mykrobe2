@@ -1,0 +1,128 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/panels_info_dialog.gd" id="1_dialog"]
+
+[node name="PanelsInfoDialog" type="Control"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+z_index = 30
+script = ExtResource("1_dialog")
+
+[node name="Scrim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.972549, 0.960784, 0.933333, 0.72)
+mouse_filter = 0
+
+[node name="DialogCenter" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DialogCard" type="PanelContainer" parent="DialogCenter"]
+custom_minimum_size = Vector2(920, 680)
+layout_mode = 2
+
+[node name="DialogMargin" type="MarginContainer" parent="DialogCenter/DialogCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 18
+
+[node name="DialogLayout" type="VBoxContainer" parent="DialogCenter/DialogCard/DialogMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Panel information"
+
+[node name="CloseButton" type="Button" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Header"]
+custom_minimum_size = Vector2(68, 34)
+layout_mode = 2
+text = "Close"
+
+[node name="SummaryLabel" type="Label" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout"]
+layout_mode = 2
+text = "No panel information is available."
+
+[node name="HeaderSeparator" type="HSeparator" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout"]
+layout_mode = 2
+
+[node name="Body" type="HSplitContainer" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 250
+
+[node name="SpeciesList" type="ItemList" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Body"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="DetailsScroll" type="ScrollContainer" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Body"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Details" type="VBoxContainer" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Body/DetailsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 9
+
+[node name="SpeciesTitle" type="Label" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Body/DetailsScroll/Details"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Species"
+
+[node name="SpeciesStatus" type="Label" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Body/DetailsScroll/Details"]
+layout_mode = 2
+
+[node name="DefaultPanel" type="Label" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Body/DetailsScroll/Details"]
+layout_mode = 2
+
+[node name="DetailsSeparator" type="HSeparator" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Body/DetailsScroll/Details"]
+layout_mode = 2
+
+[node name="PanelsBox" type="VBoxContainer" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Body/DetailsScroll/Details"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="FooterSeparator" type="HSeparator" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout"]
+layout_mode = 2
+
+[node name="Footer" type="HBoxContainer" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout"]
+layout_mode = 2
+
+[node name="PanelsDir" type="Label" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Data directory:"
+text_overrun_behavior = 3
+
+[connection signal="gui_input" from="Scrim" to="." method="_on_scrim_gui_input"]
+[connection signal="pressed" from="DialogCenter/DialogCard/DialogMargin/DialogLayout/Header/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="item_selected" from="DialogCenter/DialogCard/DialogMargin/DialogLayout/Body/SpeciesList" to="." method="_on_species_list_item_selected"]

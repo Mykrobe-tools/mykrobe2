@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://h6ubkubw2gwv"]
+[gd_scene load_steps=11 format=3 uid="uid://h6ubkubw2gwv"]
 
 [ext_resource type="Script" uid="uid://fkihy2arg2jh" path="res://scripts/main.gd" id="1_2p1fg"]
 [ext_resource type="PackedScene" path="res://scenes/BackgroundPills.tscn" id="2_pills"]
@@ -7,6 +7,9 @@
 [ext_resource type="PackedScene" path="res://scenes/LandingView.tscn" id="5_landing"]
 [ext_resource type="PackedScene" path="res://scenes/BootstrapView.tscn" id="6_bootstrap"]
 [ext_resource type="PackedScene" path="res://scenes/ProcessingOverlay.tscn" id="7_processing"]
+[ext_resource type="Texture2D" path="res://assets/icons/gear.svg" id="8_gear"]
+[ext_resource type="PackedScene" path="res://scenes/SettingsDrawer.tscn" id="9_settings"]
+[ext_resource type="PackedScene" path="res://scenes/PanelsInfoDialog.tscn" id="10_panels_info"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -49,7 +52,30 @@ offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 0
 
+[node name="SettingsToggleButton" type="Button" parent="."]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 1
+anchors_preset = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 52.0
+offset_bottom = 52.0
+focus_mode = 2
+mouse_default_cursor_shape = 2
+icon = ExtResource("8_gear")
+expand_icon = true
+icon_alignment = 1
+alignment = 1
+theme_override_constants/icon_max_width = 20
+tooltip_text = "Settings"
+z_index = 10
+
+[node name="SettingsDrawer" parent="." instance=ExtResource("9_settings")]
+
+[node name="PanelsInfoDialog" parent="." instance=ExtResource("10_panels_info")]
+
 [node name="ChoosePanelDialog" parent="." instance=ExtResource("3_panel_dialog")]
+z_index = 25
 
 [node name="OutputDialog" type="FileDialog" parent="."]
 title = "Save result JSON"
@@ -63,5 +89,8 @@ use_native_dialog = true
 [connection signal="new_requested" from="ResultsView" to="." method="_on_new_requested"]
 [connection signal="tab_changed" from="ResultsView" to="." method="_on_results_tab_changed"]
 [connection signal="cancel_requested" from="ProcessingOverlay" to="." method="_on_cancel_requested"]
+[connection signal="pressed" from="SettingsToggleButton" to="." method="_on_settings_toggle_pressed"]
+[connection signal="appearance_changed" from="SettingsDrawer" to="." method="_on_appearance_changed"]
+[connection signal="panel_information_requested" from="SettingsDrawer" to="." method="_on_panel_information_requested"]
 [connection signal="panel_selected" from="ChoosePanelDialog" to="." method="_on_panel_selected"]
 [connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]

@@ -43,6 +43,8 @@ The current GUI supports:
   - Species
   - Evidence
   - Raw JSON
+- following the operating system's light/dark appearance, with a saved override
+- viewing installed panel versions, references, and descriptions
 
 It is intentionally scene-driven: layout and controls live in `scenes/main.tscn`, with logic kept in scripts.
 

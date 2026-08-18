@@ -28,11 +28,39 @@ const THEMES := {
 		"dot": Color("c9c4bc"),
 		"header_bg": Color("f7f4ed"),
 		"circle_bg": Color(1, 1, 1, 0.92),
-		"scrim": Color(0.972549, 0.960784, 0.933333, 0.55),
+		"scrim": Color(0.972549, 0.960784, 0.933333, 0.72),
+	},
+	"Dark": {
+		"bg": Color("15191c"),
+		"panel": Color("20262a"),
+		"panel_alt": Color("252c31"),
+		"border": Color("3b464c"),
+		"text": Color("dedbd4"),
+		"text_muted": Color("aaa49a"),
+		"text_inverse": Color("ffffff"),
+		"accent": Color("65b2dc"),
+		"button_bg": Color("20262a"),
+		"button_hover": Color("293840"),
+		"button_pressed": Color("3987b5"),
+		"button_border": Color("496675"),
+		"button_disabled_bg": Color("1b2024"),
+		"button_disabled_border": Color("354047"),
+		"field_bg": Color("1b2024"),
+		"field_border": Color("465159"),
+		"field_focus": Color("65b2dc"),
+		"selection_bg": Color("263c48"),
+		"selection_border": Color("4c819e"),
+		"status_error": Color("ff8a65"),
+		"success": Color("9bd364"),
+		"danger": Color("ff795a"),
+		"dot": Color("65717a"),
+		"header_bg": Color(0.105882, 0.12549, 0.137255, 0.96),
+		"circle_bg": Color(0.12549, 0.14902, 0.164706, 0.94),
+		"scrim": Color(0.035294, 0.043137, 0.047059, 0.78),
 	}
 }
 
-const THEME_ORDER := ["Light"]
+const THEME_ORDER := ["Light", "Dark"]
 
 func theme_names() -> Array:
 	return THEME_ORDER.duplicate()
@@ -73,6 +101,10 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 	window_border.set_border_width_all(1)
 	var window_border_unfocused := window_border.duplicate()
 	window_border_unfocused.border_color = palette_map["field_border"]
+	var separator_style := StyleBoxFlat.new()
+	separator_style.bg_color = palette_map["border"]
+	separator_style.content_margin_top = 1
+	separator_style.content_margin_bottom = 0
 
 	theme.set_stylebox("panel", "Panel", panel_style)
 	theme.set_stylebox("panel", "PanelContainer", panel_style)
@@ -141,6 +173,16 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 	theme.set_color("font_hover_color", "PopupMenu", palette_map["text"])
 	theme.set_color("font_separator_color", "PopupMenu", palette_map["text_muted"])
 	theme.set_color("font_accelerator_color", "PopupMenu", palette_map["text_muted"])
+	theme.set_stylebox("separator", "HSeparator", separator_style)
+
+	theme.set_color("icon_normal_color", "Button", palette_map["text_muted"])
+	theme.set_color("icon_hover_color", "Button", palette_map["accent"])
+	theme.set_color("icon_focus_color", "Button", palette_map["accent"])
+	theme.set_color("icon_pressed_color", "Button", palette_map["text"])
+	theme.set_color("icon_hover_pressed_color", "Button", palette_map["text"])
+	var disabled_icon: Color = palette_map["text_muted"]
+	disabled_icon.a = 0.45
+	theme.set_color("icon_disabled_color", "Button", disabled_icon)
 
 	theme.set_stylebox("normal", "CheckBox", button_flat)
 	theme.set_stylebox("hover", "CheckBox", button_flat)

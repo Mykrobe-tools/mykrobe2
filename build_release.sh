@@ -126,6 +126,14 @@ cp -R "${GUI_DIR}/." "${STAGE_DIR}/"
 rm -rf "${STAGE_DIR}/.godot" "${STAGE_DIR}/bin"
 mkdir -p "${STAGE_DIR}/bin"
 
+project_file="${STAGE_DIR}/project.godot"
+project_file_tmp="${project_file}.tmp"
+awk -v version="${VERSION}" '
+	/^config\/version=/ { print "config/version=\"" version "\""; next }
+	{ print }
+' "${project_file}" > "${project_file_tmp}"
+mv "${project_file_tmp}" "${project_file}"
+
 if [[ "${SKIP_BACKEND}" -eq 0 ]]; then
 	echo "[1/2] Building bundled mykrobe2 for ${TARGET}"
 	goos="${TARGET%%/*}"

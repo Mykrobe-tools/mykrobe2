@@ -6,6 +6,10 @@ const PanelsSetupManagerScript = preload("res://scripts/panels_setup_manager.gd"
 const PredictRunManagerScript = preload("res://scripts/predict_run_manager.gd")
 const ThemesLibScript = preload("res://scripts/themes.gd")
 const LOGO_ICON_PATH = "res://assets/mykrobe-predictor-tb-icon.png"
+const SETTINGS_PATH := "user://settings.cfg"
+const APPEARANCE_SYSTEM := "System"
+const APPEARANCE_LIGHT := "Light"
+const APPEARANCE_DARK := "Dark"
 
 const DEFAULT_SAMPLE_NAME := "sample"
 
@@ -16,6 +20,9 @@ const DEFAULT_SAMPLE_NAME := "sample"
 @onready var results_view: ResultsView = $ResultsView
 @onready var processing_overlay: ProcessingOverlay = $ProcessingOverlay
 @onready var status_label: Label = $StatusLabel
+@onready var settings_toggle_button: Button = $SettingsToggleButton
+@onready var settings_drawer: SettingsDrawer = $SettingsDrawer
+@onready var panels_info_dialog: PanelsInfoDialog = $PanelsInfoDialog
 @onready var choose_panel_dialog: ChoosePanelDialog = $ChoosePanelDialog
 @onready var output_dialog: FileDialog = $OutputDialog
 
@@ -25,6 +32,7 @@ var _panels_setup: RefCounted
 var _predict_run: RefCounted
 var _themes_lib: RefCounted
 var _theme_name := "Light"
+var _appearance_mode := APPEARANCE_SYSTEM
 var _palette: Dictionary = {}
 var _species_entries: Array = []
 var _selected_species_name := ""
@@ -45,7 +53,12 @@ func _ready() -> void:
 	_themes_lib = ThemesLibScript.new()
 	_local_mykrobe2_manager = LocalMykrobe2ManagerScript.new()
 	_local_mykrobe2_manager.configure("bin")
-	_apply_theme(_theme_name)
+	_load_settings()
+	settings_drawer.set_appearance(_appearance_mode)
+	settings_drawer.set_app_version(str(ProjectSettings.get_setting("application/config/version", "dev")))
+	_apply_effective_theme()
+	if DisplayServer.is_dark_mode_supported():
+		DisplayServer.set_system_theme_change_callback(_on_system_theme_changed)
 	_panels_dir = _helpers.default_panels_dir()
 	_set_notice("")
 	_set_window_title_default()
@@ -53,6 +66,36 @@ func _ready() -> void:
 	_refresh_species_options()
 	_refresh_setup_state()
 	_maybe_start_initial_panels_bootstrap()
+
+func _exit_tree() -> void:
+	if DisplayServer.is_dark_mode_supported():
+		DisplayServer.set_system_theme_change_callback(Callable())
+
+func _effective_theme_name() -> String:
+	if _appearance_mode == APPEARANCE_DARK:
+		return APPEARANCE_DARK
+	if _appearance_mode == APPEARANCE_LIGHT:
+		return APPEARANCE_LIGHT
+	if DisplayServer.is_dark_mode_supported() and DisplayServer.is_dark_mode():
+		return APPEARANCE_DARK
+	return APPEARANCE_LIGHT
+
+func _apply_effective_theme() -> void:
+	_apply_theme(_effective_theme_name())
+
+func _load_settings() -> void:
+	var config := ConfigFile.new()
+	if config.load(SETTINGS_PATH) != OK:
+		return
+	var configured := str(config.get_value("ui", "appearance", APPEARANCE_SYSTEM))
+	if configured in [APPEARANCE_SYSTEM, APPEARANCE_LIGHT, APPEARANCE_DARK]:
+		_appearance_mode = configured
+
+func _save_settings() -> void:
+	var config := ConfigFile.new()
+	config.load(SETTINGS_PATH)
+	config.set_value("ui", "appearance", _appearance_mode)
+	config.save(SETTINGS_PATH)
 
 func _apply_theme(theme_name: String) -> void:
 	if _themes_lib == null or not _themes_lib.has_theme(theme_name):
@@ -71,11 +114,31 @@ func _apply_theme(theme_name: String) -> void:
 	processing_overlay.apply_palette(_palette)
 	choose_panel_dialog.apply_palette(_palette)
 	results_view.apply_palette(_palette)
+	settings_drawer.apply_palette(_palette)
+	panels_info_dialog.apply_palette(_palette)
 	_apply_palette_overrides()
 
 func _apply_palette_overrides() -> void:
 	var text: Color = _palette.get("text", Color("6d6a65"))
 	status_label.add_theme_color_override("font_color", text)
+	_apply_settings_button_style()
+
+func _apply_settings_button_style() -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0, 0, 0, 0)
+	normal.border_color = Color(0, 0, 0, 0)
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(22)
+	normal.set_content_margin_all(8)
+	var hover := normal.duplicate()
+	hover.bg_color = _palette.get("button_hover", Color("f4fbff"))
+	hover.border_color = _palette.get("button_border", Color("b9d6ea"))
+	var pressed := hover.duplicate()
+	pressed.bg_color = _palette.get("selection_bg", Color("e9f3f8"))
+	settings_toggle_button.add_theme_stylebox_override("normal", normal)
+	settings_toggle_button.add_theme_stylebox_override("hover", hover)
+	settings_toggle_button.add_theme_stylebox_override("focus", hover)
+	settings_toggle_button.add_theme_stylebox_override("pressed", pressed)
 
 func _process(_delta: float) -> void:
 	_poll_panels_setup()
@@ -143,6 +206,24 @@ func _on_analyse_requested(paths: PackedStringArray) -> void:
 func _on_change_requested() -> void:
 	_show_options_dialog()
 
+func _on_settings_toggle_pressed() -> void:
+	settings_drawer.toggle_drawer()
+
+func _on_appearance_changed(mode: String) -> void:
+	if mode not in [APPEARANCE_SYSTEM, APPEARANCE_LIGHT, APPEARANCE_DARK]:
+		return
+	_appearance_mode = mode
+	_save_settings()
+	_apply_effective_theme()
+
+func _on_system_theme_changed() -> void:
+	if _appearance_mode == APPEARANCE_SYSTEM:
+		_apply_effective_theme()
+
+func _on_panel_information_requested() -> void:
+	settings_drawer.close_drawer()
+	panels_info_dialog.open_dialog(_species_entries, _panels_dir, _selected_species_name)
+
 func _on_panel_selected(species: String, panel: String) -> void:
 	_selected_species_name = species
 	_selected_panel_name = panel
@@ -196,6 +277,7 @@ func _on_cancel_requested() -> void:
 	_set_window_title_default()
 
 func _start_predict(reads_paths: PackedStringArray) -> void:
+	settings_drawer.close_drawer(false)
 	var sample := _sample_name.strip_edges()
 	var panels_dir := _panels_dir.strip_edges()
 	var species := _selected_species()
@@ -244,6 +326,7 @@ func _start_predict(reads_paths: PackedStringArray) -> void:
 
 	_current_result_sample = sample
 	_current_result_path = output_path
+	settings_toggle_button.visible = false
 	processing_overlay.start()
 	_set_notice("")
 	_set_window_title_processing(sample)
@@ -291,20 +374,25 @@ func _show_landing_view() -> void:
 	bootstrap_view.visible = false
 	results_view.visible = false
 	animated_background.visible = true
+	settings_toggle_button.visible = true
 
 func _show_bootstrap_view() -> void:
 	landing_view.visible = false
 	bootstrap_view.visible = true
 	results_view.visible = false
 	animated_background.visible = true
+	settings_toggle_button.visible = false
+	settings_drawer.close_drawer(false)
 
 func _show_results_view() -> void:
 	landing_view.visible = false
 	bootstrap_view.visible = false
 	results_view.visible = true
 	animated_background.visible = false
+	settings_toggle_button.visible = true
 
 func _show_options_dialog() -> void:
+	settings_drawer.close_drawer(false)
 	choose_panel_dialog.open_dialog(_species_entries, _selected_species_name, _selected_panel_name)
 
 func _refresh_setup_state() -> void:
@@ -364,6 +452,7 @@ func _selected_panel() -> String:
 
 func _refresh_species_options() -> void:
 	_species_entries = _helpers.load_species_entries(_resolve_binary_path(), _panels_dir.strip_edges())
+	settings_drawer.set_panel_entries(_species_entries)
 	if _species_entries.is_empty():
 		_selected_species_name = ""
 		_selected_panel_name = ""

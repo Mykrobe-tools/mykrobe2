@@ -1,0 +1,110 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/settings_drawer.gd" id="1_drawer"]
+
+[node name="SettingsDrawer" type="PanelContainer"]
+visible = false
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 360.0
+grow_vertical = 2
+z_index = 20
+script = ExtResource("1_drawer")
+
+[node name="DrawerMargin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="DrawerLayout" type="VBoxContainer" parent="DrawerMargin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Header" type="HBoxContainer" parent="DrawerMargin/DrawerLayout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="DrawerMargin/DrawerLayout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Settings"
+
+[node name="CloseButton" type="Button" parent="DrawerMargin/DrawerLayout/Header"]
+custom_minimum_size = Vector2(68, 34)
+layout_mode = 2
+text = "Close"
+tooltip_text = "Close settings"
+
+[node name="HeaderSeparator" type="HSeparator" parent="DrawerMargin/DrawerLayout"]
+layout_mode = 2
+
+[node name="Content" type="VBoxContainer" parent="DrawerMargin/DrawerLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="AppearanceTitle" type="Label" parent="DrawerMargin/DrawerLayout/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Appearance"
+
+[node name="AppearanceOption" type="OptionButton" parent="DrawerMargin/DrawerLayout/Content"]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+
+[node name="AppearanceHelp" type="Label" parent="DrawerMargin/DrawerLayout/Content"]
+layout_mode = 2
+text = "Uses the operating system's app appearance."
+autowrap_mode = 2
+
+[node name="AppearanceGap" type="Control" parent="DrawerMargin/DrawerLayout/Content"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="PanelsSeparator" type="HSeparator" parent="DrawerMargin/DrawerLayout/Content"]
+layout_mode = 2
+
+[node name="PanelsTitle" type="Label" parent="DrawerMargin/DrawerLayout/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Panels"
+
+[node name="PanelsSummary" type="Label" parent="DrawerMargin/DrawerLayout/Content"]
+layout_mode = 2
+text = "Panel information is not available."
+autowrap_mode = 2
+
+[node name="PanelsButton" type="Button" parent="DrawerMargin/DrawerLayout/Content"]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+disabled = true
+text = "View panel information…"
+
+[node name="About" type="VBoxContainer" parent="DrawerMargin/DrawerLayout"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="AboutSeparator" type="HSeparator" parent="DrawerMargin/DrawerLayout/About"]
+layout_mode = 2
+
+[node name="AboutTitle" type="Label" parent="DrawerMargin/DrawerLayout/About"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "About"
+
+[node name="AppName" type="Label" parent="DrawerMargin/DrawerLayout/About"]
+layout_mode = 2
+text = "Mykrobe"
+
+[node name="VersionLabel" type="Label" parent="DrawerMargin/DrawerLayout/About"]
+layout_mode = 2
+text = "Version dev"
+
+[connection signal="pressed" from="DrawerMargin/DrawerLayout/Header/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="item_selected" from="DrawerMargin/DrawerLayout/Content/AppearanceOption" to="." method="_on_appearance_option_item_selected"]
+[connection signal="pressed" from="DrawerMargin/DrawerLayout/Content/PanelsButton" to="." method="_on_panels_button_pressed"]

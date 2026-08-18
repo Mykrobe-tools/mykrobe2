@@ -1,6 +1,22 @@
 extends RefCounted
 class_name ResultFormatter
 
+var _accent_html := "3987b5"
+var _danger_html := "f55a32"
+var _success_html := "78b13f"
+var _muted_html := "7a7a7a"
+
+func set_palette(palette: Dictionary) -> void:
+	_accent_html = _html_color(palette.get("accent", Color("3987b5")))
+	_danger_html = _html_color(palette.get("danger", Color("f55a32")))
+	_success_html = _html_color(palette.get("success", Color("78b13f")))
+	_muted_html = _html_color(palette.get("text_muted", Color("7a7a7a")))
+
+func _html_color(value: Variant) -> String:
+	if value is Color:
+		return (value as Color).to_html(false)
+	return str(value).trim_prefix("#")
+
 const FIRST_LINE_DRUGS := [
 	"Isoniazid",
 	"Rifampicin",
@@ -67,7 +83,7 @@ func format_evidence_tab(sample: String, parsed: Variant) -> String:
 		var drug_call: Dictionary = susceptibility.get(drug, {})
 		if str(drug_call.get("predict", "")) != "R":
 			continue
-		blocks.append("[b][color=#3987b5]%s[/color][/b]" % str(drug).to_upper())
+		blocks.append("[b][color=#%s]%s[/color][/b]" % [_accent_html, str(drug).to_upper()])
 		blocks.append("")
 		var called_by_variant: Variant = drug_call.get("called_by", {})
 		if typeof(called_by_variant) != TYPE_DICTIONARY or Dictionary(called_by_variant).is_empty():
@@ -142,11 +158,11 @@ func _format_drug_group(drugs: Array, susceptibility: Dictionary) -> String:
 		var predict := _predict_for_drug(susceptibility, drug)
 		match predict:
 			"R":
-				lines.append("%s [color=#f55a32]▲ RESISTANT[/color]" % drug)
+				lines.append("%s [color=#%s]▲ RESISTANT[/color]" % [drug, _danger_html])
 			"S":
-				lines.append("%s [color=#78b13f]● SUSCEPTIBLE[/color]" % drug)
+				lines.append("%s [color=#%s]● SUSCEPTIBLE[/color]" % [drug, _success_html])
 			_:
-				lines.append("%s [color=#7a7a7a]• NO CALL[/color]" % drug)
+				lines.append("%s [color=#%s]• NO CALL[/color]" % [drug, _muted_html])
 	return "\n".join(lines)
 
 func _sorted_drugs(susceptibility: Dictionary) -> Array:
