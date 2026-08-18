@@ -12,6 +12,7 @@ const TAB_ALL := 0
 const TAB_DRUGS := 1
 const TAB_EVIDENCE := 2
 const TAB_SPECIES := 3
+const DEFAULT_SAMPLE_NAME := "sample"
 
 @onready var background_rect: ColorRect = $Background
 @onready var animated_background: Control = $AnimatedBackground
@@ -53,16 +54,9 @@ const TAB_SPECIES := 3
 @onready var status_label: Label = $StatusLabel
 @onready var options_dialog: Control = $OptionsDialog
 @onready var options_card: PanelContainer = $OptionsDialog/OptionsCenter/OptionsCard
-@onready var sample_edit: LineEdit = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SampleRow/SampleEdit
-@onready var panels_dir_edit: LineEdit = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker/PanelsDirEdit
 @onready var species_option: OptionButton = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SpeciesRow/SpeciesOption
 @onready var panel_option: OptionButton = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelRow/PanelOption
-@onready var report_all_calls_check: CheckBox = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid/ReportAllCallsCheck
-@onready var ncbi_names_check: CheckBox = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid/NCBINamesCheck
-@onready var ont_check: CheckBox = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid/ONTCheck
-@onready var guess_method_check: CheckBox = $OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid/GuessMethodCheck
 @onready var reads_dialog: FileDialog = $ReadsDialog
-@onready var panels_dir_dialog: FileDialog = $PanelsDirDialog
 @onready var output_dialog: FileDialog = $OutputDialog
 
 var _local_mykrobe2_manager: RefCounted
@@ -80,11 +74,11 @@ var _current_result_sample := ""
 var _current_result_path := ""
 var _current_tab := TAB_ALL
 var _pending_run_after_reads_selection := false
-var _active_reads_path := ""
+var _sample_name := DEFAULT_SAMPLE_NAME
+var _panels_dir := ""
 var _output_dialog_mode := ""
 var _processing_elapsed := 0.0
 var _pending_result_path := ""
-var _pending_result_notice := ""
 var _pending_result_attempts := 0
 var _panel_dialog_original_species := ""
 var _panel_dialog_original_panel := ""
@@ -98,7 +92,7 @@ func _ready() -> void:
 	_local_mykrobe2_manager = LocalMykrobe2ManagerScript.new()
 	_local_mykrobe2_manager.configure("bin")
 	_apply_theme(_theme_name)
-	panels_dir_edit.text = _helpers.default_panels_dir()
+	_panels_dir = _helpers.default_panels_dir()
 	_apply_tab_styles()
 	_set_results_tab(TAB_ALL)
 	_set_notice("")
@@ -203,7 +197,6 @@ func _poll_predict_run(delta: float) -> void:
 	if _pending_result_path != "":
 		if _load_json_result(_pending_result_path, _current_result_sample, true):
 			_pending_result_path = ""
-			_pending_result_notice = ""
 			_pending_result_attempts = 0
 			processing_overlay.visible = false
 			cancel_button.disabled = false
@@ -215,7 +208,6 @@ func _poll_predict_run(delta: float) -> void:
 		if _pending_result_attempts >= 40:
 			var failed_path := _pending_result_path
 			_pending_result_path = ""
-			_pending_result_notice = ""
 			_pending_result_attempts = 0
 			processing_overlay.visible = false
 			_show_landing_view()
@@ -234,7 +226,6 @@ func _poll_predict_run(delta: float) -> void:
 	cancel_button.disabled = false
 	if result.get("success", false):
 		_pending_result_path = str(result.get("output_path", _current_result_path))
-		_pending_result_notice = str(result.get("status", "Analysis complete."))
 		_pending_result_attempts = 0
 		processing_overlay.visible = true
 		processing_label.text = "Loading results"
@@ -261,22 +252,11 @@ func _on_set_panel_button_pressed() -> void:
 	_hide_options_dialog()
 	_update_landing_selection()
 
-func _on_panels_browse_pressed() -> void:
-	panels_dir_dialog.popup_centered_ratio(0.7)
-
 func _on_reads_dialog_file_selected(path: String) -> void:
-	_active_reads_path = path
-	if sample_edit.text.strip_edges() == "" or sample_edit.text == "sample":
-		sample_edit.text = path.get_file().get_basename()
+	_sample_name = _sample_name_from_reads(path)
 	if _pending_run_after_reads_selection:
 		_pending_run_after_reads_selection = false
 		_start_predict(path)
-
-func _on_panels_dir_dialog_dir_selected(path: String) -> void:
-	panels_dir_edit.text = path
-	_refresh_species_options()
-	_refresh_setup_state()
-	_maybe_start_initial_panels_bootstrap()
 
 func _on_output_dialog_file_selected(path: String) -> void:
 	if _output_dialog_mode != "save_result":
@@ -301,16 +281,6 @@ func _on_species_option_item_selected(index: int) -> void:
 func _on_panel_option_item_selected(_index: int) -> void:
 	_update_landing_selection()
 
-func _on_refresh_setup_button_pressed() -> void:
-	_refresh_species_options()
-	_refresh_setup_state()
-	_maybe_start_initial_panels_bootstrap()
-
-func _on_use_shared_panels_button_pressed() -> void:
-	panels_dir_edit.text = _helpers.default_panels_dir()
-	_refresh_species_options()
-	_refresh_setup_state()
-
 func _on_all_tab_button_pressed() -> void:
 	_set_results_tab(TAB_ALL)
 
@@ -334,6 +304,7 @@ func _on_new_button_pressed() -> void:
 	_current_result_text = ""
 	_current_result_sample = ""
 	_current_result_path = ""
+	_sample_name = DEFAULT_SAMPLE_NAME
 	save_button.disabled = true
 	_show_landing_view()
 	_set_notice("")
@@ -350,20 +321,18 @@ func _on_cancel_button_pressed() -> void:
 	_set_window_title_default()
 
 func _start_predict(reads_path: String) -> void:
-	var sample := sample_edit.text.strip_edges()
-	var panels_dir := panels_dir_edit.text.strip_edges()
+	var sample := _sample_name.strip_edges()
+	var panels_dir := _panels_dir.strip_edges()
 	var species := _selected_species()
 	var panel_name := _selected_panel()
 	if sample == "":
 		_set_notice("Sample name is required.")
-		_show_options_dialog()
 		return
 	if reads_path.strip_edges() == "":
 		_set_notice("Reads file is required.")
 		return
 	if panels_dir == "":
 		_set_notice("Panels directory is required.")
-		_show_options_dialog()
 		return
 	if species == "":
 		_set_notice("Species is required.")
@@ -386,12 +355,6 @@ func _start_predict(reads_path: String) -> void:
 	])
 	if panel_name != "":
 		args.append_array(["--panel", panel_name])
-	if report_all_calls_check.button_pressed:
-		args.append("--report-all-calls")
-	if ncbi_names_check.button_pressed:
-		args.append("--ncbi-names")
-	if ont_check.button_pressed:
-		args.append("--ont")
 	args.append("--guess-sequence-method")
 
 	var start_result: Dictionary = _predict_run.start(binary_path, args, output_path)
@@ -429,8 +392,20 @@ func _load_json_result(path: String, preferred_sample: String = "sample", quiet:
 		return false
 	_current_result_text = text
 	_current_result_path = path
-	_display_results(preferred_sample, parsed)
+	var result_sample := _resolve_result_sample(preferred_sample, parsed)
+	_current_result_sample = result_sample
+	_display_results(result_sample, parsed)
 	return true
+
+func _resolve_result_sample(preferred_sample: String, parsed: Variant) -> String:
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return preferred_sample
+	var root: Dictionary = parsed
+	if root.has(preferred_sample):
+		return preferred_sample
+	if root.keys().is_empty():
+		return preferred_sample
+	return str(root.keys()[0])
 
 func _display_results(sample: String, parsed: Variant) -> void:
 	var all_tab: Dictionary = _formatter.format_all_tab(sample, parsed)
@@ -473,7 +448,7 @@ func _hide_options_dialog() -> void:
 	options_dialog.visible = false
 
 func _refresh_setup_state() -> void:
-	var panels_dir := panels_dir_edit.text.strip_edges()
+	var panels_dir := _panels_dir.strip_edges()
 	var manifest_exists := FileAccess.file_exists(panels_dir.path_join("manifest.json"))
 	if _panels_setup.is_running() or not manifest_exists:
 		bootstrap_status_label.text = "Panel data missing. Downloading and processing data. This may take a few minutes"
@@ -489,7 +464,7 @@ func _maybe_start_initial_panels_bootstrap() -> void:
 		return
 	if DisplayServer.get_name() == "headless":
 		return
-	var panels_dir := panels_dir_edit.text.strip_edges()
+	var panels_dir := _panels_dir.strip_edges()
 	if panels_dir == "":
 		return
 	if FileAccess.file_exists(panels_dir.path_join("manifest.json")):
@@ -538,7 +513,7 @@ func _selected_panel() -> String:
 	return str(_panel_entries[idx].get("name", "")).strip_edges()
 
 func _refresh_species_options() -> void:
-	_species_entries = _helpers.load_species_entries(_resolve_binary_path(), panels_dir_edit.text.strip_edges())
+	_species_entries = _helpers.load_species_entries(_resolve_binary_path(), _panels_dir.strip_edges())
 	species_option.clear()
 	species_option.disabled = true
 	panel_option.clear()
@@ -715,10 +690,12 @@ func _on_files_dropped(files: PackedStringArray) -> void:
 		return
 	var path := files[0]
 	if path.to_lower().ends_with(".json"):
-		if _load_json_result(path, sample_edit.text.strip_edges()):
+		if _load_json_result(path, _sample_name):
 			_set_notice("Loaded result JSON from %s." % path)
 		return
-	_active_reads_path = path
-	if sample_edit.text.strip_edges() == "" or sample_edit.text == "sample":
-		sample_edit.text = path.get_file().get_basename()
+	_sample_name = _sample_name_from_reads(path)
 	_start_predict(path)
+
+func _sample_name_from_reads(path: String) -> String:
+	var sample := path.get_file().get_basename().strip_edges()
+	return DEFAULT_SAMPLE_NAME if sample == "" else sample

@@ -699,40 +699,6 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22
 text = "Choose panel"
 
-[node name="SampleRow" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
-visible = false
-layout_mode = 2
-
-[node name="SampleLabel" type="Label" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SampleRow"]
-layout_mode = 2
-text = "Sample name"
-
-[node name="SampleEdit" type="LineEdit" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SampleRow"]
-layout_mode = 2
-text = "sample"
-placeholder_text = "SAMPLE"
-
-[node name="PanelsRow" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
-visible = false
-layout_mode = 2
-
-[node name="PanelsLabel" type="Label" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow"]
-layout_mode = 2
-text = "Panels directory"
-
-[node name="PanelsPicker" type="HBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="PanelsDirEdit" type="LineEdit" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker"]
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "/path/to/panels"
-
-[node name="PanelsBrowseButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker"]
-layout_mode = 2
-text = "Browse"
-
 [node name="SpeciesRow" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
 layout_mode = 2
 
@@ -754,40 +720,6 @@ text = "Panel"
 [node name="PanelOption" type="OptionButton" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelRow"]
 layout_mode = 2
 disabled = true
-
-[node name="OptionsGrid" type="GridContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
-visible = false
-layout_mode = 2
-columns = 2
-
-[node name="ReportAllCallsCheck" type="CheckBox" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid"]
-layout_mode = 2
-text = "Report all calls"
-
-[node name="NCBINamesCheck" type="CheckBox" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid"]
-layout_mode = 2
-text = "Add NCBI names"
-
-[node name="ONTCheck" type="CheckBox" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid"]
-layout_mode = 2
-text = "ONT defaults"
-
-[node name="GuessMethodCheck" type="CheckBox" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsGrid"]
-layout_mode = 2
-text = "Guess sequence method"
-
-[node name="OptionsButtons" type="HBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
-visible = false
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="RefreshPanelsButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsButtons"]
-layout_mode = 2
-text = "Refresh Panels"
-
-[node name="OpenPanelsDirButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsButtons"]
-layout_mode = 2
-text = "Use Shared Panels"
 
 [node name="PanelDialogButtons" type="HBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
 layout_mode = 2
@@ -811,13 +743,6 @@ file_mode = 0
 access = 2
 use_native_dialog = true
 
-[node name="PanelsDirDialog" type="FileDialog" parent="."]
-title = "Open a Directory"
-ok_button_text = "Select Current Folder"
-file_mode = 2
-access = 2
-use_native_dialog = true
-
 [node name="OutputDialog" type="FileDialog" parent="."]
 title = "Save result JSON"
 access = 2
@@ -833,13 +758,9 @@ use_native_dialog = true
 [connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/SaveButton" to="." method="_on_save_button_pressed"]
 [connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/NewButton" to="." method="_on_new_button_pressed"]
 [connection signal="pressed" from="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/CancelButton" to="." method="_on_cancel_button_pressed"]
-[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker/PanelsBrowseButton" to="." method="_on_panels_browse_pressed"]
 [connection signal="item_selected" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SpeciesRow/SpeciesOption" to="." method="_on_species_option_item_selected"]
 [connection signal="item_selected" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelRow/PanelOption" to="." method="_on_panel_option_item_selected"]
-[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsButtons/RefreshPanelsButton" to="." method="_on_refresh_setup_button_pressed"]
-[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsButtons/OpenPanelsDirButton" to="." method="_on_use_shared_panels_button_pressed"]
 [connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelDialogButtons/CancelPanelButton" to="." method="_on_cancel_panel_button_pressed"]
 [connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelDialogButtons/SetPanelButton" to="." method="_on_set_panel_button_pressed"]
 [connection signal="file_selected" from="ReadsDialog" to="." method="_on_reads_dialog_file_selected"]
-[connection signal="dir_selected" from="PanelsDirDialog" to="." method="_on_panels_dir_dialog_dir_selected"]
 [connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]
