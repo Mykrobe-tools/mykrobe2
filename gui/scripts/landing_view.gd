@@ -9,10 +9,9 @@ signal change_requested
 @onready var logo_text: Label = $LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo/LandingLogoText
 @onready var tagline: Label = $LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingTagline
 @onready var selection_label: Label = $LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow/LandingSelection
-@onready var empty_files_row: HBoxContainer = $LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/EmptyFilesRow
-@onready var files_list: ItemList = $LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesList
-@onready var files_actions: HBoxContainer = $LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions
-@onready var remove_file_button: Button = $LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions/RemoveFileButton
+@onready var empty_files_placeholder: CenterContainer = $LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesArea/EmptyFilesPlaceholder
+@onready var files_list: ItemList = $LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesArea/FilesList
+@onready var clear_files_button: Button = $LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions/ClearFilesButton
 @onready var analyse_button: Button = $LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/AnalyseButton
 @onready var file_dialog: FileDialog = $FileDialog
 
@@ -83,30 +82,21 @@ func _default_input_directory() -> String:
 func _on_files_selected(paths: PackedStringArray) -> void:
 	add_files(paths)
 
-func _on_files_list_multi_selected(_index: int, _selected: bool) -> void:
-	remove_file_button.disabled = files_list.get_selected_items().is_empty()
+func _on_files_list_item_selected(_index: int) -> void:
+	files_list.deselect_all()
 
-func _on_remove_file_button_pressed() -> void:
-	var selected := files_list.get_selected_items()
-	if selected.is_empty():
-		return
-	var remaining := PackedStringArray()
-	for index in range(_paths.size()):
-		if not selected.has(index):
-			remaining.append(_paths[index])
-	_paths = remaining
-	_refresh_files()
+func _on_clear_files_button_pressed() -> void:
+	clear_files()
 
 func _refresh_files() -> void:
 	files_list.clear()
 	for path in _paths:
 		files_list.add_item(path.get_file())
-		files_list.set_item_tooltip(files_list.item_count - 1, path)
+		var item_index := files_list.item_count - 1
+		files_list.set_item_tooltip(item_index, path)
 	var has_files := not _paths.is_empty()
-	empty_files_row.visible = not has_files
-	files_list.visible = has_files
-	files_actions.visible = has_files
-	remove_file_button.disabled = true
+	empty_files_placeholder.visible = not has_files
+	clear_files_button.disabled = not has_files
 	_update_analysis_enabled()
 
 func _update_analysis_enabled() -> void:

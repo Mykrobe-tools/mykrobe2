@@ -51,11 +51,11 @@ grow_vertical = 2
 
 [node name="LandingVBox" type="VBoxContainer" parent="LandingCenter/LandingCard/LandingMargin"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 20
 alignment = 1
 
 [node name="LandingSpacerTop" type="Control" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
-custom_minimum_size = Vector2(0, 16)
+custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
 
 [node name="LandingLogo" type="HBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
@@ -81,6 +81,10 @@ text = "Antimicrobial resistance information
 within minutes"
 horizontal_alignment = 1
 
+[node name="PanelGap" type="Control" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+
 [node name="LandingSelectionRow" type="HBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
@@ -100,43 +104,51 @@ text = "Change"
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="EmptyFilesRow" type="HBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles"]
-layout_mode = 2
-theme_override_constants/separation = 10
-alignment = 1
-
-[node name="EmptyFilesLabel" type="Label" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/EmptyFilesRow"]
-layout_mode = 2
-text = "No files. Drag and drop or:"
-
-[node name="AddFileButton" type="Button" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/EmptyFilesRow"]
-custom_minimum_size = Vector2(90, 34)
-layout_mode = 2
-text = "Add file"
-
-[node name="FilesList" type="ItemList" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles"]
-visible = false
+[node name="FilesArea" type="Control" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles"]
 custom_minimum_size = Vector2(0, 92)
 layout_mode = 2
-select_mode = 1
-allow_reselect = true
+
+[node name="FilesList" type="ItemList" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesArea"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EmptyFilesPlaceholder" type="CenterContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesArea"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="EmptyFilesLabel" type="Label" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesArea/EmptyFilesPlaceholder"]
+layout_mode = 2
+text = "No files.
+Drag and drop or click \"Add files\""
+horizontal_alignment = 1
 
 [node name="FilesActions" type="HBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles"]
-visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
-alignment = 1
+alignment = 2
 
-[node name="AddFileButton" type="Button" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions"]
-custom_minimum_size = Vector2(90, 32)
-layout_mode = 2
-text = "Add file"
-
-[node name="RemoveFileButton" type="Button" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions"]
+[node name="ClearFilesButton" type="Button" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions"]
 custom_minimum_size = Vector2(90, 32)
 layout_mode = 2
 disabled = true
-text = "Remove"
+text = "Clear"
+
+[node name="AddFilesButton" type="Button" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions"]
+custom_minimum_size = Vector2(100, 32)
+layout_mode = 2
+text = "Add files"
+
+[node name="AnalyseGap" type="Control" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+layout_mode = 2
 
 [node name="LandingButtons" type="VBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
 layout_mode = 2
@@ -158,9 +170,8 @@ access = 2
 use_native_dialog = true
 
 [connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow/ChangeButton" to="." method="_on_change_button_pressed"]
-[connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/EmptyFilesRow/AddFileButton" to="." method="_on_add_file_button_pressed"]
-[connection signal="multi_selected" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesList" to="." method="_on_files_list_multi_selected"]
-[connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions/AddFileButton" to="." method="_on_add_file_button_pressed"]
-[connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions/RemoveFileButton" to="." method="_on_remove_file_button_pressed"]
+[connection signal="item_selected" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesArea/FilesList" to="." method="_on_files_list_item_selected"]
+[connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions/ClearFilesButton" to="." method="_on_clear_files_button_pressed"]
+[connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/InputFiles/FilesActions/AddFilesButton" to="." method="_on_add_file_button_pressed"]
 [connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/AnalyseButton" to="." method="_on_analyse_button_pressed"]
 [connection signal="files_selected" from="FileDialog" to="." method="_on_files_selected"]
