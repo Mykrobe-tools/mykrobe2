@@ -1,0 +1,114 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/landing_view.gd" id="1_landing"]
+
+[node name="LandingView" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_landing")
+
+[node name="LandingCenter" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LandingCard" type="Control" parent="LandingCenter"]
+custom_minimum_size = Vector2(560, 560)
+layout_mode = 2
+
+[node name="LandingCircle" type="PanelContainer" parent="LandingCenter/LandingCard"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -280.0
+offset_right = 280.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LandingMargin" type="MarginContainer" parent="LandingCenter/LandingCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 92.0
+offset_top = 110.0
+offset_right = -92.0
+offset_bottom = -92.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LandingVBox" type="VBoxContainer" parent="LandingCenter/LandingCard/LandingMargin"]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="LandingSpacerTop" type="Control" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+
+[node name="LandingLogo" type="HBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="LandingLogoIcon" type="TextureRect" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo"]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LandingLogoText" type="Label" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
+theme_override_font_sizes/font_size = 30
+text = "MYKROBE"
+
+[node name="LandingTagline" type="Label" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
+theme_override_font_sizes/font_size = 26
+text = "Antimicrobial resistance information
+within minutes"
+horizontal_alignment = 1
+
+[node name="LandingSelectionRow" type="HBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="LandingSelection" type="Label" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
+theme_override_font_sizes/font_size = 16
+text = "No panel selected"
+
+[node name="ChangeButton" type="Button" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+text = "CHANGE"
+
+[node name="LandingButtons" type="VBoxContainer" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="AnalyseButton" type="Button" parent="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons"]
+custom_minimum_size = Vector2(220, 46)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "ANALYSE SAMPLE"
+
+[connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow/ChangeButton" to="." method="_on_change_button_pressed"]
+[connection signal="pressed" from="LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/AnalyseButton" to="." method="_on_analyse_button_pressed"]

@@ -11,18 +11,14 @@ const DEFAULT_SAMPLE_NAME := "sample"
 
 @onready var background_rect: ColorRect = $Background
 @onready var animated_background: Control = $AnimatedBackground
-@onready var landing_circle: PanelContainer = $LandingView/LandingCenter/LandingCard/LandingCircle
 @onready var bootstrap_circle: PanelContainer = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapCircle
 @onready var processing_circle: PanelContainer = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingCircle
-@onready var landing_logo_icon: TextureRect = $LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo/LandingLogoIcon
-@onready var landing_selection: Label = $LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow/LandingSelection
 @onready var bootstrap_logo_icon: TextureRect = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo/BootstrapLogoIcon
-@onready var landing_view: Control = $LandingView
+@onready var landing_view: LandingView = $LandingView
 @onready var bootstrap_view: Control = $BootstrapView
 @onready var bootstrap_status_label: Label = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapStatus
 @onready var bootstrap_log_text: RichTextLabel = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLog
 @onready var results_view: ResultsView = $ResultsView
-@onready var analyse_button: Button = $LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/AnalyseButton
 @onready var processing_overlay: Control = $ProcessingOverlay
 @onready var processing_label: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingLabel
 @onready var dot_1: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingDots/Dot1
@@ -79,11 +75,11 @@ func _apply_theme(theme_name: String) -> void:
 	self.theme = _themes_lib.make_theme(theme_name, 16)
 	background_rect.color = _palette.get("bg", Color("f8f5ee"))
 	var icon_texture: Texture2D = _helpers.load_texture(LOGO_ICON_PATH)
-	landing_logo_icon.texture = icon_texture
+	landing_view.set_logo_texture(icon_texture)
 	bootstrap_logo_icon.texture = icon_texture
 	results_view.set_logo_texture(icon_texture)
 	modulate = Color(1, 1, 1, 1)
-	for panel in [landing_circle, bootstrap_circle, processing_circle]:
+	for panel in [bootstrap_circle, processing_circle]:
 		var style := StyleBoxFlat.new()
 		style.bg_color = _palette.get("circle_bg", Color(1, 1, 1, 0.92))
 		style.corner_radius_top_left = 400
@@ -91,6 +87,7 @@ func _apply_theme(theme_name: String) -> void:
 		style.corner_radius_bottom_left = 400
 		style.corner_radius_bottom_right = 400
 		panel.add_theme_stylebox_override("panel", style)
+	landing_view.apply_palette(_palette)
 	choose_panel_dialog.apply_palette(_palette)
 	results_view.apply_palette(_palette)
 	_apply_palette_overrides()
@@ -100,9 +97,7 @@ func _apply_palette_overrides() -> void:
 	var text: Color = _palette.get("text", Color("6d6a65"))
 	var muted: Color = _palette.get("text_muted", Color("8b8478"))
 	var dot: Color = _palette.get("dot", Color("c9c4bc"))
-	$LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo/LandingLogoText.add_theme_color_override("font_color", accent)
 	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo/BootstrapLogoText.add_theme_color_override("font_color", accent)
-	$LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingTagline.add_theme_color_override("font_color", text)
 	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapTitle.add_theme_color_override("font_color", text)
 	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapStatus.add_theme_color_override("font_color", muted)
 	processing_label.add_theme_color_override("font_color", text)
@@ -172,13 +167,13 @@ func _poll_predict_run(delta: float) -> void:
 	_set_notice("%s\n%s" % [str(result.get("error", "Analysis failed.")), str(result.get("log", ""))])
 	_set_window_title_default()
 
-func _on_analyse_button_pressed() -> void:
+func _on_analyse_requested() -> void:
 	if bootstrap_view.visible:
 		return
 	_pending_run_after_reads_selection = true
 	reads_dialog.popup_centered_ratio(0.7)
 
-func _on_options_button_pressed() -> void:
+func _on_change_requested() -> void:
 	_show_options_dialog()
 
 func _on_panel_selected(species: String, panel: String) -> void:
@@ -409,7 +404,7 @@ func _refresh_species_options() -> void:
 	if _species_entries.is_empty():
 		_selected_species_name = ""
 		_selected_panel_name = ""
-		analyse_button.disabled = true
+		landing_view.set_analysis_enabled(false)
 		_update_landing_selection()
 		return
 	var preferred_panel := _selected_panel_name
@@ -421,7 +416,7 @@ func _refresh_species_options() -> void:
 		species_entry = Dictionary(_species_entries[0])
 	_selected_species_name = str(species_entry.get("species", "")).strip_edges()
 	_selected_panel_name = _resolve_panel_name(species_entry, preferred_panel)
-	analyse_button.disabled = false
+	landing_view.set_analysis_enabled(true)
 	_update_landing_selection()
 
 func _find_species_entry(species: String) -> Dictionary:
@@ -455,15 +450,7 @@ func _resolve_panel_name(species_entry: Dictionary, preferred_panel: String) -> 
 	return first_panel
 
 func _update_landing_selection() -> void:
-	var species := _selected_species()
-	var panel_name := _selected_panel()
-	if species == "":
-		landing_selection.text = "No panel selected"
-		return
-	if panel_name == "":
-		landing_selection.text = species.to_upper()
-		return
-	landing_selection.text = "%s · panel %s" % [species.to_upper(), panel_name]
+	landing_view.set_panel(_selected_species(), _selected_panel())
 
 func _resolve_binary_path() -> String:
 	var from_env := OS.get_environment("MYKROBE2_BINARY").strip_edges()

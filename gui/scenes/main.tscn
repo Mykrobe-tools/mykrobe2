@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://h6ubkubw2gwv"]
+[gd_scene load_steps=6 format=3 uid="uid://h6ubkubw2gwv"]
 
 [ext_resource type="Script" uid="uid://fkihy2arg2jh" path="res://scripts/main.gd" id="1_2p1fg"]
 [ext_resource type="PackedScene" path="res://scenes/BackgroundPills.tscn" id="2_pills"]
 [ext_resource type="PackedScene" path="res://scenes/ChoosePanelDialog.tscn" id="3_panel_dialog"]
 [ext_resource type="PackedScene" path="res://scenes/ResultsView.tscn" id="4_results"]
+[ext_resource type="PackedScene" path="res://scenes/LandingView.tscn" id="5_landing"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -25,112 +26,7 @@ color = Color(0.972549, 0.960784, 0.933333, 1)
 
 [node name="AnimatedBackground" parent="." instance=ExtResource("2_pills")]
 
-[node name="LandingView" type="Control" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="LandingCenter" type="CenterContainer" parent="LandingView"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="LandingCard" type="Control" parent="LandingView/LandingCenter"]
-custom_minimum_size = Vector2(560, 560)
-layout_mode = 2
-
-[node name="LandingCircle" type="PanelContainer" parent="LandingView/LandingCenter/LandingCard"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -280.0
-offset_top = -280.0
-offset_right = 280.0
-offset_bottom = 280.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="LandingMargin" type="MarginContainer" parent="LandingView/LandingCenter/LandingCard"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 92.0
-offset_top = 110.0
-offset_right = -92.0
-offset_bottom = -92.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="LandingVBox" type="VBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin"]
-layout_mode = 2
-theme_override_constants/separation = 24
-alignment = 1
-
-[node name="LandingSpacerTop" type="Control" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
-custom_minimum_size = Vector2(0, 16)
-layout_mode = 2
-
-[node name="LandingLogo" type="HBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
-layout_mode = 2
-theme_override_constants/separation = 14
-alignment = 1
-
-[node name="LandingLogoIcon" type="TextureRect" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo"]
-custom_minimum_size = Vector2(56, 56)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="LandingLogoText" type="Label" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
-theme_override_font_sizes/font_size = 30
-text = "MYKROBE"
-
-[node name="LandingTagline" type="Label" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
-theme_override_font_sizes/font_size = 26
-text = "Antimicrobial resistance information
-within minutes"
-horizontal_alignment = 1
-
-[node name="LandingSelectionRow" type="HBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
-layout_mode = 2
-theme_override_constants/separation = 10
-alignment = 1
-
-[node name="LandingSelection" type="Label" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
-theme_override_font_sizes/font_size = 16
-text = "No panel selected"
-
-[node name="OptionsButton" type="Button" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow"]
-custom_minimum_size = Vector2(0, 30)
-layout_mode = 2
-text = "CHANGE"
-
-[node name="LandingButtons" type="VBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
-layout_mode = 2
-theme_override_constants/separation = 10
-alignment = 1
-
-[node name="AnalyseButton" type="Button" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons"]
-custom_minimum_size = Vector2(220, 46)
-layout_mode = 2
-size_flags_horizontal = 4
-text = "ANALYSE SAMPLE"
+[node name="LandingView" parent="." instance=ExtResource("5_landing")]
 
 [node name="BootstrapView" type="Control" parent="."]
 visible = false
@@ -340,8 +236,8 @@ access = 2
 filters = PackedStringArray("*.json ; JSON files")
 use_native_dialog = true
 
-[connection signal="pressed" from="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/AnalyseButton" to="." method="_on_analyse_button_pressed"]
-[connection signal="pressed" from="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow/OptionsButton" to="." method="_on_options_button_pressed"]
+[connection signal="analyse_requested" from="LandingView" to="." method="_on_analyse_requested"]
+[connection signal="change_requested" from="LandingView" to="." method="_on_change_requested"]
 [connection signal="save_requested" from="ResultsView" to="." method="_on_save_requested"]
 [connection signal="new_requested" from="ResultsView" to="." method="_on_new_requested"]
 [connection signal="tab_changed" from="ResultsView" to="." method="_on_results_tab_changed"]
