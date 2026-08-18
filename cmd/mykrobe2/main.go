@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/martinghunt/mykrobe2/internal/buildinfo"
 	"github.com/martinghunt/mykrobe2/mykrobe"
 	"github.com/martinghunt/mykrobe2/mykrobe/speciesdata"
 	"github.com/spf13/cobra"
@@ -84,19 +85,28 @@ type makeProbesOptions struct {
 }
 
 type indexOptions struct {
-	fastaPaths   []string
-	amrPath      string
-	lineagePath  string
-	outputPath   string
-	kmer         int
+	fastaPaths  []string
+	amrPath     string
+	lineagePath string
+	outputPath  string
+	kmer        int
 }
 
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "mykrobe2",
+		Use:     "mykrobe2",
+		Version: displayVersion(buildinfo.Version),
 	}
+	cmd.SetVersionTemplate("{{.Name}} {{.Version}}\n")
 	cmd.AddCommand(newPredictCmd(), newPanelsCmd(), newMakeProbesCmd(), newIndexCmd(), newCompareOutputCmd())
 	return cmd
+}
+
+func displayVersion(raw string) string {
+	if len(raw) > 1 && (raw[0] == 'v' || raw[0] == 'V') && raw[1] >= '0' && raw[1] <= '9' {
+		return raw[1:]
+	}
+	return raw
 }
 
 func newPredictCmd() *cobra.Command {

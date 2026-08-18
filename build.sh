@@ -122,6 +122,8 @@ mkdir -p "$DEFAULT_GOMODCACHE_DIR"
 export GOCACHE="${GOCACHE:-$DEFAULT_GOCACHE_DIR}"
 export GOMODCACHE="${GOMODCACHE:-$DEFAULT_GOMODCACHE_DIR}"
 
+build_version="${version:-dev}"
+
 build_one() {
 	local goos="$1"
 	local goarch="$2"
@@ -149,7 +151,9 @@ build_one() {
 	(
 		cd "$ROOT_DIR"
 		CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" \
-			go build -trimpath -o "$outfile" "$CMD_PATH"
+			go build -trimpath \
+				-ldflags "-X github.com/martinghunt/mykrobe2/internal/buildinfo.Version=${build_version}" \
+				-o "$outfile" "$CMD_PATH"
 	)
 }
 
