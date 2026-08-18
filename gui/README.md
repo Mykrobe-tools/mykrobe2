@@ -2,6 +2,13 @@
 
 This directory contains the Godot 4.7 desktop GUI for `mykrobe2`.
 
+## Local prerequisites
+
+Running the project only needs Godot 4.7.x and a locally built backend (`../build.sh`).
+Install the matching Godot export templates as well if you want to create packaged
+apps locally. Cross-platform release exports are built by GitHub Actions, so local
+Wine, Windows SDKs, and Linux cross-compilers are not required for normal testing.
+
 ## Development
 
 The project is designed to work in two modes:
@@ -38,3 +45,9 @@ The current GUI supports:
   - Raw JSON
 
 It is intentionally scene-driven: layout and controls live in `scenes/main.tscn`, with logic kept in scripts.
+
+## Release artifacts
+
+Tags beginning with `v` build GUI applications for Linux and Windows on amd64 and
+arm64, plus one universal macOS app that runs natively on Intel and Apple Silicon.
+The matching `mykrobe2` command-line executable is bundled inside every GUI app.

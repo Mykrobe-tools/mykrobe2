@@ -24,6 +24,8 @@ Default behavior:
 Options:
   --release           Build the full release matrix:
                       darwin/linux/windows x amd64/arm64.
+                      Outputs are .tar.gz (macOS/Linux) or .zip (Windows),
+                      with a SHA-256 checksum file.
   --all               Same target matrix as --release, but version is optional.
   --version VERSION   Version string for release artifact filenames.
   --os GOOS           Build only for the specified GOOS.
@@ -45,6 +47,7 @@ version=""
 output_dir=""
 requested_os=""
 requested_arch=""
+release_artifacts=()
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
@@ -124,6 +127,47 @@ export GOMODCACHE="${GOMODCACHE:-$DEFAULT_GOMODCACHE_DIR}"
 
 build_version="${version:-dev}"
 
+package_release_artifact() {
+	local goos="$1"
+	local outfile="$2"
+	local artifact="$3"
+	local package_name=""
+
+	case "$goos" in
+		windows)
+			package_name="${artifact}.zip"
+			(
+				cd "$output_dir"
+				zip -q -m "$package_name" "$(basename "$outfile")"
+			)
+			;;
+		*)
+			package_name="${artifact}.tar.gz"
+			tar -C "$output_dir" -czf "$output_dir/$package_name" "$(basename "$outfile")"
+			rm -f "$outfile"
+			;;
+	esac
+	release_artifacts+=("$package_name")
+}
+
+write_release_checksums() {
+	local checksum_file="$output_dir/${BIN_NAME}-${version}-checksums.txt"
+	local tmp_file="${checksum_file}.tmp"
+
+	: > "$tmp_file"
+	for artifact in "${release_artifacts[@]}"; do
+		if command -v sha256sum >/dev/null 2>&1; then
+			(cd "$output_dir" && sha256sum "$artifact") >> "$tmp_file"
+		elif command -v shasum >/dev/null 2>&1; then
+			(cd "$output_dir" && shasum -a 256 "$artifact") >> "$tmp_file"
+		else
+			echo "No SHA-256 checksum tool found: need sha256sum or shasum" >&2
+			exit 1
+		fi
+	done
+	mv "$tmp_file" "$checksum_file"
+}
+
 build_one() {
 	local goos="$1"
 	local goarch="$2"
@@ -155,6 +199,10 @@ build_one() {
 				-ldflags "-X github.com/martinghunt/mykrobe2/internal/buildinfo.Version=${build_version}" \
 				-o "$outfile" "$CMD_PATH"
 	)
+
+	if [[ $release_mode -eq 1 ]]; then
+		package_release_artifact "$goos" "$outfile" "$artifact"
+	fi
 }
 
 if [[ $release_mode -eq 1 || $all_mode -eq 1 ]]; then
@@ -163,6 +211,9 @@ if [[ $release_mode -eq 1 || $all_mode -eq 1 ]]; then
 			build_one "$goos" "$goarch"
 		done
 	done
+	if [[ $release_mode -eq 1 ]]; then
+		write_release_checksums
+	fi
 	exit 0
 fi
 

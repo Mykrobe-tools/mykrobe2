@@ -1,0 +1,180 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      export_mode:
+        description: Godot export mode
+        required: true
+        default: release
+        type: choice
+        options:
+          - release
+          - debug
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: 4.7.1
+
+jobs:
+  build-cli:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build standalone CLI archives
+        run: ./build.sh --release --version "${GITHUB_REF_NAME}"
+
+      - name: Upload CLI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone-cli
+          path: dist/*
+          if-no-files-found: error
+
+  export-linux-windows:
+    runs-on: ubuntu-latest
+    env:
+      EXPORT_MODE: ${{ inputs.export_mode || 'release' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux/amd64
+            preset: Linux x86_64
+            artifact: gui-linux-amd64
+            output: dist/mykrobe2-gui-${{ github.ref_name }}-linux-amd64.tar.gz
+          - target: linux/arm64
+            preset: Linux arm64
+            artifact: gui-linux-arm64
+            output: dist/mykrobe2-gui-${{ github.ref_name }}-linux-arm64.tar.gz
+          - target: windows/amd64
+            preset: Windows x86_64
+            artifact: gui-windows-amd64
+            output: dist/mykrobe2-gui-${{ github.ref_name }}-windows-amd64.zip
+          - target: windows/arm64
+            preset: Windows arm64
+            artifact: gui-windows-arm64
+            output: dist/mykrobe2-gui-${{ github.ref_name }}-windows-arm64.zip
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install Godot and export templates
+        run: |
+          set -euo pipefail
+          curl -fL -o /tmp/godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          chmod +x "/tmp/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          curl -fL -o /tmp/godot_templates.tpz "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q /tmp/godot_templates.tpz -d /tmp/godot_templates
+          cp -R /tmp/godot_templates/templates/. "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+
+      - name: Export GUI app
+        run: |
+          ./build_release.sh \
+            --target "${{ matrix.target }}" \
+            --preset "${{ matrix.preset }}" \
+            --out "${{ matrix.output }}" \
+            --version "${GITHUB_REF_NAME}" \
+            --mode "${EXPORT_MODE}" \
+            --godot-bin "/tmp/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+
+      - name: Upload GUI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.output }}
+          if-no-files-found: error
+
+  export-macos:
+    runs-on: macos-latest
+    env:
+      EXPORT_MODE: ${{ inputs.export_mode || 'release' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install Godot and export templates
+        run: |
+          set -euo pipefail
+          curl -fL -o /tmp/godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_macos.universal.zip"
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          chmod +x /tmp/godot/Godot.app/Contents/MacOS/Godot
+          mkdir -p "$HOME/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.stable"
+          curl -fL -o /tmp/godot_templates.tpz "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q /tmp/godot_templates.tpz -d /tmp/godot_templates
+          cp -R /tmp/godot_templates/templates/. "$HOME/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.stable/"
+
+      - name: Export GUI app
+        run: |
+          ./build_release.sh \
+            --target darwin/universal \
+            --preset "macOS Universal" \
+            --out "dist/mykrobe2-gui-${GITHUB_REF_NAME}-macos-universal.dmg" \
+            --version "${GITHUB_REF_NAME}" \
+            --mode "${EXPORT_MODE}" \
+            --godot-bin /tmp/godot/Godot.app/Contents/MacOS/Godot
+
+      - name: Upload GUI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gui-macos-universal
+          path: dist/mykrobe2-gui-*-macos-universal.dmg
+          if-no-files-found: error
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs:
+      - build-cli
+      - export-linux-windows
+      - export-macos
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create combined checksums
+        working-directory: release-assets
+        run: sha256sum mykrobe2-gui-* > mykrobe2-gui-${GITHUB_REF_NAME}-checksums.txt
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-assets/*
