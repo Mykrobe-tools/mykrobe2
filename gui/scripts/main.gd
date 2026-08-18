@@ -19,6 +19,7 @@ const TAB_SPECIES := 3
 @onready var bootstrap_circle: PanelContainer = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapCircle
 @onready var processing_circle: PanelContainer = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingCircle
 @onready var landing_logo_icon: TextureRect = $LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingLogo/LandingLogoIcon
+@onready var landing_selection: Label = $LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow/LandingSelection
 @onready var bootstrap_logo_icon: TextureRect = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo/BootstrapLogoIcon
 @onready var header_logo_icon: TextureRect = $AppView/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo/HeaderLogoIcon
 @onready var landing_view: Control = $LandingView
@@ -85,6 +86,8 @@ var _processing_elapsed := 0.0
 var _pending_result_path := ""
 var _pending_result_notice := ""
 var _pending_result_attempts := 0
+var _panel_dialog_original_species := ""
+var _panel_dialog_original_panel := ""
 
 func _ready() -> void:
 	_formatter = ResultFormatterScript.new()
@@ -249,8 +252,14 @@ func _on_analyse_button_pressed() -> void:
 func _on_options_button_pressed() -> void:
 	_show_options_dialog()
 
-func _on_close_options_button_pressed() -> void:
+func _on_cancel_panel_button_pressed() -> void:
+	_restore_panel_selection(_panel_dialog_original_species, _panel_dialog_original_panel)
 	_hide_options_dialog()
+	_update_landing_selection()
+
+func _on_set_panel_button_pressed() -> void:
+	_hide_options_dialog()
+	_update_landing_selection()
 
 func _on_panels_browse_pressed() -> void:
 	panels_dir_dialog.popup_centered_ratio(0.7)
@@ -288,6 +297,9 @@ func _on_species_option_item_selected(index: int) -> void:
 	if index < 0 or index >= _species_entries.size():
 		return
 	_refresh_panel_options(_species_entries[index])
+
+func _on_panel_option_item_selected(_index: int) -> void:
+	_update_landing_selection()
 
 func _on_refresh_setup_button_pressed() -> void:
 	_refresh_species_options()
@@ -453,6 +465,8 @@ func _show_results_view() -> void:
 	animated_background.visible = false
 
 func _show_options_dialog() -> void:
+	_panel_dialog_original_species = _selected_species()
+	_panel_dialog_original_panel = _selected_panel()
 	options_dialog.visible = true
 
 func _hide_options_dialog() -> void:
@@ -534,6 +548,7 @@ func _refresh_species_options() -> void:
 	panel_option.disabled = true
 	_panel_entries.clear()
 	if _species_entries.is_empty():
+		_update_landing_selection()
 		return
 	for entry in _species_entries:
 		species_option.add_item(str(entry.get("species", "")))
@@ -553,6 +568,7 @@ func _refresh_panel_options(species_entry: Dictionary) -> void:
 	panel_option.disabled = true
 	var panels_variant: Variant = species_entry.get("panels", [])
 	if typeof(panels_variant) != TYPE_ARRAY:
+		_update_landing_selection()
 		return
 	var default_panel := str(species_entry.get("default_panel", ""))
 	for panel_variant in panels_variant:
@@ -565,6 +581,7 @@ func _refresh_panel_options(species_entry: Dictionary) -> void:
 		_panel_entries.append(panel_entry)
 		panel_option.add_item(panel_name)
 	if panel_option.item_count == 0:
+		_update_landing_selection()
 		return
 	panel_option.disabled = false
 	var preferred_index := 0
@@ -573,6 +590,38 @@ func _refresh_panel_options(species_entry: Dictionary) -> void:
 			preferred_index = i
 			break
 	panel_option.select(preferred_index)
+	_update_landing_selection()
+
+func _update_landing_selection() -> void:
+	if options_dialog.visible:
+		return
+	var species := _selected_species()
+	var panel_name := _selected_panel()
+	if species == "":
+		landing_selection.text = "No panel selected"
+		return
+	if panel_name == "":
+		landing_selection.text = species.to_upper()
+		return
+	landing_selection.text = "%s · panel %s" % [species.to_upper(), panel_name]
+
+func _restore_panel_selection(species: String, panel_name: String) -> void:
+	if species == "":
+		species_option.select(-1)
+		panel_option.clear()
+		panel_option.disabled = true
+		_panel_entries.clear()
+		return
+	for species_index in range(_species_entries.size()):
+		if str(_species_entries[species_index].get("species", "")).strip_edges() != species:
+			continue
+		species_option.select(species_index)
+		_refresh_panel_options(_species_entries[species_index])
+		for panel_index in range(_panel_entries.size()):
+			if str(_panel_entries[panel_index].get("name", "")).strip_edges() == panel_name:
+				panel_option.select(panel_index)
+				break
+		return
 
 func _resolve_binary_path() -> String:
 	var from_env := OS.get_environment("MYKROBE2_BINARY").strip_edges()

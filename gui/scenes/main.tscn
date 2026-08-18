@@ -103,6 +103,22 @@ text = "Antimicrobial resistance information
 within minutes"
 horizontal_alignment = 1
 
+[node name="LandingSelectionRow" type="HBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="LandingSelection" type="Label" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
+theme_override_font_sizes/font_size = 16
+text = "No panel selected"
+
+[node name="OptionsButton" type="Button" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+text = "CHANGE"
+
 [node name="LandingButtons" type="VBoxContainer" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
@@ -113,12 +129,6 @@ custom_minimum_size = Vector2(220, 46)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "ANALYSE SAMPLE"
-
-[node name="OptionsButton" type="Button" parent="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons"]
-layout_mode = 2
-size_flags_horizontal = 4
-text = "OPTIONS"
-flat = true
 
 [node name="BootstrapView" type="Control" parent="."]
 visible = false
@@ -687,11 +697,7 @@ theme_override_constants/separation = 12
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 22
-text = "Analysis options"
-
-[node name="CloseOptionsButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsHeader"]
-layout_mode = 2
-text = "CLOSE"
+text = "Choose panel"
 
 [node name="SampleRow" type="VBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
 visible = false
@@ -783,6 +789,21 @@ text = "Refresh Panels"
 layout_mode = 2
 text = "Use Shared Panels"
 
+[node name="PanelDialogButtons" type="HBoxContainer" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 2
+
+[node name="CancelPanelButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelDialogButtons"]
+custom_minimum_size = Vector2(90, 36)
+layout_mode = 2
+text = "Cancel"
+
+[node name="SetPanelButton" type="Button" parent="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelDialogButtons"]
+custom_minimum_size = Vector2(110, 36)
+layout_mode = 2
+text = "Set panel"
+
 [node name="ReadsDialog" type="FileDialog" parent="."]
 title = "Open a File"
 ok_button_text = "Open"
@@ -804,7 +825,7 @@ filters = PackedStringArray("*.json ; JSON files")
 use_native_dialog = true
 
 [connection signal="pressed" from="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/AnalyseButton" to="." method="_on_analyse_button_pressed"]
-[connection signal="pressed" from="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingButtons/OptionsButton" to="." method="_on_options_button_pressed"]
+[connection signal="pressed" from="LandingView/LandingCenter/LandingCard/LandingMargin/LandingVBox/LandingSelectionRow/OptionsButton" to="." method="_on_options_button_pressed"]
 [connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/AllTabButton" to="." method="_on_all_tab_button_pressed"]
 [connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/DrugsTabButton" to="." method="_on_drugs_tab_button_pressed"]
 [connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/EvidenceTabButton" to="." method="_on_evidence_tab_button_pressed"]
@@ -812,11 +833,13 @@ use_native_dialog = true
 [connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/SaveButton" to="." method="_on_save_button_pressed"]
 [connection signal="pressed" from="AppView/HeaderBar/HeaderMargin/HeaderHBox/NewButton" to="." method="_on_new_button_pressed"]
 [connection signal="pressed" from="ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/CancelButton" to="." method="_on_cancel_button_pressed"]
-[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsHeader/CloseOptionsButton" to="." method="_on_close_options_button_pressed"]
 [connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelsRow/PanelsPicker/PanelsBrowseButton" to="." method="_on_panels_browse_pressed"]
 [connection signal="item_selected" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/SpeciesRow/SpeciesOption" to="." method="_on_species_option_item_selected"]
+[connection signal="item_selected" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelRow/PanelOption" to="." method="_on_panel_option_item_selected"]
 [connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsButtons/RefreshPanelsButton" to="." method="_on_refresh_setup_button_pressed"]
 [connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/OptionsButtons/OpenPanelsDirButton" to="." method="_on_use_shared_panels_button_pressed"]
+[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelDialogButtons/CancelPanelButton" to="." method="_on_cancel_panel_button_pressed"]
+[connection signal="pressed" from="OptionsDialog/OptionsCenter/OptionsCard/OptionsMargin/OptionsVBox/PanelDialogButtons/SetPanelButton" to="." method="_on_set_panel_button_pressed"]
 [connection signal="file_selected" from="ReadsDialog" to="." method="_on_reads_dialog_file_selected"]
 [connection signal="dir_selected" from="PanelsDirDialog" to="." method="_on_panels_dir_dialog_dir_selected"]
 [connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]
