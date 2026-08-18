@@ -45,3 +45,40 @@ func TestDisplayVersion(t *testing.T) {
 		}
 	}
 }
+
+func TestFlagNamesAcceptDashesAndUnderscores(t *testing.T) {
+	cmd := newRootCmd()
+	predict, _, err := cmd.Find([]string{"predict"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	dashed := predict.Flags().Lookup("panels-dir")
+	underscored := predict.Flags().Lookup("panels_dir")
+	if dashed == nil || underscored == nil || dashed != underscored {
+		t.Fatalf("flag aliases do not resolve to the same flag: dashed=%p underscored=%p", dashed, underscored)
+	}
+}
+
+func TestCommandNamesAcceptDashesAndUnderscores(t *testing.T) {
+	cmd := newRootCmd()
+	tests := []struct {
+		args []string
+		want string
+	}{
+		{args: []string{"compare-output"}, want: "compare-output"},
+		{args: []string{"compare_output"}, want: "compare-output"},
+		{args: []string{"panels", "update-metadata"}, want: "update-metadata"},
+		{args: []string{"panels", "update_metadata"}, want: "update-metadata"},
+		{args: []string{"panels", "update-species"}, want: "update-species"},
+		{args: []string{"panels", "update_species"}, want: "update-species"},
+	}
+	for _, tt := range tests {
+		got, _, err := cmd.Find(tt.args)
+		if err != nil {
+			t.Fatalf("Find(%v) error = %v", tt.args, err)
+		}
+		if got.Name() != tt.want {
+			t.Fatalf("Find(%v) name = %q, want %q", tt.args, got.Name(), tt.want)
+		}
+	}
+}

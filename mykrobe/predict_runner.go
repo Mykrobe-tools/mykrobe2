@@ -192,7 +192,7 @@ func resolvePredictInputs(indexPath, panelArg, mapPath, lineagePath, panelsDir, 
 		return predictInputs{}, fmt.Errorf("predict with --species custom requires --index")
 	}
 	if panelsDir == "" || species == "" {
-		return predictInputs{}, fmt.Errorf("predict requires --index, or --panels_dir with --species")
+		return predictInputs{}, fmt.Errorf("predict requires --index, or --panels-dir with --species")
 	}
 
 	dataDir, err := speciesdata.NewDataDir(panelsDir)

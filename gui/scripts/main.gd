@@ -368,19 +368,19 @@ func _start_predict(reads_path: String) -> void:
 		"--sample", sample,
 		"--seq", reads_path,
 		"--species", species,
-		"--panels_dir", panels_dir,
+		"--panels-dir", panels_dir,
 		"--output", output_path,
 		"--format", "json",
 	])
 	if panel_name != "":
 		args.append_array(["--panel", panel_name])
 	if report_all_calls_check.button_pressed:
-		args.append("--report_all_calls")
+		args.append("--report-all-calls")
 	if ncbi_names_check.button_pressed:
-		args.append("--ncbi_names")
+		args.append("--ncbi-names")
 	if ont_check.button_pressed:
 		args.append("--ont")
-	args.append("--guess_sequence_method")
+	args.append("--guess-sequence-method")
 
 	var start_result: Dictionary = _predict_run.start(binary_path, args, output_path)
 	if not start_result.get("started", false):
@@ -493,16 +493,16 @@ func _maybe_start_initial_panels_bootstrap() -> void:
 			"label": "Updating panel metadata",
 			"args": PackedStringArray([
 				"panels",
-				"update_metadata",
-				"--panels_dir", panels_dir,
+				"update-metadata",
+				"--panels-dir", panels_dir,
 			]),
 		},
 		{
 			"label": "Installing panels for all species",
 			"args": PackedStringArray([
 				"panels",
-				"update_species",
-				"--panels_dir", panels_dir,
+				"update-species",
+				"--panels-dir", panels_dir,
 				"all",
 			]),
 		},

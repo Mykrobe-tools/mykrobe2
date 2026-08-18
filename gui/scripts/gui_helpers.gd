@@ -59,7 +59,7 @@ func load_species_entries(binary_path: String, panels_dir: String) -> Array:
 		var exit_code := OS.execute(binary_path, PackedStringArray([
 			"panels",
 			"describe",
-			"--panels_dir", panels_dir,
+			"--panels-dir", panels_dir,
 			"--format", "json",
 		]), output_lines, true)
 		if exit_code == 0:

@@ -30,16 +30,17 @@ type diffEntry struct {
 func newCompareOutputCmd() *cobra.Command {
 	opts := &compareOutputOptions{}
 	cmd := &cobra.Command{
-		Use:    "compare_output <left.json> <right.json>",
-		Short:  "Compare two mykrobe predict output JSON files",
-		Hidden: true,
-		Args:   cobra.ExactArgs(2),
+		Use:     "compare-output <left.json> <right.json>",
+		Aliases: []string{"compare_output"},
+		Short:   "Compare two mykrobe predict output JSON files",
+		Hidden:  true,
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runCompareOutput(opts, cmd.OutOrStdout(), args[0], args[1])
 		},
 	}
-	cmd.Flags().Float64Var(&opts.floatTolerance, "float_tolerance", defaultCompareFloatTolerance, "Absolute float tolerance")
-	cmd.Flags().BoolVar(&opts.compareAll, "compare_all", false, "Compare all fields strictly, including version strings and full probe set paths")
+	cmd.Flags().Float64Var(&opts.floatTolerance, "float-tolerance", defaultCompareFloatTolerance, "Absolute float tolerance")
+	cmd.Flags().BoolVar(&opts.compareAll, "compare-all", false, "Compare all fields strictly, including version strings and full probe set paths")
 	return cmd
 }
 

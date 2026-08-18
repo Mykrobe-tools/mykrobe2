@@ -24,10 +24,10 @@ type RunOptions struct {
 
 func WritePanels(w io.Writer, opts RunOptions) (map[string]LineageInfo, error) {
 	if opts.VCFPath != "" && (opts.TextFile != "" || len(opts.Variants) > 0) {
-		return nil, fmt.Errorf("make-probes --vcf cannot be combined with --variants or --text_file")
+		return nil, fmt.Errorf("make-probes --vcf cannot be combined with --variants or --text-file")
 	}
 	if opts.VCFPath == "" && len(opts.Variants) == 0 && opts.TextFile == "" {
-		return nil, fmt.Errorf("make-probes requires --variants, --text_file, or --vcf")
+		return nil, fmt.Errorf("make-probes requires --variants, --text-file, or --vcf")
 	}
 
 	reference := DefaultReferenceName(opts.ReferencePath)
