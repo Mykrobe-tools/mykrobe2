@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://h6ubkubw2gwv"]
+[gd_scene load_steps=7 format=3 uid="uid://h6ubkubw2gwv"]
 
 [ext_resource type="Script" uid="uid://fkihy2arg2jh" path="res://scripts/main.gd" id="1_2p1fg"]
 [ext_resource type="PackedScene" path="res://scenes/BackgroundPills.tscn" id="2_pills"]
 [ext_resource type="PackedScene" path="res://scenes/ChoosePanelDialog.tscn" id="3_panel_dialog"]
 [ext_resource type="PackedScene" path="res://scenes/ResultsView.tscn" id="4_results"]
 [ext_resource type="PackedScene" path="res://scenes/LandingView.tscn" id="5_landing"]
+[ext_resource type="PackedScene" path="res://scenes/BootstrapView.tscn" id="6_bootstrap"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -28,94 +29,7 @@ color = Color(0.972549, 0.960784, 0.933333, 1)
 
 [node name="LandingView" parent="." instance=ExtResource("5_landing")]
 
-[node name="BootstrapView" type="Control" parent="."]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="BootstrapCenter" type="CenterContainer" parent="BootstrapView"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="BootstrapCard" type="Control" parent="BootstrapView/BootstrapCenter"]
-custom_minimum_size = Vector2(720, 600)
-layout_mode = 2
-
-[node name="BootstrapCircle" type="PanelContainer" parent="BootstrapView/BootstrapCenter/BootstrapCard"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -300.0
-offset_top = -300.0
-offset_right = 300.0
-offset_bottom = 300.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="BootstrapMargin" type="MarginContainer" parent="BootstrapView/BootstrapCenter/BootstrapCard"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 90.0
-offset_top = 80.0
-offset_right = -90.0
-offset_bottom = -80.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="BootstrapVBox" type="VBoxContainer" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="BootstrapLogo" type="HBoxContainer" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
-layout_mode = 2
-theme_override_constants/separation = 14
-alignment = 1
-
-[node name="BootstrapLogoIcon" type="TextureRect" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo"]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="BootstrapLogoText" type="Label" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.223529, 0.529412, 0.701961, 1)
-theme_override_font_sizes/font_size = 28
-text = "MYKROBE"
-
-[node name="BootstrapTitle" type="Label" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
-theme_override_font_sizes/font_size = 28
-text = "Preparing Mykrobe data"
-horizontal_alignment = 1
-
-[node name="BootstrapStatus" type="Label" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.44, 0.42, 1)
-text = "Downloading panel metadata and species data."
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="BootstrapLog" type="RichTextLabel" parent="BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
-layout_mode = 2
-size_flags_vertical = 3
-focus_mode = 2
-scroll_following = true
-selection_enabled = true
+[node name="BootstrapView" parent="." instance=ExtResource("6_bootstrap")]
 
 [node name="ResultsView" parent="." instance=ExtResource("4_results")]
 [node name="ProcessingOverlay" type="Control" parent="."]

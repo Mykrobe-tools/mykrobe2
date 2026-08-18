@@ -11,13 +11,9 @@ const DEFAULT_SAMPLE_NAME := "sample"
 
 @onready var background_rect: ColorRect = $Background
 @onready var animated_background: Control = $AnimatedBackground
-@onready var bootstrap_circle: PanelContainer = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapCircle
 @onready var processing_circle: PanelContainer = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingCircle
-@onready var bootstrap_logo_icon: TextureRect = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo/BootstrapLogoIcon
 @onready var landing_view: LandingView = $LandingView
-@onready var bootstrap_view: Control = $BootstrapView
-@onready var bootstrap_status_label: Label = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapStatus
-@onready var bootstrap_log_text: RichTextLabel = $BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLog
+@onready var bootstrap_view: BootstrapView = $BootstrapView
 @onready var results_view: ResultsView = $ResultsView
 @onready var processing_overlay: Control = $ProcessingOverlay
 @onready var processing_label: Label = $ProcessingOverlay/ProcessingCenter/ProcessingCard/ProcessingMargin/ProcessingVBox/ProcessingLabel
@@ -76,34 +72,25 @@ func _apply_theme(theme_name: String) -> void:
 	background_rect.color = _palette.get("bg", Color("f8f5ee"))
 	var icon_texture: Texture2D = _helpers.load_texture(LOGO_ICON_PATH)
 	landing_view.set_logo_texture(icon_texture)
-	bootstrap_logo_icon.texture = icon_texture
+	bootstrap_view.set_logo_texture(icon_texture)
 	results_view.set_logo_texture(icon_texture)
 	modulate = Color(1, 1, 1, 1)
-	for panel in [bootstrap_circle, processing_circle]:
-		var style := StyleBoxFlat.new()
-		style.bg_color = _palette.get("circle_bg", Color(1, 1, 1, 0.92))
-		style.corner_radius_top_left = 400
-		style.corner_radius_top_right = 400
-		style.corner_radius_bottom_left = 400
-		style.corner_radius_bottom_right = 400
-		panel.add_theme_stylebox_override("panel", style)
+	var processing_style := StyleBoxFlat.new()
+	processing_style.bg_color = _palette.get("circle_bg", Color(1, 1, 1, 0.92))
+	processing_style.set_corner_radius_all(400)
+	processing_circle.add_theme_stylebox_override("panel", processing_style)
 	landing_view.apply_palette(_palette)
+	bootstrap_view.apply_palette(_palette)
 	choose_panel_dialog.apply_palette(_palette)
 	results_view.apply_palette(_palette)
 	_apply_palette_overrides()
 
 func _apply_palette_overrides() -> void:
-	var accent: Color = _palette.get("accent", Color("3987b5"))
 	var text: Color = _palette.get("text", Color("6d6a65"))
-	var muted: Color = _palette.get("text_muted", Color("8b8478"))
 	var dot: Color = _palette.get("dot", Color("c9c4bc"))
-	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapLogo/BootstrapLogoText.add_theme_color_override("font_color", accent)
-	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapTitle.add_theme_color_override("font_color", text)
-	$BootstrapView/BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/BootstrapStatus.add_theme_color_override("font_color", muted)
 	processing_label.add_theme_color_override("font_color", text)
 	for label in [dot_1, dot_2, dot_3]:
 		label.add_theme_color_override("font_color", dot)
-	bootstrap_log_text.add_theme_color_override("default_color", text)
 	status_label.add_theme_color_override("font_color", text)
 
 func _process(delta: float) -> void:
@@ -113,11 +100,11 @@ func _process(delta: float) -> void:
 func _poll_panels_setup() -> void:
 	var result: Dictionary = _panels_setup.poll()
 	if result.get("running", false):
-		bootstrap_log_text.text = str(result.get("log", ""))
+		bootstrap_view.set_log(str(result.get("log", "")))
 		return
 	if not result.get("finished", false):
 		return
-	bootstrap_log_text.text = str(result.get("log", ""))
+	bootstrap_view.set_log(str(result.get("log", "")))
 	if result.get("success", false):
 		_refresh_species_options()
 		_refresh_setup_state()
@@ -348,7 +335,7 @@ func _refresh_setup_state() -> void:
 	var panels_dir := _panels_dir.strip_edges()
 	var manifest_exists := FileAccess.file_exists(panels_dir.path_join("manifest.json"))
 	if _panels_setup.is_running() or not manifest_exists:
-		bootstrap_status_label.text = "Panel data missing. Downloading and processing data. This may take a few minutes"
+		bootstrap_view.set_status("Panel data missing. Downloading and processing data. This may take a few minutes")
 		_show_bootstrap_view()
 		return
 	if _current_result_text != "":
