@@ -4,9 +4,11 @@ import (
 	"path/filepath"
 	"slices"
 	"testing"
+
+	"github.com/martinghunt/mykrobe2/internal/testutil"
 )
 
-const annotationRefData = "/Users/martin/git/mykrobe/tests/ref_data"
+var annotationRefData = testutil.MykrobePath("tests", "ref_data")
 
 func TestSimpleGeneForward(t *testing.T) {
 	ref, err := loadReference(filepath.Join(annotationRefData, "NC_000962.3.fasta"))

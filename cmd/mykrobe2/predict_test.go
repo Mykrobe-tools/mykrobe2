@@ -32,7 +32,7 @@ func TestPredictCommand(t *testing.T) {
 	if err := os.WriteFile(lineage, []byte(`{"A123T":{"name":"lineage1","use_ref_allele":true}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	buildCustomIndexFile(t, index, 5, []string{panel}, "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json", lineage)
+	buildCustomIndexFile(t, index, 5, []string{panel}, filepath.Join(mykrobeTestRefData, "tb_variant_to_resistance_drug.json"), lineage)
 
 	err := run([]string{
 		"predict",
@@ -101,7 +101,7 @@ func TestPredictCommandWithMultipleSeqFiles(t *testing.T) {
 	if err := os.WriteFile(reads2, []byte(">r2\nTTTTTCACTA\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	buildCustomIndexFile(t, index, 5, []string{panel}, "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json", "")
+	buildCustomIndexFile(t, index, 5, []string{panel}, filepath.Join(mykrobeTestRefData, "tb_variant_to_resistance_drug.json"), "")
 
 	err := run([]string{
 		"predict",
@@ -157,7 +157,7 @@ func TestPredictCommandWithONTAndConfThresholdFlags(t *testing.T) {
 	if err := os.WriteFile(lineage, []byte(`{"A123T":{"name":"lineage1","use_ref_allele":true}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	buildCustomIndexFile(t, index, 5, []string{panel}, "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json", lineage)
+	buildCustomIndexFile(t, index, 5, []string{panel}, filepath.Join(mykrobeTestRefData, "tb_variant_to_resistance_drug.json"), lineage)
 
 	err := run([]string{
 		"predict",
@@ -591,7 +591,7 @@ func TestPredictCommandCSV(t *testing.T) {
 	if err := os.WriteFile(reads, []byte(">r1\nACGTGCACTA\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	buildCustomIndexFile(t, index, 5, []string{panel}, "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json", "")
+	buildCustomIndexFile(t, index, 5, []string{panel}, filepath.Join(mykrobeTestRefData, "tb_variant_to_resistance_drug.json"), "")
 	if err := run([]string{
 		"predict",
 		"--sample", "S1",

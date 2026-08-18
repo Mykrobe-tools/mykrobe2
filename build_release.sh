@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GUI_DIR="${ROOT_DIR}/gui"
 BUILD_SCRIPT="${ROOT_DIR}/build.sh"
 GUI_BIN_DIR="${GUI_DIR}/bin"
-DEFAULT_GODOT_BIN="/Users/martin/Applications/Godot.app/Contents/MacOS/Godot"
+DEFAULT_GODOT_BIN="${HOME}/Applications/Godot.app/Contents/MacOS/Godot"
 
 TARGET=""
 PRESET=""

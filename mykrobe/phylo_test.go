@@ -1,9 +1,12 @@
 package mykrobe
 
-import "testing"
+import (
+	"path/filepath"
+	"testing"
+)
 
 func TestAMRSpeciesPredictorMixedMTBCNTM(t *testing.T) {
-	p, err := NewAMRSpeciesPredictor(nil, nil, nil, nil, "/Users/martin/git/mykrobe/tests/ref_data/mtbc_hierarchy.json")
+	p, err := NewAMRSpeciesPredictor(nil, nil, nil, nil, filepath.Join(mykrobeTestRefData, "mtbc_hierarchy.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,7 +25,7 @@ func TestAMRSpeciesPredictorMixedMTBCNTM(t *testing.T) {
 }
 
 func TestAMRSpeciesPredictorGetBestCoverageDict(t *testing.T) {
-	p, err := NewAMRSpeciesPredictor(nil, nil, nil, nil, "/Users/martin/git/mykrobe/tests/ref_data/mtbc_hierarchy.json")
+	p, err := NewAMRSpeciesPredictor(nil, nil, nil, nil, filepath.Join(mykrobeTestRefData, "mtbc_hierarchy.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +43,7 @@ func TestAMRSpeciesPredictorGetBestCoverageDict(t *testing.T) {
 }
 
 func TestAMRSpeciesPredictorMixedChimera(t *testing.T) {
-	p, err := NewAMRSpeciesPredictor(nil, nil, nil, nil, "/Users/martin/git/mykrobe/tests/ref_data/mtbc_hierarchy.json")
+	p, err := NewAMRSpeciesPredictor(nil, nil, nil, nil, filepath.Join(mykrobeTestRefData, "mtbc_hierarchy.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +95,7 @@ func TestDetectSpeciesAndGetDepths(t *testing.T) {
 		},
 	}
 
-	phylo, depths, err := DetectSpeciesAndGetDepths(set, "/Users/martin/git/mykrobe/tests/ref_data/mtbc_hierarchy.json", "Non_tuberculosis_mycobacterium_complex")
+	phylo, depths, err := DetectSpeciesAndGetDepths(set, filepath.Join(mykrobeTestRefData, "mtbc_hierarchy.json"), "Non_tuberculosis_mycobacterium_complex")
 	if err != nil {
 		t.Fatal(err)
 	}

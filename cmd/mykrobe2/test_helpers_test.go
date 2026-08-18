@@ -8,9 +8,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/martinghunt/mykrobe2/internal/testutil"
 	"github.com/martinghunt/mykrobe2/mykrobe"
 	"github.com/martinghunt/mykrobe2/mykrobe/speciesdata"
 )
+
+var mykrobeTestRefData = testutil.MykrobePath("tests", "ref_data")
 
 func writeJSONFile(t *testing.T, path string, v any) {
 	t.Helper()

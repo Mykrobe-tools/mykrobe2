@@ -30,7 +30,7 @@ Do not copy Python structure unless it is the clearest option. Port behavior, te
   - Panel manifest and installed-panel management for Mykrobe-style panel bundles.
 
 - `gui`
-  - Godot 4.4 desktop GUI.
+  - Godot 4.7 desktop GUI.
   - Use scenes for layout, controls, and structure wherever possible.
   - Keep GDScript focused on behavior, process execution, data binding, and light view logic.
   - Shared data such as panels should use the same location as the CLI.
@@ -67,7 +67,7 @@ The target is behavioral parity, not source parity.
 
 ## External Dependencies
 
-- Sequence file reading should use `faqt` from `~/git/faqt`.
+- Sequence file reading should use `github.com/martinghunt/faqt`.
 - Keep new dependencies minimal.
 - Adding Cobra for CLI structure is acceptable.
 - Avoid adding infrastructure-heavy dependencies.

@@ -1,16 +1,19 @@
 package probes
 
 import (
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/martinghunt/mykrobe2/internal/testutil"
 )
 
-const probeTestRefData = "/Users/martin/git/mykrobe/tests/ref_data"
+var probeTestRefData = testutil.MykrobePath("tests", "ref_data")
 
 func TestLoadDNAVarsTextFile(t *testing.T) {
-	infile := "/Users/martin/git/mykrobe/tests/probe_tests/test_probe_generation.load_dna_vars_txt_file.tsv"
+	infile := testutil.MykrobePath("tests", "probe_tests", "test_probe_generation.load_dna_vars_txt_file.tsv")
 	gotMutations, gotLineage, err := LoadDNAVarsTextFile(infile, "ref")
 	if err != nil {
 		t.Fatal(err)
@@ -146,7 +149,7 @@ func TestSimpleVariantWithMultipleNearbySNPs(t *testing.T) {
 }
 
 func TestThreeBaseSubstitutionTrimsLikePythonIndelLogic(t *testing.T) {
-	ag := mustAlleleGenerator(t, "/Users/martin/Work/flexit_probes/AE005674.fasta", 21)
+	ag := mustAlleleGenerator(t, writeAE005674Fixture(t), 21)
 	v := mustVariant(t, "AE005674", "CGA2354611CAA")
 	context := []Variant{
 		mustVariant(t, "AE005674", "T2354600C"),
@@ -168,6 +171,20 @@ func TestThreeBaseSubstitutionTrimsLikePythonIndelLogic(t *testing.T) {
 	if !slices.Equal(panel.Alts, wantAlts) {
 		t.Fatalf("unexpected trimmed alts\ngot  %v\nwant %v", panel.Alts, wantAlts)
 	}
+}
+
+func writeAE005674Fixture(t *testing.T) string {
+	t.Helper()
+	const segmentStart = 2354590
+	const trimmedAlt = "CGATCGTGTCATAAACCGCCAAGTCACCATGGGGATGGTA"
+	ref := []byte(strings.Repeat("N", segmentStart+1+len(trimmedAlt)))
+	copy(ref[segmentStart:], "A"+trimmedAlt)
+	copy(ref[segmentStart+20:], "CGA")
+	path := filepath.Join(t.TempDir(), "AE005674.fasta")
+	if err := os.WriteFile(path, append([]byte(">AE005674\n"), ref...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return path
 }
 
 func TestSplitContext(t *testing.T) {

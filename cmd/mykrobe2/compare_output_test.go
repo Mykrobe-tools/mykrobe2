@@ -201,7 +201,7 @@ func TestCompareOutputIgnoresProbeSetParentDirsByDefault(t *testing.T) {
 	writeJSONFile(t, right, map[string]any{
 		"SAMPLE": map[string]any{
 			"probe_sets": []any{
-				"/Users/martin/tmp/myk_test/mykrobe_data/tb/tb-species-202309.fasta.gz",
+				"/example/mykrobe_data/tb/tb-species-202309.fasta.gz",
 			},
 		},
 	})

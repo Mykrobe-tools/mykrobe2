@@ -7,10 +7,14 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/martinghunt/mykrobe2/internal/testutil"
 )
 
+var mykrobeTestRefData = testutil.MykrobePath("tests", "ref_data")
+
 func TestTBPredictorCoverageGreaterThanThreshold(t *testing.T) {
-	p, err := NewTBPredictor(nil, nil, "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json")
+	p, err := NewTBPredictor(nil, nil, filepath.Join(mykrobeTestRefData, "tb_variant_to_resistance_drug.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +74,7 @@ func TestAnalyzeCoverageSetTB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, err := AnalyzeCoverageSetTB(set, 100, "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json", "")
+	res, err := AnalyzeCoverageSetTB(set, 100, filepath.Join(mykrobeTestRefData, "tb_variant_to_resistance_drug.json"), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,7 +102,7 @@ func TestTBPredictorAddsCalledByForResistanceCalls(t *testing.T) {
 			Variant: "ref-I21T?var_name=ATC1674262ACT&gene=inhA&mut=I21T",
 		},
 	}
-	p, err := NewTBPredictor(variantCalls, nil, "/Users/martin/git/mykrobe/tests/ref_data/tb_variant_to_resistance_drug.json")
+	p, err := NewTBPredictor(variantCalls, nil, filepath.Join(mykrobeTestRefData, "tb_variant_to_resistance_drug.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,11 +236,11 @@ func TestVariantCallJSONDoesNotEscapeAmpersands(t *testing.T) {
 	var buf bytes.Buffer
 	err := WriteJSONLikePython(&buf, map[string]any{
 		"call": Call{
-		Class:               "Call.VariantCall",
-		Variant:             "ref-A1692141C?var_name=A1692141C&num_alts=1&ref=NC_000962.3&enum=0&gene=NA&mut=A1692141C",
-		Genotype:            []int{1, 1},
-		GenotypeLikelihoods: []float64{-1, -2, -3},
-		Info:                map[string]any{"contamination_depths": []float64{}},
+			Class:               "Call.VariantCall",
+			Variant:             "ref-A1692141C?var_name=A1692141C&num_alts=1&ref=NC_000962.3&enum=0&gene=NA&mut=A1692141C",
+			Genotype:            []int{1, 1},
+			GenotypeLikelihoods: []float64{-1, -2, -3},
+			Info:                map[string]any{"contamination_depths": []float64{}},
 		},
 	}, "")
 	if err != nil {

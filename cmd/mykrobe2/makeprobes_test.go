@@ -21,7 +21,7 @@ func TestMakeProbesCommandWithVariants(t *testing.T) {
 
 	err = run([]string{
 		"make-probes",
-		filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "BX571856.1.fasta"),
+		filepath.Join(mykrobeTestRefData, "BX571856.1.fasta"),
 		"--variants", "A31T",
 		"--kmer", "31",
 	})
@@ -103,8 +103,8 @@ func TestMakeProbesCommandWithGenbankVariant(t *testing.T) {
 
 	err = run([]string{
 		"make-probes",
-		filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "NC_000962.3.fasta"),
-		"--genbank", filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "NC_000962.3.gb"),
+		filepath.Join(mykrobeTestRefData, "NC_000962.3.fasta"),
+		"--genbank", filepath.Join(mykrobeTestRefData, "NC_000962.3.gb"),
 		"--variants", "rpoB_S450L",
 		"--kmer", "31",
 	})
@@ -145,8 +145,8 @@ func TestMakeProbesCommandWithGenbankTextFileIncludesGeneName(t *testing.T) {
 
 	err = run([]string{
 		"make-probes",
-		filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "NC_000962.3.fasta"),
-		"--genbank", filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "NC_000962.3.gb"),
+		filepath.Join(mykrobeTestRefData, "NC_000962.3.fasta"),
+		"--genbank", filepath.Join(mykrobeTestRefData, "NC_000962.3.gb"),
 		"--text_file", textFile,
 		"--kmer", "31",
 	})
@@ -189,7 +189,7 @@ func TestMakeProbesCommandWithVCF(t *testing.T) {
 
 	err = run([]string{
 		"make-probes",
-		filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "BX571856.1.fasta"),
+		filepath.Join(mykrobeTestRefData, "BX571856.1.fasta"),
 		"--vcf", vcf,
 		"--kmer", "31",
 	})
@@ -234,7 +234,7 @@ func TestMakeProbesCommandUsesBackgroundVCFContext(t *testing.T) {
 
 	err = run([]string{
 		"make-probes",
-		filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "BX571856.1.fasta"),
+		filepath.Join(mykrobeTestRefData, "BX571856.1.fasta"),
 		"--variants", "A31T",
 		"--background-vcf", bgVCF,
 		"--kmer", "31",
@@ -275,7 +275,7 @@ func TestMakeProbesCommandWithoutBackgroundInputsDoesNotExpandContext(t *testing
 
 	err = run([]string{
 		"make-probes",
-		filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "BX571856.1.fasta"),
+		filepath.Join(mykrobeTestRefData, "BX571856.1.fasta"),
 		"--variants", "A31T",
 		"--kmer", "31",
 	})
@@ -324,7 +324,7 @@ func TestMakeProbesCommandUsesBackgroundVCFList(t *testing.T) {
 
 	err = run([]string{
 		"make-probes",
-		filepath.Join("/Users/martin/git/mykrobe/tests/ref_data", "BX571856.1.fasta"),
+		filepath.Join(mykrobeTestRefData, "BX571856.1.fasta"),
 		"--variants", "A31T",
 		"--background-vcf-list", bgList,
 		"--kmer", "31",

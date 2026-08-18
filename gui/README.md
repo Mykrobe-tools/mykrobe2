@@ -1,6 +1,6 @@
 # GUI
 
-This directory contains the Godot 4.4 desktop GUI for `mykrobe2`.
+This directory contains the Godot 4.7 desktop GUI for `mykrobe2`.
 
 ## Development
 
