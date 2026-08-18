@@ -101,7 +101,7 @@ func newRootCmd() *cobra.Command {
 	}
 	cmd.SetVersionTemplate("{{.Name}} {{.Version}}\n")
 	cmd.SetGlobalNormalizationFunc(normalizeFlagName)
-	cmd.AddCommand(newPredictCmd(), newPanelsCmd(), newMakeProbesCmd(), newIndexCmd(), newCompareOutputCmd())
+	cmd.AddCommand(newPredictCmd(), newPanelsCmd(), newMakeProbesCmd(), newIndexCmd(), newCompareOutputCmd(), newDownloadTestReadsCmd())
 	return cmd
 }
 
