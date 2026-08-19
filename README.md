@@ -48,7 +48,7 @@ xattr -dr com.apple.quarantine ~/Applications/mykrobe2.app
 On macOS, remove the download quarantine attribute from the extracted executable:
 
 ```bash
-xattr -d com.apple.quarantine -r mykrobe2
+xattr -d com.apple.quarantine mykrobe2
 ```
 
 ## Building
