@@ -19,12 +19,24 @@ tests, documentation, and benchmarking under human direction and review.
    - Windows: `mykrobe2-gui-*-windows-{amd64,arm64}.zip`
 3. Open the macOS disk image, or extract the Linux/Windows archive, then run the app.
 
-The macOS alpha build is unsigned. On first launch, Control-click the app, choose
-**Open**, then confirm that you want to open it. Alternatively, remove the
-download quarantine attribute after copying the app out of the disk image:
+
+The macOS app is unsigned, meaning you have to give it permission to run
+after extracting the app from the downloaded `*.dmg` file. This
+probably will not be possible via "Privacy & Security" in Settings.
+
+If you have an admin account on your mac: copy the mykrobe2.app into
+Applications, as is normal for apps. Then run this in a terminal:
 
 ```bash
-xattr -d com.apple.quarantine -r mykrobe2.app
+sudo xattr -dr com.apple.quarantine /Applications/mykrobe2.app
+```
+
+If you do not have an admin account, then make a folder called
+Applications in your home folder. Copy the mykrobe2.app to it. Then
+run this in a terminal:
+
+```bash
+xattr -d com.apple.quarantine ~/Applications/mykrobe2.app
 ```
 
 ### Command-line program
