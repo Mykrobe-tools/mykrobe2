@@ -36,7 +36,7 @@ Applications in your home folder. Copy the mykrobe2.app to it. Then
 run this in a terminal:
 
 ```bash
-xattr -d com.apple.quarantine ~/Applications/mykrobe2.app
+xattr -dr com.apple.quarantine ~/Applications/mykrobe2.app
 ```
 
 ### Command-line program
