@@ -2,9 +2,12 @@ package main
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/Mykrobe-tools/mykrobe2/internal/buildinfo"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 func TestRootVersionFlag(t *testing.T) {
@@ -59,6 +62,58 @@ func TestFlagNamesAcceptDashesAndUnderscores(t *testing.T) {
 	}
 }
 
+func TestPredictRetainsLegacyShortOptions(t *testing.T) {
+	cmd := newPredictCmd()
+	var stderr bytes.Buffer
+	cmd.SetErr(&stderr)
+	if err := cmd.ParseFlags([]string{
+		"-s", "SAMPLE",
+		"-k", "21",
+		"-A",
+		"-e", "0.1",
+		"-D", "0.4",
+		"-o", "result.json",
+		"-S", "tb",
+		"-O", "json",
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	wants := map[string]string{
+		"sample":                        "SAMPLE",
+		"kmer":                          "21",
+		"report-all-calls":              "true",
+		"expected-error-rate":           "0.1",
+		"min-proportion-expected-depth": "0.4",
+		"output":                        "result.json",
+		"species":                       "tb",
+		"format":                        "json",
+	}
+	for name, want := range wants {
+		flag := cmd.Flags().Lookup(name)
+		if flag == nil {
+			t.Fatalf("flag --%s not found", name)
+		}
+		if got := flag.Value.String(); got != want {
+			t.Errorf("flag --%s = %q, want %q", name, got, want)
+		}
+	}
+}
+
+func TestPredictAcceptsKmerLongOptions(t *testing.T) {
+	for _, option := range []string{"--kmer", "--k"} {
+		t.Run(option, func(t *testing.T) {
+			cmd := newPredictCmd()
+			if err := cmd.ParseFlags([]string{option, "21"}); err != nil {
+				t.Fatal(err)
+			}
+			if got := cmd.Flags().Lookup("kmer").Value.String(); got != "21" {
+				t.Fatalf("--kmer = %q after parsing %s, want 21", got, option)
+			}
+		})
+	}
+}
+
 func TestCommandNamesAcceptDashesAndUnderscores(t *testing.T) {
 	cmd := newRootCmd()
 	tests := []struct {
@@ -80,5 +135,88 @@ func TestCommandNamesAcceptDashesAndUnderscores(t *testing.T) {
 		if got.Name() != tt.want {
 			t.Fatalf("Find(%v) name = %q, want %q", tt.args, got.Name(), tt.want)
 		}
+	}
+}
+
+func TestAllCommandsAndFlagsHaveHelpText(t *testing.T) {
+	root := newRootCmd()
+	var check func(*cobra.Command)
+	check = func(cmd *cobra.Command) {
+		t.Helper()
+		if strings.TrimSpace(cmd.Short) == "" {
+			t.Errorf("command %q has no help summary", cmd.CommandPath())
+		}
+		cmd.LocalNonPersistentFlags().VisitAll(func(flag *pflag.Flag) {
+			if !flag.Hidden && strings.TrimSpace(flag.Usage) == "" {
+				t.Errorf("flag --%s on command %q has no help text", flag.Name, cmd.CommandPath())
+			}
+		})
+		for _, child := range cmd.Commands() {
+			check(child)
+		}
+	}
+	check(root)
+}
+
+func TestCommandHelpDescribesCommonWorkflows(t *testing.T) {
+	tests := []struct {
+		args []string
+		want []string
+	}{
+		{args: nil, want: []string{"antimicrobial resistance", "panels", "predict"}},
+		{args: []string{"predict"}, want: []string{"--species", "--index", "Sequence file(s) in FASTA, FASTQ, or BAM format"}},
+		{args: []string{"panels"}, want: []string{"Inspect available panel data", "update-metadata", "update-species"}},
+		{args: []string{"panels", "describe"}, want: []string{"whether updates are available", "Output format: text or json"}},
+		{args: []string{"panels", "update-metadata"}, want: []string{"latest versions", "--manifest-file", "--manifest-url"}},
+		{args: []string{"panels", "update-species"}, want: []string{"one species", "<species|all>"}},
+		{args: []string{"make-probes"}, want: []string{"reference genome", "--background-vcf", "--variants"}},
+		{args: []string{"index"}, want: []string{"self-contained custom panel index", "--fasta", "--output"}},
+		{args: []string{"download-test-reads"}, want: []string{"TB test-read dataset", "<output-filename>"}},
+		{args: []string{"compare-output"}, want: []string{"floating-point differences", "--float-tolerance"}},
+	}
+
+	for _, tt := range tests {
+		name := "root"
+		if len(tt.args) > 0 {
+			name = strings.Join(tt.args, "_")
+		}
+		t.Run(name, func(t *testing.T) {
+			cmd := newRootCmd()
+			var output bytes.Buffer
+			cmd.SetOut(&output)
+			cmd.SetErr(&output)
+			cmd.SetArgs(append(append([]string(nil), tt.args...), "--help"))
+			if err := cmd.Execute(); err != nil {
+				t.Fatal(err)
+			}
+			for _, want := range tt.want {
+				if !strings.Contains(output.String(), want) {
+					t.Errorf("help output does not contain %q:\n%s", want, output.String())
+				}
+			}
+		})
+	}
+}
+
+func TestRootHelpUsesWorkflowCommandOrder(t *testing.T) {
+	cmd := newRootCmd()
+	var output bytes.Buffer
+	cmd.SetOut(&output)
+	cmd.SetErr(&output)
+	cmd.SetArgs([]string{"--help"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+
+	help := output.String()
+	previous := -1
+	for _, command := range []string{"predict", "panels", "make-probes", "index", "download-test-reads", "help", "completion"} {
+		position := strings.Index(help, "  "+command)
+		if position < 0 {
+			t.Errorf("command %q missing from help", command)
+		} else if position < previous {
+			t.Errorf("command %q is out of order:\n%s", command, help)
+		}
+		previous = position
 	}
 }

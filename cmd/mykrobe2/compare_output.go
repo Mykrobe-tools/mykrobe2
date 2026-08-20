@@ -33,6 +33,7 @@ func newCompareOutputCmd() *cobra.Command {
 		Use:     "compare-output <left.json> <right.json>",
 		Aliases: []string{"compare_output"},
 		Short:   "Compare two mykrobe predict output JSON files",
+		Long:    "Compare two Mykrobe prediction JSON files while allowing small floating-point differences.",
 		Hidden:  true,
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
