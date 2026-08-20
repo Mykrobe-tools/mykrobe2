@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Restore Mykrobe-compatible `predict` short options, including `-s`, `-k`, `-A`, `-e`, `-D`, `-o`, `-S`, and `-O`, while accepting both `--kmer` and the legacy `--k` spelling.
+- Theme scrollbar and slider tracks and grabbers consistently in both light and dark desktop modes.
 
 ## [0.1.0-alpha.1] - 2026-08-18
 

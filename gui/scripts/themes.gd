@@ -10,6 +10,7 @@ const THEMES := {
 		"text": Color("6d6a65"),
 		"text_muted": Color("8b8478"),
 		"text_inverse": Color("ffffff"),
+		"scrollbar_outline": Color("b9d6ea"),
 		"accent": Color("3987b5"),
 		"button_bg": Color("ffffff"),
 		"button_hover": Color("f4fbff"),
@@ -38,6 +39,7 @@ const THEMES := {
 		"text": Color("dedbd4"),
 		"text_muted": Color("aaa49a"),
 		"text_inverse": Color("ffffff"),
+		"scrollbar_outline": Color("496675"),
 		"accent": Color("65b2dc"),
 		"button_bg": Color("20262a"),
 		"button_hover": Color("293840"),
@@ -192,8 +194,61 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 	theme.set_stylebox("hover", "CheckButton", button_flat)
 	theme.set_stylebox("pressed", "CheckButton", button_flat)
 	theme.set_stylebox("focus", "CheckButton", button_flat)
+	_set_slider_styles(theme, palette_map)
+	_set_scrollbar_styles(theme, palette_map)
 
 	return theme
+
+func _set_slider_styles(theme: Theme, palette_map: Dictionary) -> void:
+	var grabber_size := 18
+	var grabber := _make_pill_icon(grabber_size, grabber_size, palette_map["accent"])
+	var grabber_highlight := _make_pill_icon(grabber_size, grabber_size, palette_map["field_focus"])
+	var grabber_disabled := _make_pill_icon(grabber_size, grabber_size, palette_map["button_border"])
+
+	var track := StyleBoxFlat.new()
+	track.bg_color = palette_map["button_hover"]
+	track.border_color = palette_map["button_border"]
+	track.set_border_width_all(1)
+	track.set_corner_radius_all(4)
+	track.content_margin_top = 4
+	track.content_margin_bottom = 4
+	for slider_type in ["HSlider", "VSlider"]:
+		theme.set_icon("grabber", slider_type, grabber)
+		theme.set_icon("grabber_highlight", slider_type, grabber_highlight)
+		theme.set_icon("grabber_disabled", slider_type, grabber_disabled)
+		theme.set_stylebox("slider", slider_type, track)
+		theme.set_stylebox("grabber_area", slider_type, track)
+		theme.set_stylebox("grabber_area_highlight", slider_type, track)
+		theme.set_constant("grabber_size", slider_type, grabber_size)
+
+func _set_scrollbar_styles(theme: Theme, palette_map: Dictionary) -> void:
+	var track := StyleBoxFlat.new()
+	track.bg_color = palette_map["field_bg"]
+	track.border_color = palette_map["border"]
+	track.set_border_width_all(1)
+	track.set_corner_radius_all(5)
+	track.set_content_margin_all(2)
+
+	var grabber := StyleBoxFlat.new()
+	grabber.bg_color = palette_map["button_hover"]
+	grabber.border_color = palette_map["scrollbar_outline"]
+	grabber.set_border_width_all(2)
+	grabber.set_corner_radius_all(5)
+
+	var grabber_hover: StyleBoxFlat = grabber.duplicate()
+	grabber_hover.bg_color = palette_map["button_pressed"]
+
+	var grabber_pressed: StyleBoxFlat = grabber.duplicate()
+	grabber_pressed.bg_color = palette_map["accent"]
+
+	for scrollbar_type in ["VScrollBar", "HScrollBar"]:
+		theme.set_stylebox("scroll", scrollbar_type, track)
+		theme.set_stylebox("scroll_focus", scrollbar_type, track)
+		theme.set_stylebox("grabber", scrollbar_type, grabber)
+		theme.set_stylebox("grabber_highlight", scrollbar_type, grabber_hover)
+		theme.set_stylebox("grabber_pressed", scrollbar_type, grabber_pressed)
+		theme.set_constant("scroll_size", scrollbar_type, 12)
+		theme.set_constant("min_grab_thickness", scrollbar_type, 36)
 
 func _make_arrow_icon(width: int, height: int, color: Color) -> Texture2D:
 	var image := Image.create(width, height, false, Image.FORMAT_RGBA8)
@@ -206,6 +261,15 @@ func _make_arrow_icon(width: int, height: int, color: Color) -> Texture2D:
 		for x in range(start_x, end_x + 1):
 			if y >= midpoint:
 				image.set_pixel(x, y, color)
+	return ImageTexture.create_from_image(image)
+
+func _make_pill_icon(width: int, height: int, color: Color) -> ImageTexture:
+	var image := Image.create(width, height, false, Image.FORMAT_RGBA8)
+	for y in range(height):
+		for x in range(width):
+			var rx := (x + 0.5 - 0.5 * width) / (0.5 * width)
+			var ry := (y + 0.5 - 0.5 * height) / (0.5 * height)
+			image.set_pixel(x, y, color if rx * rx + ry * ry <= 1.0 else Color(0, 0, 0, 0))
 	return ImageTexture.create_from_image(image)
 
 func _panel_style(bg: Color, border: Color, radius: int, border_width: int) -> StyleBoxFlat:
