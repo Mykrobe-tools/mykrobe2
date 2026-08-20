@@ -44,6 +44,7 @@ The current GUI supports:
   - Evidence
   - Raw JSON
 - following the operating system's light/dark appearance, with a saved override
+- scaling the interface from 75% to 250%, with the selected scale saved
 - viewing installed panel versions, references, and descriptions
 
 It is intentionally scene-driven: layout and controls live in `scenes/main.tscn`, with logic kept in scripts.

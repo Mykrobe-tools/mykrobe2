@@ -22,7 +22,7 @@ config/icon="res://assets/mykrobe-predictor-tb-icon.png"
 
 window/size/viewport_width=1440
 window/size/viewport_height=960
-window/stretch/mode="canvas_items"
+window/stretch/mode="disabled"
 
 [rendering]
 

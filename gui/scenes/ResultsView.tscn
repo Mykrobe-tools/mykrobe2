@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/results_view.gd" id="1_results"]
+[ext_resource type="Texture2D" path="res://assets/icons/gear.svg" id="2_gear"]
 
 [node name="ResultsView" type="Control"]
 visible = false
@@ -12,116 +13,131 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_results")
 
-[node name="HeaderBar" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 86.0
-grow_horizontal = 2
-color = Color(0.97, 0.96, 0.93, 0.95)
-
-[node name="HeaderMargin" type="MarginContainer" parent="HeaderBar"]
+[node name="RootLayout" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 72.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="HeaderBar" type="ColorRect" parent="RootLayout"]
+custom_minimum_size = Vector2(0, 86)
+layout_mode = 2
+color = Color(0.97, 0.96, 0.93, 0.95)
+
+[node name="HeaderMargin" type="MarginContainer" parent="RootLayout/HeaderBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
 offset_top = 12.0
 offset_right = -28.0
 offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="HeaderHBox" type="HBoxContainer" parent="HeaderBar/HeaderMargin"]
+[node name="HeaderHBox" type="HBoxContainer" parent="RootLayout/HeaderBar/HeaderMargin"]
 layout_mode = 2
 theme_override_constants/separation = 24
 alignment = 1
 
-[node name="HeaderLogo" type="HBoxContainer" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+[node name="SettingsButton" type="Button" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 2
+mouse_default_cursor_shape = 2
+icon = ExtResource("2_gear")
+expand_icon = true
+icon_alignment = 1
+alignment = 1
+theme_override_constants/icon_max_width = 20
+tooltip_text = "Settings"
+
+[node name="HeaderLogo" type="HBoxContainer" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox"]
 custom_minimum_size = Vector2(160, 40)
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="HeaderLogoIcon" type="TextureRect" parent="HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo"]
+[node name="HeaderLogoIcon" type="TextureRect" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo"]
 custom_minimum_size = Vector2(34, 34)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="HeaderLogoText" type="Label" parent="HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo"]
+[node name="HeaderLogoText" type="Label" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "MYKROBE"
 
-[node name="HeaderSpacerLeft" type="Control" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+[node name="HeaderSpacerLeft" type="Control" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TabsRow" type="HBoxContainer" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+[node name="TabsRow" type="HBoxContainer" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="AllTabButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+[node name="AllTabButton" type="Button" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
 toggle_mode = true
 text = "All"
 
-[node name="DrugsTabButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+[node name="DrugsTabButton" type="Button" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
 toggle_mode = true
 text = "Drugs"
 
-[node name="EvidenceTabButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+[node name="EvidenceTabButton" type="Button" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
 toggle_mode = true
 text = "Evidence"
 
-[node name="SpeciesTabButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
+[node name="SpeciesTabButton" type="Button" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
 toggle_mode = true
 text = "Species"
 
-[node name="HeaderSpacerRight" type="Control" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+[node name="HeaderSpacerRight" type="Control" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SaveButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+[node name="SaveButton" type="Button" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
 text = "Save"
 
-[node name="NewButton" type="Button" parent="HeaderBar/HeaderMargin/HeaderHBox"]
+[node name="NewButton" type="Button" parent="RootLayout/HeaderBar/HeaderMargin/HeaderHBox"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_vertical = 4
 text = "New"
 
-[node name="ResultsMargin" type="MarginContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 30.0
-offset_top = 112.0
-offset_right = -30.0
-offset_bottom = -34.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="ResultsMargin" type="MarginContainer" parent="RootLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 26
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 34
 
-[node name="ResultsStack" type="Control" parent="ResultsMargin"]
+[node name="ResultsStack" type="Control" parent="RootLayout/ResultsMargin"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="AllView" type="Control" parent="ResultsMargin/ResultsStack"]
+[node name="AllView" type="Control" parent="RootLayout/ResultsMargin/ResultsStack"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -129,66 +145,71 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="AllVBox" type="VBoxContainer" parent="ResultsMargin/ResultsStack/AllView"]
+[node name="AllScroll" type="ScrollContainer" parent="RootLayout/ResultsMargin/ResultsStack/AllView"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="AllVBox" type="VBoxContainer" parent="RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="AllTitle" type="Label" parent="ResultsMargin/ResultsStack/AllView/AllVBox"]
+[node name="AllTitle" type="Label" parent="RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "RESISTANCE PROFILE"
 
-[node name="AllColumns" type="HBoxContainer" parent="ResultsMargin/ResultsStack/AllView/AllVBox"]
+[node name="AllColumns" type="HBoxContainer" parent="RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 24
 
-[node name="AllSusceptibleColumn" type="VBoxContainer" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns"]
+[node name="AllSusceptibleColumn" type="VBoxContainer" parent="RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="AllSusceptibleHeading" type="Label" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn"]
+[node name="AllSusceptibleHeading" type="Label" parent="RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns/AllSusceptibleColumn"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "● SUSCEPTIBLE"
 
-[node name="AllSusceptibleSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn"]
+[node name="AllSusceptibleSeparator" type="HSeparator" parent="RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns/AllSusceptibleColumn"]
 layout_mode = 2
 
-[node name="AllSusceptibleText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn"]
+[node name="AllSusceptibleText" type="RichTextLabel" parent="RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns/AllSusceptibleColumn"]
 layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
 
-[node name="AllResistantColumn" type="VBoxContainer" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns"]
+[node name="AllResistantColumn" type="VBoxContainer" parent="RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="AllResistantHeading" type="Label" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn"]
+[node name="AllResistantHeading" type="Label" parent="RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns/AllResistantColumn"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "▲ RESISTANT"
 
-[node name="AllResistantSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn"]
+[node name="AllResistantSeparator" type="HSeparator" parent="RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns/AllResistantColumn"]
 layout_mode = 2
 
-[node name="AllResistantText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn"]
+[node name="AllResistantText" type="RichTextLabel" parent="RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns/AllResistantColumn"]
 layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
 
-[node name="DrugsView" type="Control" parent="ResultsMargin/ResultsStack"]
+[node name="DrugsView" type="Control" parent="RootLayout/ResultsMargin/ResultsStack"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -197,61 +218,66 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="DrugsVBox" type="VBoxContainer" parent="ResultsMargin/ResultsStack/DrugsView"]
+[node name="DrugsScroll" type="ScrollContainer" parent="RootLayout/ResultsMargin/ResultsStack/DrugsView"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="DrugsVBox" type="VBoxContainer" parent="RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="DrugsColumns" type="HBoxContainer" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox"]
+[node name="DrugsColumns" type="HBoxContainer" parent="RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 24
 
-[node name="FirstLineColumn" type="VBoxContainer" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns"]
+[node name="FirstLineColumn" type="VBoxContainer" parent="RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="FirstLineTitle" type="Label" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn"]
+[node name="FirstLineTitle" type="Label" parent="RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns/FirstLineColumn"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "FIRST LINE DRUGS"
 
-[node name="FirstLineSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn"]
+[node name="FirstLineSeparator" type="HSeparator" parent="RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns/FirstLineColumn"]
 layout_mode = 2
 
-[node name="FirstLineText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn"]
+[node name="FirstLineText" type="RichTextLabel" parent="RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns/FirstLineColumn"]
 layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
 
-[node name="SecondLineColumn" type="VBoxContainer" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns"]
+[node name="SecondLineColumn" type="VBoxContainer" parent="RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="SecondLineTitle" type="Label" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn"]
+[node name="SecondLineTitle" type="Label" parent="RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns/SecondLineColumn"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "SECOND LINE DRUGS"
 
-[node name="SecondLineSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn"]
+[node name="SecondLineSeparator" type="HSeparator" parent="RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns/SecondLineColumn"]
 layout_mode = 2
 
-[node name="SecondLineText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn"]
+[node name="SecondLineText" type="RichTextLabel" parent="RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns/SecondLineColumn"]
 layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
 
-[node name="EvidenceView" type="Control" parent="ResultsMargin/ResultsStack"]
+[node name="EvidenceView" type="Control" parent="RootLayout/ResultsMargin/ResultsStack"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -260,24 +286,29 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="EvidenceVBox" type="VBoxContainer" parent="ResultsMargin/ResultsStack/EvidenceView"]
+[node name="EvidenceScroll" type="ScrollContainer" parent="RootLayout/ResultsMargin/ResultsStack/EvidenceView"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="EvidenceVBox" type="VBoxContainer" parent="RootLayout/ResultsMargin/ResultsStack/EvidenceView/EvidenceScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="EvidenceTitle" type="Label" parent="ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
+[node name="EvidenceTitle" type="Label" parent="RootLayout/ResultsMargin/ResultsStack/EvidenceView/EvidenceScroll/EvidenceVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "EVIDENCE"
 
-[node name="EvidenceSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
+[node name="EvidenceSeparator" type="HSeparator" parent="RootLayout/ResultsMargin/ResultsStack/EvidenceView/EvidenceScroll/EvidenceVBox"]
 layout_mode = 2
 
-[node name="EvidenceText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox"]
+[node name="EvidenceText" type="RichTextLabel" parent="RootLayout/ResultsMargin/ResultsStack/EvidenceView/EvidenceScroll/EvidenceVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 focus_mode = 2
@@ -286,7 +317,7 @@ fit_content = true
 scroll_active = false
 selection_enabled = true
 
-[node name="SpeciesView" type="Control" parent="ResultsMargin/ResultsStack"]
+[node name="SpeciesView" type="Control" parent="RootLayout/ResultsMargin/ResultsStack"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -295,24 +326,29 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="SpeciesVBox" type="VBoxContainer" parent="ResultsMargin/ResultsStack/SpeciesView"]
+[node name="SpeciesScroll" type="ScrollContainer" parent="RootLayout/ResultsMargin/ResultsStack/SpeciesView"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="SpeciesVBox" type="VBoxContainer" parent="RootLayout/ResultsMargin/ResultsStack/SpeciesView/SpeciesScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="SpeciesTitle" type="Label" parent="ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
+[node name="SpeciesTitle" type="Label" parent="RootLayout/ResultsMargin/ResultsStack/SpeciesView/SpeciesScroll/SpeciesVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "SPECIES"
 
-[node name="SpeciesSeparator" type="HSeparator" parent="ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
+[node name="SpeciesSeparator" type="HSeparator" parent="RootLayout/ResultsMargin/ResultsStack/SpeciesView/SpeciesScroll/SpeciesVBox"]
 layout_mode = 2
 
-[node name="SpeciesText" type="RichTextLabel" parent="ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox"]
+[node name="SpeciesText" type="RichTextLabel" parent="RootLayout/ResultsMargin/ResultsStack/SpeciesView/SpeciesScroll/SpeciesVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 focus_mode = 2
@@ -321,9 +357,10 @@ fit_content = true
 scroll_active = false
 selection_enabled = true
 
-[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/TabsRow/AllTabButton" to="." method="_on_all_tab_button_pressed"]
-[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/TabsRow/DrugsTabButton" to="." method="_on_drugs_tab_button_pressed"]
-[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/TabsRow/EvidenceTabButton" to="." method="_on_evidence_tab_button_pressed"]
-[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/TabsRow/SpeciesTabButton" to="." method="_on_species_tab_button_pressed"]
-[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/SaveButton" to="." method="_on_save_button_pressed"]
-[connection signal="pressed" from="HeaderBar/HeaderMargin/HeaderHBox/NewButton" to="." method="_on_new_button_pressed"]
+[connection signal="pressed" from="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/AllTabButton" to="." method="_on_all_tab_button_pressed"]
+[connection signal="pressed" from="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/DrugsTabButton" to="." method="_on_drugs_tab_button_pressed"]
+[connection signal="pressed" from="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/EvidenceTabButton" to="." method="_on_evidence_tab_button_pressed"]
+[connection signal="pressed" from="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/SpeciesTabButton" to="." method="_on_species_tab_button_pressed"]
+[connection signal="pressed" from="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/NewButton" to="." method="_on_new_button_pressed"]
+[connection signal="pressed" from="RootLayout/HeaderBar/HeaderMargin/HeaderHBox/SettingsButton" to="." method="_on_settings_button_pressed"]

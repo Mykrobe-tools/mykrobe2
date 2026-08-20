@@ -43,68 +43,104 @@ tooltip_text = "Close settings"
 [node name="HeaderSeparator" type="HSeparator" parent="DrawerMargin/DrawerLayout"]
 layout_mode = 2
 
-[node name="Content" type="VBoxContainer" parent="DrawerMargin/DrawerLayout"]
+[node name="SettingsScroll" type="ScrollContainer" parent="DrawerMargin/DrawerLayout"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="SettingsBody" type="VBoxContainer" parent="DrawerMargin/DrawerLayout/SettingsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Content" type="VBoxContainer" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody"]
+layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="AppearanceTitle" type="Label" parent="DrawerMargin/DrawerLayout/Content"]
+[node name="AppearanceTitle" type="Label" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Appearance"
 
-[node name="AppearanceOption" type="OptionButton" parent="DrawerMargin/DrawerLayout/Content"]
+[node name="AppearanceOption" type="OptionButton" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content"]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 
-[node name="AppearanceHelp" type="Label" parent="DrawerMargin/DrawerLayout/Content"]
+[node name="AppearanceHelp" type="Label" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content"]
 layout_mode = 2
 text = "Uses the operating system's app appearance."
 autowrap_mode = 2
 
-[node name="AppearanceGap" type="Control" parent="DrawerMargin/DrawerLayout/Content"]
+[node name="UIScaleLabel" type="Label" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content"]
+layout_mode = 2
+text = "UI scale"
+
+[node name="UIScaleRow" type="HBoxContainer" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="UIScaleSlider" type="HSlider" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/UIScaleRow"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.75
+max_value = 2.5
+step = 0.05
+value = 1.0
+tooltip_text = "Scale the interface from 75% to 250%"
+
+[node name="UIScaleValue" type="Label" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/UIScaleRow"]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="AppearanceGap" type="Control" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content"]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="PanelsSeparator" type="HSeparator" parent="DrawerMargin/DrawerLayout/Content"]
+[node name="PanelsSeparator" type="HSeparator" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content"]
 layout_mode = 2
 
-[node name="PanelsTitle" type="Label" parent="DrawerMargin/DrawerLayout/Content"]
+[node name="PanelsTitle" type="Label" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Panels"
 
-[node name="PanelsSummary" type="Label" parent="DrawerMargin/DrawerLayout/Content"]
+[node name="PanelsSummary" type="Label" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content"]
 layout_mode = 2
 text = "Panel information is not available."
 autowrap_mode = 2
 
-[node name="PanelsButton" type="Button" parent="DrawerMargin/DrawerLayout/Content"]
+[node name="PanelsButton" type="Button" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content"]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 disabled = true
 text = "View panel information…"
 
-[node name="About" type="VBoxContainer" parent="DrawerMargin/DrawerLayout"]
+[node name="About" type="VBoxContainer" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="AboutSeparator" type="HSeparator" parent="DrawerMargin/DrawerLayout/About"]
+[node name="AboutSeparator" type="HSeparator" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/About"]
 layout_mode = 2
 
-[node name="AboutTitle" type="Label" parent="DrawerMargin/DrawerLayout/About"]
+[node name="AboutTitle" type="Label" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/About"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "About"
 
-[node name="AppName" type="Label" parent="DrawerMargin/DrawerLayout/About"]
+[node name="AppName" type="Label" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/About"]
 layout_mode = 2
 text = "Mykrobe"
 
-[node name="VersionLabel" type="Label" parent="DrawerMargin/DrawerLayout/About"]
+[node name="VersionLabel" type="Label" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/About"]
 layout_mode = 2
 text = "Version dev"
 
 [connection signal="pressed" from="DrawerMargin/DrawerLayout/Header/CloseButton" to="." method="_on_close_button_pressed"]
-[connection signal="item_selected" from="DrawerMargin/DrawerLayout/Content/AppearanceOption" to="." method="_on_appearance_option_item_selected"]
-[connection signal="pressed" from="DrawerMargin/DrawerLayout/Content/PanelsButton" to="." method="_on_panels_button_pressed"]
+[connection signal="item_selected" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/AppearanceOption" to="." method="_on_appearance_option_item_selected"]
+[connection signal="drag_ended" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/UIScaleRow/UIScaleSlider" to="." method="_on_ui_scale_slider_drag_ended"]
+[connection signal="value_changed" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/UIScaleRow/UIScaleSlider" to="." method="_on_ui_scale_slider_value_changed"]
+[connection signal="pressed" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/PanelsButton" to="." method="_on_panels_button_pressed"]

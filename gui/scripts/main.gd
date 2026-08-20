@@ -10,6 +10,9 @@ const SETTINGS_PATH := "user://settings.cfg"
 const APPEARANCE_SYSTEM := "System"
 const APPEARANCE_LIGHT := "Light"
 const APPEARANCE_DARK := "Dark"
+const UI_SCALE_MIN := 0.75
+const UI_SCALE_MAX := 2.5
+const UI_SCALE_DEFAULT := 1.0
 
 const DEFAULT_SAMPLE_NAME := "sample"
 
@@ -33,6 +36,7 @@ var _predict_run: RefCounted
 var _themes_lib: RefCounted
 var _theme_name := "Light"
 var _appearance_mode := APPEARANCE_SYSTEM
+var _ui_scale := UI_SCALE_DEFAULT
 var _palette: Dictionary = {}
 var _species_entries: Array = []
 var _selected_species_name := ""
@@ -54,7 +58,9 @@ func _ready() -> void:
 	_local_mykrobe2_manager = LocalMykrobe2ManagerScript.new()
 	_local_mykrobe2_manager.configure("bin")
 	_load_settings()
+	_apply_ui_scale()
 	settings_drawer.set_appearance(_appearance_mode)
+	settings_drawer.set_ui_scale(_ui_scale)
 	settings_drawer.set_app_version(str(ProjectSettings.get_setting("application/config/version", "dev")))
 	_apply_effective_theme()
 	if DisplayServer.is_dark_mode_supported():
@@ -90,12 +96,17 @@ func _load_settings() -> void:
 	var configured := str(config.get_value("ui", "appearance", APPEARANCE_SYSTEM))
 	if configured in [APPEARANCE_SYSTEM, APPEARANCE_LIGHT, APPEARANCE_DARK]:
 		_appearance_mode = configured
+	_ui_scale = clampf(float(config.get_value("ui", "scale", UI_SCALE_DEFAULT)), UI_SCALE_MIN, UI_SCALE_MAX)
 
 func _save_settings() -> void:
 	var config := ConfigFile.new()
 	config.load(SETTINGS_PATH)
 	config.set_value("ui", "appearance", _appearance_mode)
+	config.set_value("ui", "scale", _ui_scale)
 	config.save(SETTINGS_PATH)
+
+func _apply_ui_scale() -> void:
+	get_window().content_scale_factor = _ui_scale
 
 func _apply_theme(theme_name: String) -> void:
 	if _themes_lib == null or not _themes_lib.has_theme(theme_name):
@@ -135,10 +146,11 @@ func _apply_settings_button_style() -> void:
 	hover.border_color = _palette.get("button_border", Color("b9d6ea"))
 	var pressed := hover.duplicate()
 	pressed.bg_color = _palette.get("selection_bg", Color("e9f3f8"))
-	settings_toggle_button.add_theme_stylebox_override("normal", normal)
-	settings_toggle_button.add_theme_stylebox_override("hover", hover)
-	settings_toggle_button.add_theme_stylebox_override("focus", hover)
-	settings_toggle_button.add_theme_stylebox_override("pressed", pressed)
+	for button in [settings_toggle_button, results_view.settings_button]:
+		button.add_theme_stylebox_override("normal", normal)
+		button.add_theme_stylebox_override("hover", hover)
+		button.add_theme_stylebox_override("focus", hover)
+		button.add_theme_stylebox_override("pressed", pressed)
 
 func _process(_delta: float) -> void:
 	_poll_panels_setup()
@@ -215,6 +227,11 @@ func _on_appearance_changed(mode: String) -> void:
 	_appearance_mode = mode
 	_save_settings()
 	_apply_effective_theme()
+
+func _on_ui_scale_changed(value: float) -> void:
+	_ui_scale = clampf(value, UI_SCALE_MIN, UI_SCALE_MAX)
+	_apply_ui_scale()
+	_save_settings()
 
 func _on_system_theme_changed() -> void:
 	if _appearance_mode == APPEARANCE_SYSTEM:
@@ -389,7 +406,7 @@ func _show_results_view() -> void:
 	bootstrap_view.visible = false
 	results_view.visible = true
 	animated_background.visible = false
-	settings_toggle_button.visible = true
+	settings_toggle_button.visible = false
 
 func _show_options_dialog() -> void:
 	settings_drawer.close_drawer(false)

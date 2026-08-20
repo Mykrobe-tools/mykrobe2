@@ -4,6 +4,7 @@ class_name ResultsView
 signal save_requested
 signal new_requested
 signal tab_changed(tab_name: String)
+signal settings_requested
 
 const ResultFormatterScript = preload("res://scripts/result_formatter.gd")
 
@@ -12,31 +13,32 @@ const TAB_DRUGS := 1
 const TAB_EVIDENCE := 2
 const TAB_SPECIES := 3
 
-@onready var header_bar: ColorRect = $HeaderBar
-@onready var header_logo_icon: TextureRect = $HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo/HeaderLogoIcon
-@onready var header_logo_text: Label = $HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo/HeaderLogoText
-@onready var all_tab_button: Button = $HeaderBar/HeaderMargin/HeaderHBox/TabsRow/AllTabButton
-@onready var drugs_tab_button: Button = $HeaderBar/HeaderMargin/HeaderHBox/TabsRow/DrugsTabButton
-@onready var evidence_tab_button: Button = $HeaderBar/HeaderMargin/HeaderHBox/TabsRow/EvidenceTabButton
-@onready var species_tab_button: Button = $HeaderBar/HeaderMargin/HeaderHBox/TabsRow/SpeciesTabButton
-@onready var save_button: Button = $HeaderBar/HeaderMargin/HeaderHBox/SaveButton
-@onready var all_view: Control = $ResultsMargin/ResultsStack/AllView
-@onready var drugs_view: Control = $ResultsMargin/ResultsStack/DrugsView
-@onready var evidence_view: Control = $ResultsMargin/ResultsStack/EvidenceView
-@onready var species_view: Control = $ResultsMargin/ResultsStack/SpeciesView
-@onready var all_title: Label = $ResultsMargin/ResultsStack/AllView/AllVBox/AllTitle
-@onready var susceptible_heading: Label = $ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn/AllSusceptibleHeading
-@onready var resistant_heading: Label = $ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn/AllResistantHeading
-@onready var all_susceptible_text: RichTextLabel = $ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllSusceptibleColumn/AllSusceptibleText
-@onready var all_resistant_text: RichTextLabel = $ResultsMargin/ResultsStack/AllView/AllVBox/AllColumns/AllResistantColumn/AllResistantText
-@onready var first_line_title: Label = $ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn/FirstLineTitle
-@onready var second_line_title: Label = $ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn/SecondLineTitle
-@onready var first_line_text: RichTextLabel = $ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/FirstLineColumn/FirstLineText
-@onready var second_line_text: RichTextLabel = $ResultsMargin/ResultsStack/DrugsView/DrugsVBox/DrugsColumns/SecondLineColumn/SecondLineText
-@onready var evidence_title: Label = $ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox/EvidenceTitle
-@onready var evidence_text: RichTextLabel = $ResultsMargin/ResultsStack/EvidenceView/EvidenceVBox/EvidenceText
-@onready var species_title: Label = $ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox/SpeciesTitle
-@onready var species_text: RichTextLabel = $ResultsMargin/ResultsStack/SpeciesView/SpeciesVBox/SpeciesText
+@onready var header_bar: ColorRect = $RootLayout/HeaderBar
+@onready var settings_button: Button = $RootLayout/HeaderBar/HeaderMargin/HeaderHBox/SettingsButton
+@onready var header_logo_icon: TextureRect = $RootLayout/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo/HeaderLogoIcon
+@onready var header_logo_text: Label = $RootLayout/HeaderBar/HeaderMargin/HeaderHBox/HeaderLogo/HeaderLogoText
+@onready var all_tab_button: Button = $RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/AllTabButton
+@onready var drugs_tab_button: Button = $RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/DrugsTabButton
+@onready var evidence_tab_button: Button = $RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/EvidenceTabButton
+@onready var species_tab_button: Button = $RootLayout/HeaderBar/HeaderMargin/HeaderHBox/TabsRow/SpeciesTabButton
+@onready var save_button: Button = $RootLayout/HeaderBar/HeaderMargin/HeaderHBox/SaveButton
+@onready var all_view: Control = $RootLayout/ResultsMargin/ResultsStack/AllView
+@onready var drugs_view: Control = $RootLayout/ResultsMargin/ResultsStack/DrugsView
+@onready var evidence_view: Control = $RootLayout/ResultsMargin/ResultsStack/EvidenceView
+@onready var species_view: Control = $RootLayout/ResultsMargin/ResultsStack/SpeciesView
+@onready var all_title: Label = $RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllTitle
+@onready var susceptible_heading: Label = $RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns/AllSusceptibleColumn/AllSusceptibleHeading
+@onready var resistant_heading: Label = $RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns/AllResistantColumn/AllResistantHeading
+@onready var all_susceptible_text: RichTextLabel = $RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns/AllSusceptibleColumn/AllSusceptibleText
+@onready var all_resistant_text: RichTextLabel = $RootLayout/ResultsMargin/ResultsStack/AllView/AllScroll/AllVBox/AllColumns/AllResistantColumn/AllResistantText
+@onready var first_line_title: Label = $RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns/FirstLineColumn/FirstLineTitle
+@onready var second_line_title: Label = $RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns/SecondLineColumn/SecondLineTitle
+@onready var first_line_text: RichTextLabel = $RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns/FirstLineColumn/FirstLineText
+@onready var second_line_text: RichTextLabel = $RootLayout/ResultsMargin/ResultsStack/DrugsView/DrugsScroll/DrugsVBox/DrugsColumns/SecondLineColumn/SecondLineText
+@onready var evidence_title: Label = $RootLayout/ResultsMargin/ResultsStack/EvidenceView/EvidenceScroll/EvidenceVBox/EvidenceTitle
+@onready var evidence_text: RichTextLabel = $RootLayout/ResultsMargin/ResultsStack/EvidenceView/EvidenceScroll/EvidenceVBox/EvidenceText
+@onready var species_title: Label = $RootLayout/ResultsMargin/ResultsStack/SpeciesView/SpeciesScroll/SpeciesVBox/SpeciesTitle
+@onready var species_text: RichTextLabel = $RootLayout/ResultsMargin/ResultsStack/SpeciesView/SpeciesScroll/SpeciesVBox/SpeciesText
 
 var _formatter: RefCounted
 var _palette: Dictionary = {}
@@ -162,3 +164,6 @@ func _on_save_button_pressed() -> void:
 
 func _on_new_button_pressed() -> void:
 	new_requested.emit()
+
+func _on_settings_button_pressed() -> void:
+	settings_requested.emit()

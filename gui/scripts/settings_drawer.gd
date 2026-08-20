@@ -2,17 +2,20 @@ extends PanelContainer
 class_name SettingsDrawer
 
 signal appearance_changed(mode: String)
+signal ui_scale_changed(value: float)
 signal panel_information_requested
 
 const APPEARANCE_MODES := ["System", "Light", "Dark"]
 const DRAWER_WIDTH := 360.0
 
 @onready var close_button: Button = $DrawerMargin/DrawerLayout/Header/CloseButton
-@onready var appearance_option: OptionButton = $DrawerMargin/DrawerLayout/Content/AppearanceOption
-@onready var appearance_help: Label = $DrawerMargin/DrawerLayout/Content/AppearanceHelp
-@onready var panels_summary: Label = $DrawerMargin/DrawerLayout/Content/PanelsSummary
-@onready var panels_button: Button = $DrawerMargin/DrawerLayout/Content/PanelsButton
-@onready var version_label: Label = $DrawerMargin/DrawerLayout/About/VersionLabel
+@onready var appearance_option: OptionButton = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/AppearanceOption
+@onready var appearance_help: Label = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/AppearanceHelp
+@onready var ui_scale_slider: HSlider = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/UIScaleRow/UIScaleSlider
+@onready var ui_scale_value: Label = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/UIScaleRow/UIScaleValue
+@onready var panels_summary: Label = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/PanelsSummary
+@onready var panels_button: Button = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/PanelsButton
+@onready var version_label: Label = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/About/VersionLabel
 
 var _open := false
 var _tween: Tween
@@ -49,6 +52,11 @@ func set_appearance(mode: String) -> void:
 		index = 0
 	appearance_option.select(index)
 	_update_appearance_help(APPEARANCE_MODES[index])
+
+func set_ui_scale(value: float) -> void:
+	var clamped_value := clampf(value, ui_scale_slider.min_value, ui_scale_slider.max_value)
+	ui_scale_slider.set_value_no_signal(clamped_value)
+	_update_ui_scale_value(clamped_value)
 
 func set_app_version(version: String) -> void:
 	var clean_version := version.strip_edges()
@@ -124,6 +132,9 @@ func _update_appearance_help(mode: String) -> void:
 		_:
 			appearance_help.text = "Always use the light appearance."
 
+func _update_ui_scale_value(value: float) -> void:
+	ui_scale_value.text = "%d%%" % roundi(value * 100.0)
+
 func _on_close_button_pressed() -> void:
 	close_drawer()
 
@@ -133,6 +144,12 @@ func _on_appearance_option_item_selected(index: int) -> void:
 	var mode: String = APPEARANCE_MODES[index]
 	_update_appearance_help(mode)
 	appearance_changed.emit(mode)
+
+func _on_ui_scale_slider_value_changed(value: float) -> void:
+	_update_ui_scale_value(value)
+
+func _on_ui_scale_slider_drag_ended(_value_changed: bool) -> void:
+	ui_scale_changed.emit(ui_scale_slider.value)
 
 func _on_panels_button_pressed() -> void:
 	panel_information_requested.emit()
