@@ -60,6 +60,11 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
 text = "Panel information"
 
+[node name="UpdateAllButton" type="Button" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Header"]
+custom_minimum_size = Vector2(148, 34)
+layout_mode = 2
+text = "Update all panels…"
+
 [node name="CloseButton" type="Button" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Header"]
 custom_minimum_size = Vector2(68, 34)
 layout_mode = 2
@@ -123,6 +128,83 @@ size_flags_horizontal = 3
 text = "Data directory:"
 text_overrun_behavior = 3
 
+[node name="UpdateConfirmation" type="Control" parent="."]
+visible = false
+z_index = 10
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ConfirmationScrim" type="ColorRect" parent="UpdateConfirmation"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.24)
+
+[node name="ConfirmationCenter" type="CenterContainer" parent="UpdateConfirmation"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ConfirmationCard" type="PanelContainer" parent="UpdateConfirmation/ConfirmationCenter"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+
+[node name="ConfirmationMargin" type="MarginContainer" parent="UpdateConfirmation/ConfirmationCenter/ConfirmationCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 24
+
+[node name="ConfirmationLayout" type="VBoxContainer" parent="UpdateConfirmation/ConfirmationCenter/ConfirmationCard/ConfirmationMargin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="ConfirmationTitle" type="Label" parent="UpdateConfirmation/ConfirmationCenter/ConfirmationCard/ConfirmationMargin/ConfirmationLayout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Update all panels?"
+
+[node name="ConfirmationMessage" type="Label" parent="UpdateConfirmation/ConfirmationCenter/ConfirmationCard/ConfirmationMargin/ConfirmationLayout"]
+custom_minimum_size = Vector2(448, 0)
+layout_mode = 2
+text = "Mykrobe will check for new panel data, then update every panel. This may download several gigabytes and take several minutes."
+autowrap_mode = 2
+
+[node name="ConfirmationButtons" type="HBoxContainer" parent="UpdateConfirmation/ConfirmationCenter/ConfirmationCard/ConfirmationMargin/ConfirmationLayout"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="CancelButton" type="Button" parent="UpdateConfirmation/ConfirmationCenter/ConfirmationCard/ConfirmationMargin/ConfirmationLayout/ConfirmationButtons"]
+custom_minimum_size = Vector2(100, 38)
+layout_mode = 2
+text = "Cancel"
+
+[node name="ConfirmUpdateButton" type="Button" parent="UpdateConfirmation/ConfirmationCenter/ConfirmationCard/ConfirmationMargin/ConfirmationLayout/ConfirmationButtons"]
+custom_minimum_size = Vector2(120, 38)
+layout_mode = 2
+text = "Update all"
+
 [connection signal="gui_input" from="Scrim" to="." method="_on_scrim_gui_input"]
+[connection signal="pressed" from="DialogCenter/DialogCard/DialogMargin/DialogLayout/Header/UpdateAllButton" to="." method="_on_update_all_button_pressed"]
 [connection signal="pressed" from="DialogCenter/DialogCard/DialogMargin/DialogLayout/Header/CloseButton" to="." method="_on_close_button_pressed"]
 [connection signal="item_selected" from="DialogCenter/DialogCard/DialogMargin/DialogLayout/Body/SpeciesList" to="." method="_on_species_list_item_selected"]
+[connection signal="gui_input" from="UpdateConfirmation/ConfirmationScrim" to="." method="_on_confirmation_scrim_gui_input"]
+[connection signal="pressed" from="UpdateConfirmation/ConfirmationCenter/ConfirmationCard/ConfirmationMargin/ConfirmationLayout/ConfirmationButtons/CancelButton" to="." method="_on_update_confirmation_cancelled"]
+[connection signal="pressed" from="UpdateConfirmation/ConfirmationCenter/ConfirmationCard/ConfirmationMargin/ConfirmationLayout/ConfirmationButtons/ConfirmUpdateButton" to="." method="_on_update_confirmation_confirmed"]

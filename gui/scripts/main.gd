@@ -58,6 +58,7 @@ var _pending_result_path := ""
 var _pending_result_attempts := 0
 var _test_sample_setup_pending := false
 var _test_reads_path := ""
+var _reopen_panel_info_after_setup := false
 
 func _ready() -> void:
 	_helpers = GUIHelpersScript.new()
@@ -209,11 +210,16 @@ func _poll_panels_setup() -> void:
 		if _test_sample_setup_pending:
 			_finish_test_sample_setup()
 			return
+		var reopen_panel_info := _reopen_panel_info_after_setup
+		_reopen_panel_info_after_setup = false
 		_refresh_setup_state()
 		_set_notice("")
+		if reopen_panel_info:
+			panels_info_dialog.open_dialog(_species_entries, _panels_dir, _selected_species_name)
 		return
 	_test_sample_setup_pending = false
 	_test_reads_path = ""
+	_reopen_panel_info_after_setup = false
 	_refresh_setup_state()
 	_set_notice(str(result.get("error", "Panel setup failed.")))
 	_set_window_title_default()
@@ -286,6 +292,33 @@ func _on_system_theme_changed() -> void:
 func _on_panel_information_requested() -> void:
 	settings_drawer.close_drawer()
 	panels_info_dialog.open_dialog(_species_entries, _panels_dir, _selected_species_name)
+
+func _on_panels_update_all_requested() -> void:
+	if _panels_setup.is_running() or _predict_run.is_running():
+		return
+	panels_info_dialog.close_dialog()
+	var binary_path := _resolve_binary_path()
+	if binary_path == "":
+		_set_notice("Could not find mykrobe2 binary for panel updates.")
+		return
+	var panels_dir := _panels_dir.strip_edges()
+	if panels_dir == "":
+		_set_notice("Panels directory is required.")
+		return
+	bootstrap_view.set_status("Checking for and installing panel updates. This may take several minutes.")
+	bootstrap_view.set_log("")
+	_show_bootstrap_view()
+	var start_result: Dictionary = _panels_setup.start(
+		binary_path,
+		_all_panel_setup_commands(panels_dir),
+		"All panels are up to date.",
+	)
+	if not start_result.get("started", false):
+		_refresh_setup_state()
+		_set_notice(str(start_result.get("error", "Could not update panels.")))
+		return
+	_reopen_panel_info_after_setup = true
+	_set_notice("")
 
 func _on_test_sample_requested() -> void:
 	if _panels_setup.is_running() or _predict_run.is_running():
@@ -556,9 +589,18 @@ func _maybe_start_initial_panels_bootstrap() -> void:
 	if binary_path == "":
 		_set_notice("Could not find mykrobe2 binary for panel setup.")
 		return
-	var start_result: Dictionary = _panels_setup.start(binary_path, [
+	var start_result: Dictionary = _panels_setup.start(
+		binary_path,
+		_all_panel_setup_commands(panels_dir),
+		"All species panels are ready.",
+	)
+	if not start_result.get("started", false):
+		_set_notice(str(start_result.get("error", "Could not start panel setup.")))
+
+func _all_panel_setup_commands(panels_dir: String) -> Array:
+	return [
 		{
-			"label": "Updating panel metadata",
+			"label": "Refreshing panel metadata",
 			"args": PackedStringArray([
 				"panels",
 				"update-metadata",
@@ -566,7 +608,7 @@ func _maybe_start_initial_panels_bootstrap() -> void:
 			]),
 		},
 		{
-			"label": "Installing panels for all species",
+			"label": "Updating all panels",
 			"args": PackedStringArray([
 				"panels",
 				"update-species",
@@ -574,9 +616,7 @@ func _maybe_start_initial_panels_bootstrap() -> void:
 				"all",
 			]),
 		},
-	], "All species panels are ready.")
-	if not start_result.get("started", false):
-		_set_notice(str(start_result.get("error", "Could not start panel setup.")))
+	]
 
 func _selected_species() -> String:
 	return _selected_species_name

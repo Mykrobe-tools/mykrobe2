@@ -1,6 +1,8 @@
 extends Control
 class_name PanelsInfoDialog
 
+signal update_all_requested
+
 @onready var scrim: ColorRect = $Scrim
 @onready var dialog_card: PanelContainer = $DialogCenter/DialogCard
 @onready var close_button: Button = $DialogCenter/DialogCard/DialogMargin/DialogLayout/Header/CloseButton
@@ -11,6 +13,10 @@ class_name PanelsInfoDialog
 @onready var default_panel_label: Label = $DialogCenter/DialogCard/DialogMargin/DialogLayout/Body/DetailsScroll/Details/DefaultPanel
 @onready var panels_box: VBoxContainer = $DialogCenter/DialogCard/DialogMargin/DialogLayout/Body/DetailsScroll/Details/PanelsBox
 @onready var panels_dir_label: Label = $DialogCenter/DialogCard/DialogMargin/DialogLayout/Footer/PanelsDir
+@onready var update_confirmation: Control = $UpdateConfirmation
+@onready var confirmation_scrim: ColorRect = $UpdateConfirmation/ConfirmationScrim
+@onready var confirmation_card: PanelContainer = $UpdateConfirmation/ConfirmationCenter/ConfirmationCard
+@onready var confirm_update_button: Button = $UpdateConfirmation/ConfirmationCenter/ConfirmationCard/ConfirmationMargin/ConfirmationLayout/ConfirmationButtons/ConfirmUpdateButton
 
 var _entries: Array = []
 var _displayed_entries: Array = []
@@ -21,6 +27,7 @@ func open_dialog(entries: Array, panels_dir: String, preferred_species: String =
 	panels_dir_label.text = "Data directory: %s" % panels_dir
 	panels_dir_label.tooltip_text = panels_dir
 	_populate_species_list(preferred_species)
+	update_confirmation.visible = false
 	visible = true
 	close_button.grab_focus()
 
@@ -33,6 +40,8 @@ func apply_palette(palette: Dictionary) -> void:
 	modal_style.set_border_width_all(1)
 	modal_style.set_corner_radius_all(14)
 	dialog_card.add_theme_stylebox_override("panel", modal_style)
+	confirmation_card.add_theme_stylebox_override("panel", modal_style.duplicate())
+	confirmation_scrim.color = palette.get("modal_scrim", Color(0, 0, 0, 0.24))
 	summary_label.add_theme_color_override("font_color", palette.get("text_muted", Color("8b8478")))
 	panels_dir_label.add_theme_color_override("font_color", palette.get("text_muted", Color("8b8478")))
 	var selected_items := species_list.get_selected_items()
@@ -40,6 +49,7 @@ func apply_palette(palette: Dictionary) -> void:
 		_show_species(int(selected_items[0]))
 
 func close_dialog() -> void:
+	update_confirmation.visible = false
 	visible = false
 
 func _populate_species_list(preferred_species: String) -> void:
@@ -184,11 +194,29 @@ func _on_species_list_item_selected(index: int) -> void:
 func _on_close_button_pressed() -> void:
 	close_dialog()
 
+func _on_update_all_button_pressed() -> void:
+	update_confirmation.visible = true
+	confirm_update_button.grab_focus()
+
+func _on_update_confirmation_cancelled() -> void:
+	update_confirmation.visible = false
+
+func _on_update_confirmation_confirmed() -> void:
+	update_confirmation.visible = false
+	update_all_requested.emit()
+
+func _on_confirmation_scrim_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_on_update_confirmation_cancelled()
+
 func _on_scrim_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		close_dialog()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
-		close_dialog()
+		if update_confirmation.visible:
+			_on_update_confirmation_cancelled()
+		else:
+			close_dialog()
 		get_viewport().set_input_as_handled()

@@ -30,6 +30,7 @@ const THEMES := {
 		"header_bg": Color("f7f4ed"),
 		"circle_bg": Color(1, 1, 1, 0.92),
 		"scrim": Color(0.972549, 0.960784, 0.933333, 0.72),
+		"modal_scrim": Color(0, 0, 0, 0.24),
 	},
 	"Dark": {
 		"bg": Color("15191c"),
@@ -59,6 +60,7 @@ const THEMES := {
 		"header_bg": Color(0.105882, 0.12549, 0.137255, 0.96),
 		"circle_bg": Color(0.12549, 0.14902, 0.164706, 0.94),
 		"scrim": Color(0.035294, 0.043137, 0.047059, 0.78),
+		"modal_scrim": Color(0, 0, 0, 0.48),
 	}
 }
 
