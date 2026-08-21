@@ -2,6 +2,7 @@ extends Control
 class_name PanelsInfoDialog
 
 signal update_all_requested
+signal open_panels_folder_requested(path: String)
 
 @onready var scrim: ColorRect = $Scrim
 @onready var dialog_card: PanelContainer = $DialogCenter/DialogCard
@@ -21,9 +22,11 @@ signal update_all_requested
 var _entries: Array = []
 var _displayed_entries: Array = []
 var _palette: Dictionary = {}
+var _panels_dir := ""
 
 func open_dialog(entries: Array, panels_dir: String, preferred_species: String = "") -> void:
 	_entries = entries.duplicate(true)
+	_panels_dir = panels_dir.strip_edges()
 	panels_dir_label.text = "Data directory: %s" % panels_dir
 	panels_dir_label.tooltip_text = panels_dir
 	_populate_species_list(preferred_species)
@@ -193,6 +196,9 @@ func _on_species_list_item_selected(index: int) -> void:
 
 func _on_close_button_pressed() -> void:
 	close_dialog()
+
+func _on_open_panels_folder_button_pressed() -> void:
+	open_panels_folder_requested.emit(_panels_dir)
 
 func _on_update_all_button_pressed() -> void:
 	update_confirmation.visible = true

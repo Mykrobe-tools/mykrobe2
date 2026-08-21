@@ -293,6 +293,23 @@ func _on_panel_information_requested() -> void:
 	settings_drawer.close_drawer()
 	panels_info_dialog.open_dialog(_species_entries, _panels_dir, _selected_species_name)
 
+func _on_open_panels_folder_requested(path: String) -> void:
+	_open_folder(path, "Panels")
+
+func _on_open_application_data_folder_requested() -> void:
+	_open_folder(OS.get_user_data_dir(), "Application data")
+
+func _open_folder(path: String, folder_name: String) -> void:
+	var clean_path := path.strip_edges()
+	if clean_path == "" or not DirAccess.dir_exists_absolute(clean_path):
+		_set_notice("%s folder was not found: %s" % [folder_name, clean_path])
+		return
+	var error := OS.shell_show_in_file_manager(clean_path, true)
+	if error != OK:
+		_set_notice("Could not open %s folder: %s" % [folder_name.to_lower(), error_string(error)])
+		return
+	_set_notice("")
+
 func _on_panels_update_all_requested() -> void:
 	if _panels_setup.is_running() or _predict_run.is_running():
 		return

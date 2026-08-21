@@ -5,6 +5,7 @@ signal appearance_changed(mode: String)
 signal ui_scale_changed(value: float)
 signal panel_information_requested
 signal test_sample_requested
+signal open_application_data_folder_requested
 
 const APPEARANCE_MODES := ["System", "Light", "Dark"]
 const DRAWER_WIDTH := 360.0
@@ -163,6 +164,9 @@ func _on_panels_button_pressed() -> void:
 
 func _on_test_sample_button_pressed() -> void:
 	test_sample_requested.emit()
+
+func _on_open_application_data_button_pressed() -> void:
+	open_application_data_folder_requested.emit()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _open and event.is_action_pressed("ui_cancel"):

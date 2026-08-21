@@ -121,12 +121,19 @@ layout_mode = 2
 
 [node name="Footer" type="HBoxContainer" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout"]
 layout_mode = 2
+theme_override_constants/separation = 10
 
 [node name="PanelsDir" type="Label" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Footer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Data directory:"
 text_overrun_behavior = 3
+
+[node name="OpenPanelsFolderButton" type="Button" parent="DialogCenter/DialogCard/DialogMargin/DialogLayout/Footer"]
+custom_minimum_size = Vector2(150, 34)
+layout_mode = 2
+text = "Open panels folder"
+tooltip_text = "Show the shared command-line and GUI panels directory in the system file manager"
 
 [node name="UpdateConfirmation" type="Control" parent="."]
 visible = false
@@ -205,6 +212,7 @@ text = "Update all"
 [connection signal="pressed" from="DialogCenter/DialogCard/DialogMargin/DialogLayout/Header/UpdateAllButton" to="." method="_on_update_all_button_pressed"]
 [connection signal="pressed" from="DialogCenter/DialogCard/DialogMargin/DialogLayout/Header/CloseButton" to="." method="_on_close_button_pressed"]
 [connection signal="item_selected" from="DialogCenter/DialogCard/DialogMargin/DialogLayout/Body/SpeciesList" to="." method="_on_species_list_item_selected"]
+[connection signal="pressed" from="DialogCenter/DialogCard/DialogMargin/DialogLayout/Footer/OpenPanelsFolderButton" to="." method="_on_open_panels_folder_button_pressed"]
 [connection signal="gui_input" from="UpdateConfirmation/ConfirmationScrim" to="." method="_on_confirmation_scrim_gui_input"]
 [connection signal="pressed" from="UpdateConfirmation/ConfirmationCenter/ConfirmationCard/ConfirmationMargin/ConfirmationLayout/ConfirmationButtons/CancelButton" to="." method="_on_update_confirmation_cancelled"]
 [connection signal="pressed" from="UpdateConfirmation/ConfirmationCenter/ConfirmationCard/ConfirmationMargin/ConfirmationLayout/ConfirmationButtons/ConfirmUpdateButton" to="." method="_on_update_confirmation_confirmed"]

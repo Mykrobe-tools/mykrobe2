@@ -145,9 +145,16 @@ text = "Mykrobe"
 layout_mode = 2
 text = "Version dev"
 
+[node name="OpenApplicationDataButton" type="Button" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/About"]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+text = "Open application data folder"
+tooltip_text = "Show the folder containing GUI settings, cached test reads, and the installed backend"
+
 [connection signal="pressed" from="DrawerMargin/DrawerLayout/Header/CloseButton" to="." method="_on_close_button_pressed"]
 [connection signal="item_selected" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/AppearanceOption" to="." method="_on_appearance_option_item_selected"]
 [connection signal="drag_ended" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/UIScaleRow/UIScaleSlider" to="." method="_on_ui_scale_slider_drag_ended"]
 [connection signal="value_changed" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/UIScaleRow/UIScaleSlider" to="." method="_on_ui_scale_slider_value_changed"]
 [connection signal="pressed" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/PanelsButton" to="." method="_on_panels_button_pressed"]
 [connection signal="pressed" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/TestSampleButton" to="." method="_on_test_sample_button_pressed"]
+[connection signal="pressed" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/About/OpenApplicationDataButton" to="." method="_on_open_application_data_button_pressed"]
