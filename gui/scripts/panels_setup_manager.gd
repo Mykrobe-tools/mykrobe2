@@ -6,6 +6,7 @@ var _task_pid := -1
 var _log_path := ""
 var _result_path := ""
 var _script_path := ""
+var _child_pid_path := ""
 var _progress_path := ""
 var _last_log_text := ""
 var _last_progress: Dictionary = {}
@@ -23,6 +24,7 @@ func start(binary_path: String, commands: Array, success_status: String) -> Dict
 	var run_prefix := OS.get_user_data_dir().path_join("panels-setup-%s" % run_id)
 	_log_path = run_prefix + ".log"
 	_result_path = run_prefix + ".result"
+	_child_pid_path = run_prefix + ".pid"
 	_progress_path = run_prefix + ".progress.jsonl"
 	_script_path = run_prefix + (".cmd" if OS.get_name() == "Windows" else ".sh")
 	_last_log_text = ""
@@ -34,6 +36,14 @@ func start(binary_path: String, commands: Array, success_status: String) -> Dict
 		_cleanup_run_files()
 		return {"started": false, "error": "Could not start background panel setup."}
 	return {"started": true}
+
+func cancel() -> void:
+	if not _task_running:
+		return
+	_kill_process_tree()
+	_task_running = false
+	_task_pid = -1
+	_cleanup_run_files()
 
 func poll() -> Dictionary:
 	if not _task_running:
@@ -78,7 +88,13 @@ func _write_posix_setup_script(script_path: String, binary_path: String, command
 		if bool(command.get("reports_progress", false)):
 			args.append_array(["--gui-progress-file", _progress_path])
 		lines.append("echo %s >> %s" % [_shell_quote(label + "..."), _shell_quote(log_path)])
-		lines.append("if ! %s %s >> %s 2>&1; then" % [_shell_quote(binary_path), _join_shell_args(args), _shell_quote(log_path)])
+		lines.append("%s %s >> %s 2>&1 &" % [_shell_quote(binary_path), _join_shell_args(args), _shell_quote(log_path)])
+		lines.append("child_pid=$!")
+		lines.append("echo \"$child_pid\" > %s" % _shell_quote(_child_pid_path))
+		lines.append("wait \"$child_pid\" 2>/dev/null")
+		lines.append("status=$?")
+		lines.append("rm -f %s" % _shell_quote(_child_pid_path))
+		lines.append("if [ \"$status\" -ne 0 ]; then")
 		lines.append("  echo %s > %s" % [_shell_quote("success=0"), _shell_quote(result_path)])
 		lines.append("  echo %s >> %s" % [_shell_quote("status=Panel setup failed."), _shell_quote(result_path)])
 		lines.append("  echo %s >> %s" % [_shell_quote("error=%s failed." % label), _shell_quote(result_path)])
@@ -183,8 +199,29 @@ static func _phase_from_log(log_text: String) -> String:
 			return line.trim_suffix("...").strip_edges()
 	return "Working"
 
+func _kill_process_tree() -> void:
+	if _task_pid <= 0:
+		return
+	if OS.get_name() == "Windows":
+		var exit_code := OS.execute("taskkill", PackedStringArray(["/PID", str(_task_pid), "/T", "/F"]), [], true)
+		if exit_code != 0:
+			OS.kill(_task_pid)
+		return
+	var child_pid := _read_child_pid()
+	if child_pid > 0:
+		OS.execute("/bin/kill", PackedStringArray(["-KILL", str(child_pid)]), [], true)
+	OS.kill(_task_pid)
+
+func _read_child_pid() -> int:
+	if _child_pid_path == "" or not FileAccess.file_exists(_child_pid_path):
+		return -1
+	var pid_text := FileAccess.get_file_as_string(_child_pid_path).strip_edges()
+	if not pid_text.is_valid_int():
+		return -1
+	return pid_text.to_int()
+
 func _cleanup_run_files() -> void:
-	for path in [_log_path, _result_path, _script_path, _progress_path]:
+	for path in [_log_path, _result_path, _script_path, _child_pid_path, _progress_path]:
 		if path != "" and FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 

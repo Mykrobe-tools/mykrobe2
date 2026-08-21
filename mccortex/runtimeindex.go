@@ -212,7 +212,6 @@ func BuildRuntimeIndexFileWithProgress(path string, k int, paths []string, progr
 	if err != nil {
 		return err
 	}
-	reportProgress(0)
 	totalSlots := max(1, counts.totalSlots)
 	tmpDir := filepath.Dir(path)
 	size := runtimeTableSize(counts.totalValidKmers)
@@ -242,6 +241,7 @@ func BuildRuntimeIndexFileWithProgress(path string, k int, paths []string, progr
 			}
 		}()
 		mask = uint64(size - 1)
+		reportProgress(0)
 		processedSlots := 0
 		for _, path := range paths {
 			reader, err := seqio.OpenPath(path)
@@ -282,6 +282,9 @@ func BuildRuntimeIndexFileWithProgress(path string, k int, paths []string, progr
 			}
 			closeIfPossible(reader)
 		}
+	}
+	if size == 0 {
+		reportProgress(0)
 	}
 	reportProgress(0.35)
 	slotsFile, err := os.CreateTemp(tmpDir, "mykrobe2-slots-*.bin")

@@ -1,6 +1,7 @@
 package mccortex
 
 import (
+	"encoding/binary"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -75,5 +76,35 @@ func TestBuildRuntimeIndexFileReportsMonotonicProgress(t *testing.T) {
 		if fractions[i] < fractions[i-1] {
 			t.Fatalf("progress decreased at %d: %#v", i, fractions)
 		}
+	}
+}
+
+func TestMapUint64HeapFileRWInitializesAndWritesBack(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "table.bin")
+	if err := os.WriteFile(path, make([]byte, 4*8), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	table, data, writeBack, err := mapUint64HeapFileRW(path, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if data != nil {
+		t.Fatalf("heap table returned mapped data: %d bytes", len(data))
+	}
+	for i, value := range table {
+		if value != invalidPanelKmer {
+			t.Fatalf("table[%d] = %x, want empty sentinel", i, value)
+		}
+	}
+	table[2] = 12345
+	if err := writeBack(); err != nil {
+		t.Fatal(err)
+	}
+	written, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(written) != 4*8 || binary.LittleEndian.Uint64(written[2*8:]) != 12345 {
+		t.Fatalf("written table = %x", written)
 	}
 }

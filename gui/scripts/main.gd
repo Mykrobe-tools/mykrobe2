@@ -85,6 +85,13 @@ func _ready() -> void:
 	_maybe_start_initial_panels_bootstrap()
 
 func _exit_tree() -> void:
+	if _panels_setup != null and _panels_setup.is_running():
+		_panels_setup.cancel()
+		var panels_lock := _panels_dir.strip_edges().path_join(".lock")
+		if FileAccess.file_exists(panels_lock):
+			DirAccess.remove_absolute(panels_lock)
+	if _predict_run != null and _predict_run.is_running():
+		_predict_run.cancel()
 	if DisplayServer.is_dark_mode_supported():
 		DisplayServer.set_system_theme_change_callback(Callable())
 

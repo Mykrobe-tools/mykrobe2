@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep selected panel-information rows visibly selected on hover, and highlight hovered unselected rows in both GUI themes.
 - Theme scrollbar and slider tracks and grabbers consistently in both light and dark desktop modes.
 - Use the normal theme text colour for panel-index progress percentages.
+- Avoid pathological Linux panel-index build performance from file-backed writable mappings while retaining read-only mmap loading.
+- Stop panel setup and analysis child processes when the GUI exits, and clear the setup lock owned by the terminated GUI task.
 
 ## [0.1.0-alpha.1] - 2026-08-18
 
