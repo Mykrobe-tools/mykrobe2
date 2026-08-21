@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Expand and reorganize CLI help with workflow-oriented command ordering, command descriptions, flag descriptions, and usage examples.
+- Embed Godot project data into Linux and Windows executables so each desktop export contains a single application binary.
 - Disable the Godot boot splash image so the correctly sized landing window appears directly.
 - Size and centre the initial desktop window from the current screen's usable area, then choose the default UI scale so the landing circle occupies approximately two-thirds of the window height when the user has not saved a scale.
 - Make desktop window resizing reflow the layout without resizing text and controls; UI scaling remains an explicit setting.
