@@ -18,6 +18,8 @@ const LANDING_CIRCLE_WINDOW_RATIO := 2.0 / 3.0
 const INITIAL_WINDOW_ASPECT := 3.0 / 2.0
 const INITIAL_WINDOW_HEIGHT_RATIO := 0.85
 const INITIAL_WINDOW_MAX_WIDTH_RATIO := 0.90
+const TEST_SAMPLE_NAME := "TB test sample"
+const TEST_READS_FILENAME := "mykrobe_predict_test_reads.fq.gz"
 
 const DEFAULT_SAMPLE_NAME := "sample"
 
@@ -54,6 +56,8 @@ var _panels_dir := ""
 var _output_dialog_mode := ""
 var _pending_result_path := ""
 var _pending_result_attempts := 0
+var _test_sample_setup_pending := false
+var _test_reads_path := ""
 
 func _ready() -> void:
 	_helpers = GUIHelpersScript.new()
@@ -202,11 +206,17 @@ func _poll_panels_setup() -> void:
 	bootstrap_view.set_log(str(result.get("log", "")))
 	if result.get("success", false):
 		_refresh_species_options()
+		if _test_sample_setup_pending:
+			_finish_test_sample_setup()
+			return
 		_refresh_setup_state()
 		_set_notice("")
 		return
+	_test_sample_setup_pending = false
+	_test_reads_path = ""
 	_refresh_setup_state()
 	_set_notice(str(result.get("error", "Panel setup failed.")))
+	_set_window_title_default()
 
 func _poll_predict_run() -> void:
 	if _pending_result_path != "":
@@ -276,6 +286,77 @@ func _on_system_theme_changed() -> void:
 func _on_panel_information_requested() -> void:
 	settings_drawer.close_drawer()
 	panels_info_dialog.open_dialog(_species_entries, _panels_dir, _selected_species_name)
+
+func _on_test_sample_requested() -> void:
+	if _panels_setup.is_running() or _predict_run.is_running():
+		return
+	settings_drawer.close_drawer(false)
+	var binary_path := _resolve_binary_path()
+	if binary_path == "":
+		_set_notice("Could not find mykrobe2 binary.")
+		return
+	var panels_dir := _panels_dir.strip_edges()
+	if panels_dir == "":
+		_set_notice("Panels directory is required.")
+		return
+	if not _select_installed_tb_panel():
+		_set_notice("An installed TB panel is required to run the test sample.")
+		return
+	_test_reads_path = OS.get_user_data_dir().path_join(TEST_READS_FILENAME)
+	if FileAccess.file_exists(_test_reads_path):
+		var cached_reads_path := _test_reads_path
+		_test_reads_path = ""
+		_run_test_sample(cached_reads_path)
+		return
+	var commands: Array = [
+		{
+			"label": "Downloading TB test reads",
+			"args": PackedStringArray([
+				"download-test-reads",
+				_test_reads_path,
+			]),
+		},
+	]
+	bootstrap_view.set_status("Downloading the TB test reads.")
+	bootstrap_view.set_log("")
+	_show_bootstrap_view()
+	var start_result: Dictionary = _panels_setup.start(binary_path, commands, "TB test reads are ready.")
+	if not start_result.get("started", false):
+		_test_reads_path = ""
+		_refresh_setup_state()
+		_set_notice(str(start_result.get("error", "Could not prepare the TB test sample.")))
+		return
+	_test_sample_setup_pending = true
+	_set_notice("")
+	get_window().title = "Downloading TB test reads - Mykrobe"
+
+func _finish_test_sample_setup() -> void:
+	_test_sample_setup_pending = false
+	var reads_path := _test_reads_path
+	_test_reads_path = ""
+	if not _select_installed_tb_panel():
+		_refresh_setup_state()
+		_set_notice("The installed TB panel could not be selected.")
+		_set_window_title_default()
+		return
+	_run_test_sample(reads_path)
+
+func _select_installed_tb_panel() -> bool:
+	var tb_entry := _find_species_entry("tb")
+	if tb_entry.is_empty() or not bool(tb_entry.get("installed", false)):
+		return false
+	var panel_name := _resolve_panel_name(tb_entry, "")
+	if panel_name == "":
+		return false
+	_selected_species_name = "tb"
+	_selected_panel_name = panel_name
+	_update_landing_selection()
+	return true
+
+func _run_test_sample(reads_path: String) -> void:
+	_sample_name = TEST_SAMPLE_NAME
+	_show_landing_view()
+	_start_predict(PackedStringArray([reads_path]))
 
 func _on_panel_selected(species: String, panel: String) -> void:
 	_selected_species_name = species

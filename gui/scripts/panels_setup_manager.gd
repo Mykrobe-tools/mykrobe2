@@ -58,7 +58,7 @@ func _write_posix_setup_script(script_path: String, binary_path: String, command
 	var lines: PackedStringArray = [
 		"#!/usr/bin/env bash",
 		"set -u",
-		"echo \"Starting panel setup.\" >> %s" % _shell_quote(log_path),
+		"echo \"Starting setup.\" >> %s" % _shell_quote(log_path),
 	]
 	for command in commands:
 		var label := str(command.get("label", "Running command"))
@@ -79,7 +79,7 @@ func _write_posix_setup_script(script_path: String, binary_path: String, command
 func _write_windows_setup_script(script_path: String, binary_path: String, commands: Array, success_status: String, log_path: String, result_path: String) -> void:
 	var lines: PackedStringArray = [
 		"@echo off",
-		"echo Starting panel setup.>> %s" % _windows_quote(log_path),
+		"echo Starting setup.>> %s" % _windows_quote(log_path),
 	]
 	for command in commands:
 		var label := str(command.get("label", "Running command"))

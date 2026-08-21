@@ -94,5 +94,6 @@ use_native_dialog = true
 [connection signal="appearance_changed" from="SettingsDrawer" to="." method="_on_appearance_changed"]
 [connection signal="ui_scale_changed" from="SettingsDrawer" to="." method="_on_ui_scale_changed"]
 [connection signal="panel_information_requested" from="SettingsDrawer" to="." method="_on_panel_information_requested"]
+[connection signal="test_sample_requested" from="SettingsDrawer" to="." method="_on_test_sample_requested"]
 [connection signal="panel_selected" from="ChoosePanelDialog" to="." method="_on_panel_selected"]
 [connection signal="file_selected" from="OutputDialog" to="." method="_on_output_dialog_file_selected"]

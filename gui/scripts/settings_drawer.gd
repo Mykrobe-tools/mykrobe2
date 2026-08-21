@@ -4,6 +4,7 @@ class_name SettingsDrawer
 signal appearance_changed(mode: String)
 signal ui_scale_changed(value: float)
 signal panel_information_requested
+signal test_sample_requested
 
 const APPEARANCE_MODES := ["System", "Light", "Dark"]
 const DRAWER_WIDTH := 360.0
@@ -15,6 +16,7 @@ const DRAWER_WIDTH := 360.0
 @onready var ui_scale_value: Label = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/UIScaleRow/UIScaleValue
 @onready var panels_summary: Label = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/PanelsSummary
 @onready var panels_button: Button = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/PanelsButton
+@onready var test_sample_button: Button = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/TestSampleButton
 @onready var version_label: Label = $DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/About/VersionLabel
 
 var _open := false
@@ -68,6 +70,7 @@ func set_panel_entries(entries: Array) -> void:
 	var installed_count := 0
 	var panel_count := 0
 	var update_count := 0
+	var tb_available := false
 	for entry_variant in entries:
 		if typeof(entry_variant) != TYPE_DICTIONARY:
 			continue
@@ -77,13 +80,17 @@ func set_panel_entries(entries: Array) -> void:
 			var panels_variant: Variant = entry.get("panels", [])
 			if typeof(panels_variant) == TYPE_ARRAY:
 				panel_count += Array(panels_variant).size()
+				if str(entry.get("species", "")).to_lower() == "tb" and not Array(panels_variant).is_empty():
+					tb_available = true
 			if bool(entry.get("update_available", false)):
 				update_count += 1
 	if entries.is_empty():
 		panels_summary.text = "Panel information is not available."
 		panels_button.disabled = true
+		test_sample_button.disabled = true
 		return
 	panels_button.disabled = false
+	test_sample_button.disabled = not tb_available
 	var panel_word := "panel" if panel_count == 1 else "panels"
 	var status := "Up to date" if update_count == 0 else "%d update%s available" % [update_count, "" if update_count == 1 else "s"]
 	panels_summary.text = "%d species installed · %d %s\n%s" % [installed_count, panel_count, panel_word, status]
@@ -153,6 +160,9 @@ func _on_ui_scale_slider_drag_ended(_value_changed: bool) -> void:
 
 func _on_panels_button_pressed() -> void:
 	panel_information_requested.emit()
+
+func _on_test_sample_button_pressed() -> void:
+	test_sample_requested.emit()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _open and event.is_action_pressed("ui_cancel"):

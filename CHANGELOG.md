@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Add a saved desktop GUI scale setting from 75% to 250%.
+- Add a compact settings action that downloads the Mykrobe test reads and runs them with the installed default TB panel through the normal GUI analysis flow.
 
 ### Changed
 - Expand and reorganize CLI help with workflow-oriented command ordering, command descriptions, flag descriptions, and usage examples.

@@ -119,6 +119,12 @@ layout_mode = 2
 disabled = true
 text = "View panel information…"
 
+[node name="TestSampleButton" type="Button" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content"]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+text = "Download & run TB test…"
+tooltip_text = "Use the installed default TB panel, download the test reads if needed, and run an analysis"
+
 [node name="About" type="VBoxContainer" parent="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody"]
 layout_mode = 2
 theme_override_constants/separation = 6
@@ -144,3 +150,4 @@ text = "Version dev"
 [connection signal="drag_ended" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/UIScaleRow/UIScaleSlider" to="." method="_on_ui_scale_slider_drag_ended"]
 [connection signal="value_changed" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/UIScaleRow/UIScaleSlider" to="." method="_on_ui_scale_slider_value_changed"]
 [connection signal="pressed" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/PanelsButton" to="." method="_on_panels_button_pressed"]
+[connection signal="pressed" from="DrawerMargin/DrawerLayout/SettingsScroll/SettingsBody/Content/TestSampleButton" to="." method="_on_test_sample_button_pressed"]
