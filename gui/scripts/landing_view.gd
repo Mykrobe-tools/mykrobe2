@@ -19,6 +19,9 @@ var _paths := PackedStringArray()
 var _panel_available := false
 var _last_input_directory := ""
 
+func circle_diameter() -> float:
+	return circle.size.y
+
 func set_logo_texture(texture: Texture2D) -> void:
 	logo_icon.texture = texture
 

@@ -13,6 +13,11 @@ const APPEARANCE_DARK := "Dark"
 const UI_SCALE_MIN := 0.75
 const UI_SCALE_MAX := 2.5
 const UI_SCALE_DEFAULT := 1.0
+const UI_SCALE_STEP := 0.05
+const LANDING_CIRCLE_WINDOW_RATIO := 2.0 / 3.0
+const INITIAL_WINDOW_ASPECT := 3.0 / 2.0
+const INITIAL_WINDOW_HEIGHT_RATIO := 0.85
+const INITIAL_WINDOW_MAX_WIDTH_RATIO := 0.90
 
 const DEFAULT_SAMPLE_NAME := "sample"
 
@@ -57,6 +62,7 @@ func _ready() -> void:
 	_themes_lib = ThemesLibScript.new()
 	_local_mykrobe2_manager = LocalMykrobe2ManagerScript.new()
 	_local_mykrobe2_manager.configure("bin")
+	_apply_initial_window_size()
 	_load_settings()
 	_apply_ui_scale()
 	settings_drawer.set_appearance(_appearance_mode)
@@ -89,14 +95,44 @@ func _effective_theme_name() -> String:
 func _apply_effective_theme() -> void:
 	_apply_theme(_effective_theme_name())
 
+func _apply_initial_window_size() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var window := get_window()
+	if window.mode != Window.MODE_WINDOWED:
+		return
+	var usable_rect := DisplayServer.screen_get_usable_rect(window.current_screen)
+	var target_size := _initial_window_size(usable_rect.size)
+	if target_size == Vector2i.ZERO:
+		return
+	window.size = target_size
+	window.position = usable_rect.position + (usable_rect.size - target_size) / 2
+
+static func _initial_window_size(usable_size: Vector2i) -> Vector2i:
+	if usable_size.x <= 0 or usable_size.y <= 0:
+		return Vector2i.ZERO
+	var height := minf(
+		usable_size.y * INITIAL_WINDOW_HEIGHT_RATIO,
+		usable_size.x * INITIAL_WINDOW_MAX_WIDTH_RATIO / INITIAL_WINDOW_ASPECT,
+	)
+	return Vector2i(roundi(height * INITIAL_WINDOW_ASPECT), roundi(height))
+
 func _load_settings() -> void:
 	var config := ConfigFile.new()
-	if config.load(SETTINGS_PATH) != OK:
-		return
-	var configured := str(config.get_value("ui", "appearance", APPEARANCE_SYSTEM))
-	if configured in [APPEARANCE_SYSTEM, APPEARANCE_LIGHT, APPEARANCE_DARK]:
-		_appearance_mode = configured
-	_ui_scale = clampf(float(config.get_value("ui", "scale", UI_SCALE_DEFAULT)), UI_SCALE_MIN, UI_SCALE_MAX)
+	if config.load(SETTINGS_PATH) == OK:
+		var configured := str(config.get_value("ui", "appearance", APPEARANCE_SYSTEM))
+		if configured in [APPEARANCE_SYSTEM, APPEARANCE_LIGHT, APPEARANCE_DARK]:
+			_appearance_mode = configured
+		if config.has_section_key("ui", "scale"):
+			_ui_scale = clampf(float(config.get_value("ui", "scale", UI_SCALE_DEFAULT)), UI_SCALE_MIN, UI_SCALE_MAX)
+			return
+	_ui_scale = _scale_for_landing_circle(get_window().size.y, landing_view.circle_diameter())
+
+static func _scale_for_landing_circle(window_height: float, circle_diameter: float) -> float:
+	if window_height <= 0.0 or circle_diameter <= 0.0:
+		return UI_SCALE_DEFAULT
+	var scale := window_height * LANDING_CIRCLE_WINDOW_RATIO / circle_diameter
+	return clampf(snappedf(scale, UI_SCALE_STEP), UI_SCALE_MIN, UI_SCALE_MAX)
 
 func _save_settings() -> void:
 	var config := ConfigFile.new()
