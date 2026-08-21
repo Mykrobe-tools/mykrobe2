@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-alpha.2] - 2026-08-21
+
 ### Added
 - Add a saved desktop GUI scale setting from 75% to 250%.
 - Add a compact settings action that downloads the Mykrobe test reads and runs them with the installed default TB panel through the normal GUI analysis flow.
@@ -38,5 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial alpha release, before changelog tracking started in this file.
 
-[Unreleased]: https://github.com/Mykrobe-tools/mykrobe2/compare/v0.1.0-alpha.1...HEAD
+[Unreleased]: https://github.com/Mykrobe-tools/mykrobe2/compare/v0.1.0-alpha.2...HEAD
+[0.1.0-alpha.2]: https://github.com/Mykrobe-tools/mykrobe2/compare/v0.1.0-alpha.1...v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/Mykrobe-tools/mykrobe2/releases/tag/v0.1.0-alpha.1

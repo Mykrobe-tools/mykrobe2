@@ -54,7 +54,7 @@ xattr -d com.apple.quarantine mykrobe2
 ## Building
 
 Run `./build.sh` to build the command-line executable for the current machine.
-Run `./build.sh --release --version v0.1.0-alpha.1` to create compressed standalone CLI
+Run `./build.sh --release --version v0.1.0-alpha.2` to create compressed standalone CLI
 artifacts for macOS, Linux, and Windows on amd64 and arm64.
 
 The GitHub Actions release workflow runs for `v*` tags. It publishes the six
