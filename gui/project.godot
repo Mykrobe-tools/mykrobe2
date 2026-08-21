@@ -16,6 +16,8 @@ run/main_scene="res://scenes/main.tscn"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="mykrobe2"
 config/features=PackedStringArray("4.7")
+boot_splash/bg_color=Color(0.972549, 0.960784, 0.933333, 1)
+boot_splash/show_image=false
 config/icon="res://assets/mykrobe-predictor-tb-icon.png"
 
 [display]
