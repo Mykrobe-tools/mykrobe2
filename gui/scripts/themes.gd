@@ -89,6 +89,7 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 	var button_pressed: StyleBoxFlat = _button_style(palette_map["button_pressed"], palette_map["accent"], true)
 	var button_disabled: StyleBoxFlat = _button_style(palette_map["button_disabled_bg"], palette_map["button_disabled_border"], false)
 	var button_flat: StyleBoxFlat = _button_style(Color(1, 1, 1, 0), Color(1, 1, 1, 0), false)
+	var list_hovered: StyleBoxFlat = _panel_style(palette_map["button_hover"], palette_map["button_border"], 6, 1)
 	var list_selected: StyleBoxFlat = _panel_style(palette_map["selection_bg"], palette_map["selection_border"], 6, 1)
 	var popup_panel_style: StyleBoxFlat = _panel_style(palette_map["field_bg"], palette_map["field_border"], 8, 1)
 	var popup_hover_style := StyleBoxFlat.new()
@@ -156,6 +157,9 @@ func make_theme(theme_name: String, font_size: int = 16) -> Theme:
 
 	theme.set_stylebox("panel", "ItemList", line_style)
 	theme.set_stylebox("focus", "ItemList", focused_line_style)
+	theme.set_stylebox("hovered", "ItemList", list_hovered)
+	theme.set_stylebox("hovered_selected", "ItemList", list_selected)
+	theme.set_stylebox("hovered_selected_focus", "ItemList", list_selected)
 	theme.set_stylebox("selected", "ItemList", list_selected)
 	theme.set_stylebox("selected_focus", "ItemList", list_selected)
 	theme.set_color("font_color", "ItemList", palette_map["text"])
