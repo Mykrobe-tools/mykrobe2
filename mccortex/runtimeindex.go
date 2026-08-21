@@ -189,10 +189,31 @@ func BuildRuntimeIndex(k int, paths []string) (*RuntimeIndex, error) {
 }
 
 func BuildRuntimeIndexFile(path string, k int, paths []string) error {
+	return BuildRuntimeIndexFileWithProgress(path, k, paths, nil)
+}
+
+// BuildRuntimeIndexFileWithProgress builds a disk-backed runtime index and
+// reports monotonic progress after the initial sizing pass. Progress covers
+// hash-table construction, probe-slot construction, and final file writing.
+func BuildRuntimeIndexFileWithProgress(path string, k int, paths []string, progress func(float64)) error {
+	lastProgress := -1.0
+	reportProgress := func(fraction float64) {
+		if progress == nil {
+			return
+		}
+		fraction = min(1, max(0, fraction))
+		if fraction-lastProgress < 0.005 && fraction < 1 {
+			return
+		}
+		lastProgress = fraction
+		progress(fraction)
+	}
 	counts, err := collectRuntimeBuildCounts(k, paths)
 	if err != nil {
 		return err
 	}
+	reportProgress(0)
+	totalSlots := max(1, counts.totalSlots)
 	tmpDir := filepath.Dir(path)
 	size := runtimeTableSize(counts.totalValidKmers)
 	var (
@@ -221,6 +242,7 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 			}
 		}()
 		mask = uint64(size - 1)
+		processedSlots := 0
 		for _, path := range paths {
 			reader, err := seqio.OpenPath(path)
 			if err != nil {
@@ -239,7 +261,9 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 				if len(rec.Seq) >= k {
 					klen = len(rec.Seq) - k + 1
 				}
+				processedSlots += klen
 				if klen <= 1 {
+					reportProgress(0.35 * float64(processedSlots) / float64(totalSlots))
 					continue
 				}
 				for i := 1; i < klen; i++ {
@@ -254,10 +278,12 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 					slot := lookupRuntimeSlot(tableKeys, mask, key)
 					tableKeys[slot] = key
 				}
+				reportProgress(0.35 * float64(processedSlots) / float64(totalSlots))
 			}
 			closeIfPossible(reader)
 		}
 	}
+	reportProgress(0.35)
 	slotsFile, err := os.CreateTemp(tmpDir, "mykrobe2-slots-*.bin")
 	if err != nil {
 		return err
@@ -274,6 +300,7 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 	kmerLengths := make([]uint32, 0, counts.probeCount)
 	var probeSlotPos uint32
 	var namePos uint32
+	processedSlots := 0
 	for _, path := range paths {
 		reader, err := seqio.OpenPath(path)
 		if err != nil {
@@ -292,12 +319,14 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 			if len(rec.Seq) >= k {
 				klen = len(rec.Seq) - k + 1
 			}
+			processedSlots += klen
 			kmerLengths = append(kmerLengths, uint32(klen))
 			nameBytes = append(nameBytes, rec.Name...)
 			namePos += uint32(len(rec.Name))
 			nameOffsets = append(nameOffsets, namePos)
 			if klen <= 1 {
 				probeOffsets = append(probeOffsets, probeSlotPos)
+				reportProgress(0.35 + 0.35*float64(processedSlots)/float64(totalSlots))
 				continue
 			}
 			if err := binary.Write(slotsBuf, binary.LittleEndian, ^uint32(0)); err != nil {
@@ -322,9 +351,11 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 				probeSlotPos++
 			}
 			probeOffsets = append(probeOffsets, probeSlotPos)
+			reportProgress(0.35 + 0.35*float64(processedSlots)/float64(totalSlots))
 		}
 		closeIfPossible(reader)
 	}
+	reportProgress(0.70)
 	if err := slotsBuf.Flush(); err != nil {
 		return err
 	}
@@ -340,7 +371,15 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 		return err
 	}
 	defer out.Close()
-	outBuf := bufio.NewWriterSize(out, 1<<20)
+	estimatedOutputSize := runtimeIndexOutputSize(size, counts)
+	progressOut := &runtimeIndexProgressWriter{
+		writer: out,
+		total:  estimatedOutputSize,
+		report: func(written, total int64) {
+			reportProgress(0.70 + 0.30*float64(written)/float64(total))
+		},
+	}
+	outBuf := bufio.NewWriterSize(progressOut, 1<<20)
 	if _, err := outBuf.Write([]byte(runtimeIndexMagic)); err != nil {
 		return err
 	}
@@ -394,7 +433,39 @@ func BuildRuntimeIndexFile(path string, k int, paths []string) error {
 	if err := binary.Write(outBuf, binary.LittleEndian, kmerLengths); err != nil {
 		return err
 	}
-	return outBuf.Flush()
+	if err := outBuf.Flush(); err != nil {
+		return err
+	}
+	reportProgress(1)
+	return nil
+}
+
+type runtimeIndexProgressWriter struct {
+	writer  io.Writer
+	written int64
+	total   int64
+	report  func(written, total int64)
+}
+
+func (w *runtimeIndexProgressWriter) Write(p []byte) (int, error) {
+	n, err := w.writer.Write(p)
+	w.written += int64(n)
+	if w.report != nil && w.total > 0 {
+		w.report(w.written, w.total)
+	}
+	return n, err
+}
+
+func runtimeIndexOutputSize(tableSize int, counts runtimeBuildCounts) int64 {
+	headerSize := len(runtimeIndexMagic) + 6*4
+	total := headerSize + alignPad(headerSize, 8)
+	total += tableSize*8 + alignPad(tableSize*8, 4)
+	total += (counts.probeCount + 1) * 4
+	total += counts.totalSlots * 4
+	total += (counts.probeCount + 1) * 4
+	total += counts.totalNameBytes + alignPad(counts.totalNameBytes, 4)
+	total += counts.probeCount * 4
+	return int64(total)
 }
 
 func runtimeTableSize(count int) int {

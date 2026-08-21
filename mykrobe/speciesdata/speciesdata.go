@@ -152,8 +152,17 @@ func (s *SpeciesDir) RuntimeIndexFile() string {
 }
 
 func (s *SpeciesDir) BuildRuntimeIndex() error {
+	return s.BuildRuntimeIndexWithProgress(nil)
+}
+
+func (s *SpeciesDir) BuildRuntimeIndexWithProgress(progress PanelProgressFunc) error {
+	message := fmt.Sprintf("Building %s %s panel index", strings.ToUpper(s.SpeciesName()), s.PanelName)
+	reportPanelProgress(progress, PanelStageIndexing, message, 0, false)
+	log.Printf("panel progress: %s", message)
 	log.Printf("building runtime index for species=%s panel=%s path=%s", s.SpeciesName(), s.PanelName, s.RuntimeIndexFile())
-	if err := mccortex.BuildRuntimeIndexFile(s.RuntimeIndexFile(), s.Kmer(), s.FASTAFiles()); err != nil {
+	if err := mccortex.BuildRuntimeIndexFileWithProgress(s.RuntimeIndexFile(), s.Kmer(), s.FASTAFiles(), func(fraction float64) {
+		reportPanelProgress(progress, PanelStageIndexing, message, fraction, true)
+	}); err != nil {
 		return err
 	}
 	info, err := os.Stat(s.RuntimeIndexFile())
@@ -165,6 +174,10 @@ func (s *SpeciesDir) BuildRuntimeIndex() error {
 }
 
 func (s *SpeciesDir) EnsurePanelIndices() error {
+	return s.EnsurePanelIndicesWithProgress(nil)
+}
+
+func (s *SpeciesDir) EnsurePanelIndicesWithProgress(progress PanelProgressFunc) error {
 	current := s.PanelName
 	defer func() {
 		_ = s.SetPanel(current)
@@ -176,7 +189,7 @@ func (s *SpeciesDir) EnsurePanelIndices() error {
 		if _, err := os.Stat(s.RuntimeIndexFile()); err == nil {
 			continue
 		}
-		if err := s.BuildRuntimeIndex(); err != nil {
+		if err := s.BuildRuntimeIndexWithProgress(progress); err != nil {
 			return err
 		}
 	}
@@ -361,6 +374,10 @@ func (d *DataDir) UpdateManifestFromURL(url string) error {
 }
 
 func (d *DataDir) AddOrReplaceSpeciesData(tarballName string, force bool) error {
+	return d.AddOrReplaceSpeciesDataWithProgress(tarballName, force, nil)
+}
+
+func (d *DataDir) AddOrReplaceSpeciesDataWithProgress(tarballName string, force bool, progress PanelProgressFunc) error {
 	if err := d.CreateRoot(); err != nil {
 		return err
 	}
@@ -377,6 +394,8 @@ func (d *DataDir) AddOrReplaceSpeciesData(tarballName string, force bool) error 
 	fromFile := !regexp.MustCompile(`^https?://`).MatchString(tarballName)
 	toExtract := tarballName
 	if !fromFile {
+		log.Printf("panel progress: Downloading panel data")
+		reportPanelProgress(progress, PanelStageDownloading, "Downloading panel data", 0, false)
 		downloadURL := resolveDownloadURL(tarballName)
 		resp, err := http.Get(downloadURL)
 		if err != nil {
@@ -391,7 +410,16 @@ func (d *DataDir) AddOrReplaceSpeciesData(tarballName string, force bool) error 
 		if err != nil {
 			return err
 		}
-		if _, err := io.Copy(f, resp.Body); err != nil {
+		var downloadReader io.Reader = resp.Body
+		if resp.ContentLength > 0 {
+			reportPanelProgress(progress, PanelStageDownloading, "Downloading panel data", 0, true)
+			downloadReader = &panelDownloadProgressReader{
+				reader: resp.Body,
+				total:  resp.ContentLength,
+				report: progress,
+			}
+		}
+		if _, err := io.Copy(f, downloadReader); err != nil {
 			f.Close()
 			return err
 		}
@@ -400,6 +428,8 @@ func (d *DataDir) AddOrReplaceSpeciesData(tarballName string, force bool) error 
 		}
 	}
 
+	log.Printf("panel progress: Extracting panel data")
+	reportPanelProgress(progress, PanelStageExtracting, "Extracting panel data", 0, false)
 	if err := extractTarGz(toExtract, tmpDir); err != nil {
 		return err
 	}
@@ -447,13 +477,18 @@ func (d *DataDir) AddOrReplaceSpeciesData(tarballName string, force bool) error 
 		entry.Latest = &manifestVersion{Version: spdir.Version(), URL: tarballName}
 	}
 	d.Manifest[species] = entry
-	if err := spdir.EnsurePanelIndices(); err != nil {
+	if err := spdir.EnsurePanelIndicesWithProgress(progress); err != nil {
 		return err
 	}
+	reportPanelProgress(progress, PanelStageFinishing, "Finishing panel installation", 0, false)
 	if err := d.SaveManifest(); err != nil {
 		return err
 	}
-	return d.StopLock()
+	if err := d.StopLock(); err != nil {
+		return err
+	}
+	reportPanelProgress(progress, PanelStageComplete, "Panel installation complete", 1, true)
+	return nil
 }
 
 func (d *DataDir) RemoveSpecies(species string) error {
@@ -527,6 +562,12 @@ func resolveDownloadURL(rawURL string) string {
 }
 
 func (d *DataDir) UpdateSpecies(species string) error {
+	return d.UpdateSpeciesWithProgress(species, nil)
+}
+
+func (d *DataDir) UpdateSpeciesWithProgress(species string, progress PanelProgressFunc) error {
+	log.Printf("panel progress: Checking %s panel data", strings.ToUpper(species))
+	reportPanelProgress(progress, PanelStageChecking, fmt.Sprintf("Checking %s panel data", strings.ToUpper(species)), 0, false)
 	entry, ok := d.Manifest[species]
 	if !ok {
 		return fmt.Errorf("unknown species %q", species)
@@ -535,14 +576,19 @@ func (d *DataDir) UpdateSpecies(species string) error {
 		return fmt.Errorf("no latest metadata for species %q", species)
 	}
 	if d.SpeciesIsUpToDate(species) {
+		reportPanelProgress(progress, PanelStageComplete, fmt.Sprintf("%s panel is up to date", strings.ToUpper(species)), 1, true)
 		return nil
 	}
-	return d.AddOrReplaceSpeciesData(entry.Latest.URL, true)
+	return d.AddOrReplaceSpeciesDataWithProgress(entry.Latest.URL, true, progress)
 }
 
 func (d *DataDir) UpdateAllSpecies() error {
+	return d.UpdateAllSpeciesWithProgress(nil)
+}
+
+func (d *DataDir) UpdateAllSpeciesWithProgress(progress PanelProgressFunc) error {
 	for _, species := range d.AllSpeciesList() {
-		if err := d.UpdateSpecies(species); err != nil {
+		if err := d.UpdateSpeciesWithProgress(species, progress); err != nil {
 			return err
 		}
 	}

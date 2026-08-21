@@ -14,12 +14,25 @@ func runPanelsUpdateMetadata(opts *panelsUpdateMetadataOptions) error {
 }
 
 func runPanelsUpdateSpecies(opts *panelsUpdateSpeciesOptions, species string) error {
+	progressWriter, err := openGUIProgressWriter(opts.guiProgressFile)
+	if err != nil {
+		return err
+	}
+	if progressWriter != nil {
+		defer progressWriter.Close()
+	}
 	ddir, err := speciesdata.NewDataDir(opts.panelsDir)
 	if err != nil {
 		return err
 	}
-	if species == "all" {
-		return ddir.UpdateAllSpecies()
+	var progress speciesdata.PanelProgressFunc
+	if progressWriter != nil {
+		progress = func(event speciesdata.PanelProgressEvent) {
+			progressWriter.Write(event)
+		}
 	}
-	return ddir.UpdateSpecies(species)
+	if species == "all" {
+		return ddir.UpdateAllSpeciesWithProgress(progress)
+	}
+	return ddir.UpdateSpeciesWithProgress(species, progress)
 }

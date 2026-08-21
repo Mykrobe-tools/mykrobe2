@@ -200,11 +200,19 @@ func _process(_delta: float) -> void:
 func _poll_panels_setup() -> void:
 	var result: Dictionary = _panels_setup.poll()
 	if result.get("running", false):
-		bootstrap_view.set_log(str(result.get("log", "")))
+		bootstrap_view.update_activity(
+			Dictionary(result.get("progress", {})),
+			str(result.get("phase", "")),
+			str(result.get("log", "")),
+		)
 		return
 	if not result.get("finished", false):
 		return
-	bootstrap_view.set_log(str(result.get("log", "")))
+	bootstrap_view.update_activity(
+		Dictionary(result.get("progress", {})),
+		str(result.get("phase", "")),
+		str(result.get("log", "")),
+	)
 	if result.get("success", false):
 		_refresh_species_options()
 		if _test_sample_setup_pending:
@@ -322,8 +330,7 @@ func _on_panels_update_all_requested() -> void:
 	if panels_dir == "":
 		_set_notice("Panels directory is required.")
 		return
-	bootstrap_view.set_status("Checking for and installing panel updates. This may take several minutes.")
-	bootstrap_view.set_log("")
+	bootstrap_view.begin_activity("Checking for and installing panel updates. This may take several minutes.")
 	_show_bootstrap_view()
 	var start_result: Dictionary = _panels_setup.start(
 		binary_path,
@@ -367,8 +374,7 @@ func _on_test_sample_requested() -> void:
 			]),
 		},
 	]
-	bootstrap_view.set_status("Downloading the TB test reads.")
-	bootstrap_view.set_log("")
+	bootstrap_view.begin_activity("Downloading the TB test reads.")
 	_show_bootstrap_view()
 	var start_result: Dictionary = _panels_setup.start(binary_path, commands, "TB test reads are ready.")
 	if not start_result.get("started", false):
@@ -601,6 +607,7 @@ func _maybe_start_initial_panels_bootstrap() -> void:
 		return
 	if FileAccess.file_exists(panels_dir.path_join("manifest.json")):
 		return
+	bootstrap_view.begin_activity("Panel data is being downloaded and prepared. This may take a few minutes.")
 	_show_bootstrap_view()
 	var binary_path := _resolve_binary_path()
 	if binary_path == "":
@@ -626,6 +633,7 @@ func _all_panel_setup_commands(panels_dir: String) -> Array:
 		},
 		{
 			"label": "Updating all panels",
+			"reports_progress": true,
 			"args": PackedStringArray([
 				"panels",
 				"update-species",

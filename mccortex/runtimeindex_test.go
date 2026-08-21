@@ -54,3 +54,26 @@ func TestRuntimeIndexRoundTripAndSummariesMatchPanelPath(t *testing.T) {
 		t.Fatalf("runtime summaries mismatch\nwant: %#v\ngot: %#v", want, got)
 	}
 }
+
+func TestBuildRuntimeIndexFileReportsMonotonicProgress(t *testing.T) {
+	dir := t.TempDir()
+	panel := filepath.Join(dir, "panel.fa")
+	if err := os.WriteFile(panel, []byte(">probe1\nAACCGGTT\n>probe2\nAACCGGTA\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var fractions []float64
+	indexPath := filepath.Join(dir, "panel.panelindex")
+	if err := BuildRuntimeIndexFileWithProgress(indexPath, 5, []string{panel}, func(fraction float64) {
+		fractions = append(fractions, fraction)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if len(fractions) < 2 || fractions[0] != 0 || fractions[len(fractions)-1] != 1 {
+		t.Fatalf("progress endpoints = %#v, want 0..1", fractions)
+	}
+	for i := 1; i < len(fractions); i++ {
+		if fractions[i] < fractions[i-1] {
+			t.Fatalf("progress decreased at %d: %#v", i, fractions)
+		}
+	}
+}

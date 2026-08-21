@@ -6,7 +6,9 @@ var _task_pid := -1
 var _log_path := ""
 var _result_path := ""
 var _script_path := ""
+var _progress_path := ""
 var _last_log_text := ""
+var _last_progress: Dictionary = {}
 
 func is_running() -> bool:
 	return _task_running
@@ -21,8 +23,10 @@ func start(binary_path: String, commands: Array, success_status: String) -> Dict
 	var run_prefix := OS.get_user_data_dir().path_join("panels-setup-%s" % run_id)
 	_log_path = run_prefix + ".log"
 	_result_path = run_prefix + ".result"
+	_progress_path = run_prefix + ".progress.jsonl"
 	_script_path = run_prefix + (".cmd" if OS.get_name() == "Windows" else ".sh")
 	_last_log_text = ""
+	_last_progress = {}
 	_task_running = true
 	_task_pid = _start_process(binary_path, commands, success_status, _log_path, _result_path)
 	if _task_pid == -1:
@@ -35,8 +39,14 @@ func poll() -> Dictionary:
 	if not _task_running:
 		return {"running": false}
 	_refresh_log_from_disk()
+	_refresh_progress_from_disk()
 	if not FileAccess.file_exists(_result_path):
-		return {"running": true, "log": _last_log_text}
+		return {
+			"running": true,
+			"log": _last_log_text,
+			"phase": _phase_from_log(_last_log_text),
+			"progress": _last_progress,
+		}
 	_task_running = false
 	_task_pid = -1
 	_refresh_log_from_disk()
@@ -44,6 +54,8 @@ func poll() -> Dictionary:
 	result["running"] = false
 	result["finished"] = true
 	result["log"] = _last_log_text
+	result["phase"] = _phase_from_log(_last_log_text)
+	result["progress"] = _last_progress
 	_cleanup_run_files()
 	return result
 
@@ -62,7 +74,9 @@ func _write_posix_setup_script(script_path: String, binary_path: String, command
 	]
 	for command in commands:
 		var label := str(command.get("label", "Running command"))
-		var args: PackedStringArray = command.get("args", PackedStringArray())
+		var args: PackedStringArray = command.get("args", PackedStringArray()).duplicate()
+		if bool(command.get("reports_progress", false)):
+			args.append_array(["--gui-progress-file", _progress_path])
 		lines.append("echo %s >> %s" % [_shell_quote(label + "..."), _shell_quote(log_path)])
 		lines.append("if ! %s %s >> %s 2>&1; then" % [_shell_quote(binary_path), _join_shell_args(args), _shell_quote(log_path)])
 		lines.append("  echo %s > %s" % [_shell_quote("success=0"), _shell_quote(result_path)])
@@ -83,7 +97,9 @@ func _write_windows_setup_script(script_path: String, binary_path: String, comma
 	]
 	for command in commands:
 		var label := str(command.get("label", "Running command"))
-		var args: PackedStringArray = command.get("args", PackedStringArray())
+		var args: PackedStringArray = command.get("args", PackedStringArray()).duplicate()
+		if bool(command.get("reports_progress", false)):
+			args.append_array(["--gui-progress-file", _progress_path])
 		lines.append("echo %s>> %s" % [label + "...", _windows_quote(log_path)])
 		lines.append("%s %s >> %s 2>&1" % [_windows_quote(binary_path), _join_windows_args(args), _windows_quote(log_path)])
 		lines.append("if errorlevel 1 (")
@@ -138,8 +154,37 @@ func _refresh_log_from_disk() -> void:
 	_last_log_text = file.get_as_text()
 	file.close()
 
+func _refresh_progress_from_disk() -> void:
+	if _progress_path == "" or not FileAccess.file_exists(_progress_path):
+		return
+	var file := FileAccess.open(_progress_path, FileAccess.READ)
+	if file == null:
+		return
+	var lines := file.get_as_text().split("\n", false)
+	file.close()
+	for index in range(lines.size() - 1, -1, -1):
+		var json := JSON.new()
+		if json.parse(lines[index]) != OK:
+			continue
+		var parsed: Variant = json.data
+		if typeof(parsed) == TYPE_DICTIONARY:
+			_last_progress = Dictionary(parsed)
+			return
+
+static func _phase_from_log(log_text: String) -> String:
+	var lines := log_text.split("\n", false)
+	for index in range(lines.size() - 1, -1, -1):
+		var line := str(lines[index]).strip_edges()
+		var progress_marker := "panel progress: "
+		var marker_position := line.find(progress_marker)
+		if marker_position >= 0:
+			return line.substr(marker_position + progress_marker.length()).strip_edges()
+		if line.ends_with("..."):
+			return line.trim_suffix("...").strip_edges()
+	return "Working"
+
 func _cleanup_run_files() -> void:
-	for path in [_log_path, _result_path, _script_path]:
+	for path in [_log_path, _result_path, _script_path, _progress_path]:
 		if path != "" and FileAccess.file_exists(path):
 			DirAccess.remove_absolute(path)
 

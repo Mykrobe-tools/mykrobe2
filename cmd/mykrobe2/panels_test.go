@@ -13,6 +13,7 @@ import (
 func TestPanelsCommands(t *testing.T) {
 	dir := t.TempDir()
 	panelsDir := filepath.Join(dir, "panels")
+	progressPath := filepath.Join(dir, "panel-progress.jsonl")
 	speciesTar := makeSpeciesTarball(t, "tb", "20240214", "202010")
 	manifestPath := filepath.Join(dir, "manifest.json")
 	writeJSONFile(t, manifestPath, map[string]map[string]string{
@@ -29,6 +30,7 @@ func TestPanelsCommands(t *testing.T) {
 	if err := run([]string{
 		"panels", "update_species",
 		"--panels_dir", panelsDir,
+		"--gui-progress-file", progressPath,
 		"tb",
 	}); err != nil {
 		t.Fatal(err)
@@ -50,6 +52,35 @@ func TestPanelsCommands(t *testing.T) {
 	}
 	if _, err := os.Stat(sdir.RuntimeIndexFile()); err != nil {
 		t.Fatalf("expected runtime index to be built: %v", err)
+	}
+	progressData, err := os.ReadFile(progressPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var events []speciesdata.PanelProgressEvent
+	for _, line := range strings.Split(strings.TrimSpace(string(progressData)), "\n") {
+		var event speciesdata.PanelProgressEvent
+		if err := json.Unmarshal([]byte(line), &event); err != nil {
+			t.Fatalf("decode progress event %q: %v", line, err)
+		}
+		events = append(events, event)
+	}
+	if len(events) == 0 {
+		t.Fatal("expected panel progress events")
+	}
+	foundDeterminateIndex := false
+	for _, event := range events {
+		if event.Stage == speciesdata.PanelStageIndexing && event.Determinate && event.Fraction > 0 {
+			foundDeterminateIndex = true
+			break
+		}
+	}
+	if !foundDeterminateIndex {
+		t.Fatalf("missing determinate index progress: %#v", events)
+	}
+	last := events[len(events)-1]
+	if last.Stage != speciesdata.PanelStageComplete || !last.Determinate || last.Fraction != 1 {
+		t.Fatalf("final progress event = %#v", last)
 	}
 }
 

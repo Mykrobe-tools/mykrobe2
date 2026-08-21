@@ -44,15 +44,16 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 90.0
-offset_top = 80.0
+offset_top = 70.0
 offset_right = -90.0
-offset_bottom = -80.0
+offset_bottom = -70.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="BootstrapVBox" type="VBoxContainer" parent="BootstrapCenter/BootstrapCard/BootstrapMargin"]
 layout_mode = 2
 theme_override_constants/separation = 14
+alignment = 1
 
 [node name="BootstrapLogo" type="HBoxContainer" parent="BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
 layout_mode = 2
@@ -82,9 +83,38 @@ text = "Downloading panel metadata and species data."
 horizontal_alignment = 1
 autowrap_mode = 3
 
+[node name="ProgressBar" type="ProgressBar" parent="BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+show_percentage = false
+indeterminate = true
+
+[node name="PhaseLabel" type="Label" parent="BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+text = "Starting…"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ElapsedLabel" type="Label" parent="BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
+layout_mode = 2
+text = "Working… 0s"
+horizontal_alignment = 1
+
+[node name="DetailsButton" type="Button" parent="BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
+custom_minimum_size = Vector2(130, 34)
+layout_mode = 2
+size_flags_horizontal = 4
+flat = true
+text = "Show details"
+
 [node name="BootstrapLog" type="RichTextLabel" parent="BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox"]
+visible = false
+custom_minimum_size = Vector2(0, 110)
 layout_mode = 2
 size_flags_vertical = 3
 focus_mode = 2
 scroll_following = true
 selection_enabled = true
+
+[connection signal="pressed" from="BootstrapCenter/BootstrapCard/BootstrapMargin/BootstrapVBox/DetailsButton" to="." method="_on_details_button_pressed"]

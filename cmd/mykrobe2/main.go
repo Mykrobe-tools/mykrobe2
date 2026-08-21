@@ -67,7 +67,8 @@ type panelsUpdateMetadataOptions struct {
 }
 
 type panelsUpdateSpeciesOptions struct {
-	panelsDir string
+	panelsDir       string
+	guiProgressFile string
 }
 
 type panelsDescribeOptions struct {
@@ -270,6 +271,8 @@ func newPanelsUpdateSpeciesCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&opts.panelsDir, "panels-dir", defaultPanels, "Directory containing installed panel data")
+	cmd.Flags().StringVar(&opts.guiProgressFile, "gui-progress-file", "", "Write JSON progress events for the desktop GUI")
+	_ = cmd.Flags().MarkHidden("gui-progress-file")
 	return cmd
 }
 

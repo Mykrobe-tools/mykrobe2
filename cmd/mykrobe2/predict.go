@@ -120,6 +120,10 @@ func openGUIProgressWriter(path string) (*guiProgressWriter, error) {
 }
 
 func (w *guiProgressWriter) Report(event mykrobe.PredictProgressEvent) {
+	w.Write(event)
+}
+
+func (w *guiProgressWriter) Write(event any) {
 	_ = w.encoder.Encode(event)
 }
 

@@ -12,10 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a compact settings action that downloads the Mykrobe test reads and runs them with the installed default TB panel through the normal GUI analysis flow.
 - Add an action to the panel-information dialog for checking for and installing updates to all panels.
 - Add contextual shortcuts for opening the shared panels directory and GUI application-data directory in the system file manager.
+- Add hidden machine-readable CLI progress reporting for GUI panel downloads and runtime-index builds.
 
 ### Changed
 - Expand and reorganize CLI help with workflow-oriented command ordering, command descriptions, flag descriptions, and usage examples.
 - Embed Godot project data into Linux and Windows executables so each desktop export contains a single application binary.
+- Replace the panel-setup log box with a progress display, live setup phases and percentages, elapsed time, and collapsible transparent details.
 - Disable the Godot boot splash image so the correctly sized landing window appears directly.
 - Size and centre the initial desktop window from the current screen's usable area, then choose the default UI scale so the landing circle occupies approximately two-thirds of the window height when the user has not saved a scale.
 - Make desktop window resizing reflow the layout without resizing text and controls; UI scaling remains an explicit setting.
@@ -28,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace the GUI's installed backend after an app update when its reported version or bundled-file hash no longer matches.
 - Keep selected panel-information rows visibly selected on hover, and highlight hovered unselected rows in both GUI themes.
 - Theme scrollbar and slider tracks and grabbers consistently in both light and dark desktop modes.
+- Use the normal theme text colour for panel-index progress percentages.
 
 ## [0.1.0-alpha.1] - 2026-08-18
 
