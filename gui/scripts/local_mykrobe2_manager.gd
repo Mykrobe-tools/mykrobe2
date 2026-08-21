@@ -23,17 +23,21 @@ func ensure_local_binary_installed() -> bool:
 	_local_binary_path = target_abs
 	var source := _find_binary_source(bin_name)
 	if source.is_empty():
-		if FileAccess.file_exists(target_abs):
+		if FileAccess.file_exists(target_abs) and _installed_binary_version_matches(target_abs):
 			_last_error = ""
 			return true
+		if FileAccess.file_exists(target_abs):
+			_last_error = "Installed mykrobe2 version does not match GUI version %s, and no bundled replacement was found." % _expected_binary_version()
+			return false
 		_last_error = "No bundled mykrobe2 found at res://bin/%s" % bin_name
 		return false
 
+	var target_matches_version := FileAccess.file_exists(target_abs) and _installed_binary_version_matches(target_abs)
 	var src_hash := FileAccess.get_sha256(source)
 	var dst_hash := ""
 	if FileAccess.file_exists(target_abs):
 		dst_hash = FileAccess.get_sha256(target_abs)
-	if FileAccess.file_exists(target_abs) and not src_hash.is_empty() and src_hash == dst_hash:
+	if FileAccess.file_exists(target_abs) and target_matches_version and not src_hash.is_empty() and src_hash == dst_hash:
 		_last_error = ""
 		return true
 	if not _copy_file_any_to_abs(source, target_abs):
@@ -41,6 +45,10 @@ func ensure_local_binary_installed() -> bool:
 		return false
 	if not OS.has_feature("windows"):
 		OS.execute("chmod", ["+x", target_abs], [], true)
+	if not _installed_binary_version_matches(target_abs):
+		var actual_version := _read_binary_version(target_abs)
+		_last_error = "Installed mykrobe2 version %s does not match GUI version %s." % [actual_version if actual_version != "" else "unknown", _expected_binary_version()]
+		return false
 	_last_error = ""
 	return true
 
@@ -78,6 +86,33 @@ func _copy_file_any_to_abs(source: String, target_abs: String) -> bool:
 	dst.close()
 	src.close()
 	return true
+
+func _expected_binary_version() -> String:
+	return _normalise_version(str(ProjectSettings.get_setting("application/config/version", "")).strip_edges())
+
+func _installed_binary_version_matches(binary_path: String) -> bool:
+	var expected_version := _expected_binary_version()
+	if expected_version == "":
+		return true
+	return _read_binary_version(binary_path) == expected_version
+
+func _read_binary_version(binary_path: String) -> String:
+	if binary_path == "" or not FileAccess.file_exists(binary_path):
+		return ""
+	var output: Array = []
+	if OS.execute(binary_path, PackedStringArray(["--version"]), output, true) != 0:
+		return ""
+	for line_variant in output:
+		var line := str(line_variant).strip_edges()
+		if line.begins_with("mykrobe2 "):
+			return _normalise_version(line.trim_prefix("mykrobe2 "))
+	return ""
+
+static func _normalise_version(version: String) -> String:
+	var clean_version := version.strip_edges()
+	if clean_version.length() > 1 and clean_version.left(1).to_lower() == "v" and clean_version.substr(1, 1).is_valid_int():
+		return clean_version.substr(1)
+	return clean_version
 
 func _binary_name() -> String:
 	if OS.has_feature("windows"):

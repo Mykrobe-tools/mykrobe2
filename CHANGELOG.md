@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Restore Mykrobe-compatible `predict` short options, including `-s`, `-k`, `-A`, `-e`, `-D`, `-o`, `-S`, and `-O`, while accepting both `--kmer` and the legacy `--k` spelling.
+- Replace the GUI's installed backend after an app update when its reported version or bundled-file hash no longer matches.
 - Keep selected panel-information rows visibly selected on hover, and highlight hovered unselected rows in both GUI themes.
 - Theme scrollbar and slider tracks and grabbers consistently in both light and dark desktop modes.
 
