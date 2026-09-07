@@ -10,6 +10,11 @@ Benchmarks ran serially on a Linux machine with an AMD Ryzen 5 7600X processor,
 32 GB RAM, and CachyOS 7.2.0. Apart from normal background processes, no other
 workloads were running.
 
+## Data and analysis materials
+
+The benchmark result JSON files and the scripts used to create the plots are
+available at [https://doi.org/10.6084/m9.figshare.33456481](https://doi.org/10.6084/m9.figshare.33456481).
+
 ## Test data
 
 _M. tuberculosis_:
