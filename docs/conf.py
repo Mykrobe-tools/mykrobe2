@@ -20,3 +20,9 @@ exclude_patterns = [
 
 html_theme = "furo"
 html_title = "Mykrobe2"
+html_theme_options = {
+    "source_repository": "https://github.com/Mykrobe-tools/mykrobe2/",
+    "source_branch": "main",
+    "source_directory": "docs/",
+    "top_of_page_buttons": ["view"],
+}
