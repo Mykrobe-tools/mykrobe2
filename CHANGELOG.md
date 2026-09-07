@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add documentation (https://mykrobe2.readthedocs.io)
+
 ## [0.1.0-alpha.2] - 2026-08-21
 
 ### Added
