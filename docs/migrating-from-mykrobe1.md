@@ -27,6 +27,16 @@ mykrobe2 predict --sample sample_name --species tb --seq reads.fq.gz --output ou
 Use `mykrobe2 panels describe` to see the species and panel versions available
 in your local panel-data directory.
 
+## No more skeleton files
+
+Mykrobe 1 built and reused Cortex `.ctx` "skeleton" files for each panel, by
+default under `mykrobe/data/skeletons/`. Mykrobe2 does not create or require
+skeleton files when running `predict`; panel indexes are prepared when panels
+are installed, and custom panels are supplied as `.panelindex` files.
+
+The Mykrobe 1 `--skeleton_dir` and `--force` options therefore have no Mykrobe2
+equivalents.
+
 ## Custom panels now use an index file
 
 This is the main workflow change. In Mykrobe 1, `predict` received separate
