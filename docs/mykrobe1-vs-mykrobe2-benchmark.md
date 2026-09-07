@@ -6,7 +6,7 @@
   `mykrobe_v0.13.0.img`.
 * Mykrobe2 version 0.1.0-alpha.2.
 
-Benchmarks ran serially on a Linux machine with an AMD Ryzen 5 7560X processor,
+Benchmarks ran serially on a Linux machine with an AMD Ryzen 5 7600X processor,
 32 GB RAM, and CachyOS 7.2.0. Apart from normal background processes, no other
 workloads were running.
 
