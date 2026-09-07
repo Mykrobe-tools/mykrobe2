@@ -3,7 +3,7 @@
 This is a brief explanation of the mycobacteria taxonomic
 names reported by Mykrobe when using the species `tb`.
 
-# Background
+## Background
 
 There is no consensus as to the naming of mycobacterial genera and species.
 
@@ -28,14 +28,14 @@ _Mycolicibacter sinensis_ and _Mycobacterium novum_.
 
 
 
-# How does Mykrobe report species?
+## How does Mykrobe report species?
 
-## Old Mykrobe panels
+### Old Mykrobe panels
 
 Mykrobe panels pre-2023 (walker-2015, bradley-2015, 202001, 202010, 202206) all used the "old" names and taxonomy.
 Although some of these panels were released after 2018, they use species probes that were originally developed before the taxonomy was changed.
 
-## New Mykrobe panels
+### New Mykrobe panels
 
 In September 2023, the Mykrobe species probes were updated.
 The updated panel is called 202309. It uses GTDB as the primary
@@ -58,7 +58,7 @@ The values are the numbers of GTDB genomes for that species associated with each
 
 
 
-# References
+## References
 
 [1] Gupta et al, Phylogenomics and comparative genomic studies robustly support division of the genus Mycobacterium into an emended genus Mycobacterium and four novel genera, Front Microbiol 2018, 9: 67, https://doi.org/10.3389/fmicb.2018.00067
 
