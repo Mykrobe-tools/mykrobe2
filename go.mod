@@ -4,8 +4,8 @@ go 1.25.0
 
 require (
 	github.com/dsnet/compress v0.0.1 // indirect
-	github.com/klauspost/compress v1.18.1 // indirect
-	github.com/martinghunt/faqt v0.8.0
+	github.com/klauspost/compress v1.18.3 // indirect
+	github.com/martinghunt/faqt v0.12.1
 	github.com/ulikunitz/xz v0.5.15 // indirect
 )
 
@@ -15,3 +15,5 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.9
 )
+
+require github.com/martinghunt/go-agc v0.3.0 // indirect
