@@ -52,6 +52,10 @@ mykrobe2 make-probes reference.fa \
   > probes.fa
 ```
 
+Repeat `--background-vcf` for each file. Each value is a literal filename,
+including any commas. Comma-separated lists and space-separated filenames
+after a single `--background-vcf` are not supported.
+
 For many VCF files, place one filename per line in a text file (blank lines and
 lines beginning with `#` are ignored), then use:
 

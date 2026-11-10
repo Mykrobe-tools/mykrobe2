@@ -37,6 +37,11 @@ mykrobe2 predict --sample my_sample_name \
   --seq reads.fq.gz
 ```
 
+For two input files, repeat the option:
+`--seq reads_1.fq.gz --seq reads_2.fq.gz`. Unlike Mykrobe 1, Mykrobe2 requires
+repeated flags; `--seq file1 file2` is an error. Commas are part of filenames,
+not separators.
+
 For other species, change `tb` in the option `--species tb` to one of: `flexneri`, `paratyphiB`, `sonnei`, `staph`, `typhi`.
 
 Moving from the previous command-line program? See

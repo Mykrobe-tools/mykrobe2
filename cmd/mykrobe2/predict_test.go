@@ -111,7 +111,7 @@ func TestPredictCommand(t *testing.T) {
 func TestPredictCommandWithMultipleSeqFiles(t *testing.T) {
 	dir := t.TempDir()
 	panel := filepath.Join(dir, "panel.fa")
-	reads1 := filepath.Join(dir, "reads1.fa")
+	reads1 := filepath.Join(dir, "reads, sample 1.fa")
 	reads2 := filepath.Join(dir, "reads2.fa")
 	index := filepath.Join(dir, "custom.panelindex")
 	out := filepath.Join(dir, "out.json")
@@ -207,7 +207,7 @@ func TestPredictCommandWithONTAndConfThresholdFlags(t *testing.T) {
 
 func TestPredictCommandWithCustomIndexGenotypingOnly(t *testing.T) {
 	dir := t.TempDir()
-	panel := filepath.Join(dir, "panel.fa")
+	panel := filepath.Join(dir, "panel, custom.fa")
 	reads := filepath.Join(dir, "reads.fa")
 	index := filepath.Join(dir, "custom.panelindex")
 	out := filepath.Join(dir, "out.json")

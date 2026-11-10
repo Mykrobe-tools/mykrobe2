@@ -215,7 +215,7 @@ func TestMakeProbesCommandWithVCF(t *testing.T) {
 func TestMakeProbesCommandUsesBackgroundVCFContext(t *testing.T) {
 	dir := t.TempDir()
 	out := filepath.Join(dir, "probes.fa")
-	bgVCF := filepath.Join(dir, "background.vcf")
+	bgVCF := filepath.Join(dir, "background, sample.vcf")
 	vcfData := "" +
 		"##fileformat=VCFv4.2\n" +
 		"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n" +

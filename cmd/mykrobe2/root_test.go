@@ -62,6 +62,31 @@ func TestFlagNamesAcceptDashesAndUnderscores(t *testing.T) {
 	}
 }
 
+func TestPredictRejectsExtraSequenceArguments(t *testing.T) {
+	for _, args := range [][]string{
+		{"--seq", "foo", "bar"},
+		{"-i", "foo", "bar", "--species", "tb"},
+		{"--seq", "foo", "--", "bar"},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			cmd := newRootCmd()
+			var output bytes.Buffer
+			cmd.SetOut(&output)
+			cmd.SetErr(&output)
+			cmd.SetArgs(append([]string{"predict"}, args...))
+			err := cmd.Execute()
+			if err == nil {
+				t.Fatal("expected extra sequence argument to be rejected")
+			}
+			for _, want := range []string{"positional arguments", "bar", "repeat --seq"} {
+				if !strings.Contains(err.Error(), want) {
+					t.Errorf("error = %q, want it to contain %q", err, want)
+				}
+			}
+		})
+	}
+}
+
 func TestPredictRetainsLegacyShortOptions(t *testing.T) {
 	cmd := newPredictCmd()
 	var stderr bytes.Buffer
@@ -164,7 +189,7 @@ func TestCommandHelpDescribesCommonWorkflows(t *testing.T) {
 		want []string
 	}{
 		{args: nil, want: []string{"antimicrobial resistance", "panels", "predict"}},
-		{args: []string{"predict"}, want: []string{"--species", "--index", "Sequence file(s) in FASTA, FASTQ, or BAM format"}},
+		{args: []string{"predict"}, want: []string{"--species", "--index", "Sequence file in FASTA, FASTQ, or BAM format", "repeat --seq for multiple files"}},
 		{args: []string{"panels"}, want: []string{"Inspect available panel data", "update-metadata", "update-species"}},
 		{args: []string{"panels", "describe"}, want: []string{"whether updates are available", "Output format: text or json"}},
 		{args: []string{"panels", "update-metadata"}, want: []string{"latest versions", "--manifest-file", "--manifest-url"}},

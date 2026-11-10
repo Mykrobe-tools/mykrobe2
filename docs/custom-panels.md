@@ -38,6 +38,9 @@ Alternatively, pass simple DNA variants directly:
 mykrobe2 make-probes reference.fa --variants A1000T,C245G > probes.ref.fa
 ```
 
+Alternatively, repeat the option: `--variants A1000T --variants C245G`.
+Space-separated values after a single `--variants` are not supported.
+
 VCF input is also supported:
 
 ```bash
@@ -100,10 +103,16 @@ variant and presence/absence probe files:
 
 ```bash
 mykrobe2 index \
-  --fasta probes.ref.fa,probes.gene.fa,probes.pres_abs.fa \
+  --fasta probes.ref.fa \
+  --fasta probes.gene.fa \
+  --fasta probes.pres_abs.fa \
   --variant-to-resistance-json var2res.json \
   --output custom.panelindex
 ```
+
+Repeat `--fasta` for each file. Each value is a literal filename, including any
+commas. Comma-separated lists and space-separated filenames after a single
+`--fasta` are not supported.
 
 Run prediction with the resulting self-contained index:
 

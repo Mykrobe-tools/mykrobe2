@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Require repeated `--seq`, `--fasta`, and `--background-vcf` flags for multiple files, preserving commas in filenames.
+- Clarify multiple-file usage in CLI help and documentation, including differences from Mykrobe 1.
+
+### Fixed
+
+- Reject unexpected positional arguments instead of silently ignoring them, and report unknown `panels` subcommands as errors.
+- Reject invalid `predict --model`, `--ploidy`, and `--format` values before processing inputs or opening output files.
+
 ## [0.1.0-alpha.3] - 2026-11-06
 
 ### Added

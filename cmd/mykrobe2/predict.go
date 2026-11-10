@@ -13,6 +13,21 @@ import (
 )
 
 func runPredict(opts *predictOptions) error {
+	switch opts.model {
+	case "kmer_count", "median_depth":
+	default:
+		return fmt.Errorf("invalid --model %q: must be kmer_count or median_depth", opts.model)
+	}
+	switch opts.ploidy {
+	case "diploid", "haploid":
+	default:
+		return fmt.Errorf("invalid --ploidy %q: must be diploid or haploid", opts.ploidy)
+	}
+	switch opts.outputFormat {
+	case "json", "csv", "json_and_csv":
+	default:
+		return fmt.Errorf("invalid --format %q: must be csv, json, or json_and_csv", opts.outputFormat)
+	}
 	if opts.output == "" {
 		return fmt.Errorf("predict requires --seq, a panel source, and --output")
 	}

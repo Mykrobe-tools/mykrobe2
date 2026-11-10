@@ -20,7 +20,7 @@ Details of the _S. sonnei_ genotyping scheme are available in the paper [Hawkey 
 
 ## Examples of basic usage
 
-Run on a _Mycobacterium tuberculosis_ sample with one FASTQ file as input, writing the results to a comma-delimited file:
+Run on a _Mycobacterium tuberculosis_ sample with one FASTQ file as input, writing the results to a JSON file:
 ```
 mykrobe2 predict --species tb --sample sample_name -i reads.fq --output out.json
 ```
@@ -31,6 +31,12 @@ As above, but the input is two gzipped FASTQ files:
 ```
 mykrobe2 predict -S tb -s sample_name -i reads_1.fq.gz -i reads_2.fq.gz -o out.json
 ```
+
+Repeat `--seq` (or `-i`) for each input file. Each value is a literal filename,
+so `--seq 'sample,1.fq.gz'` refers to one file; commas do not separate files.
+Unlike Mykrobe 1, Mykrobe2 does not accept
+`--seq reads_1.fq.gz reads_2.fq.gz`; it reports the extra filename as an error.
+See [Migrating from Mykrobe 1](multiple-input-files).
 
 As above, but the input is a BAM file:
 ```

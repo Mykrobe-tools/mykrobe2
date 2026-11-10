@@ -109,6 +109,10 @@ func newRootCmd() *cobra.Command {
 		Long: "Mykrobe2 predicts antimicrobial resistance, species, and lineage from " +
 			"whole-genome sequence data using installed or custom probe panels.",
 		Version: displayVersion(buildinfo.Version),
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
+		},
 	}
 	cmd.SetVersionTemplate("{{.Name}} {{.Version}}\n")
 	cmd.SetGlobalNormalizationFunc(normalizeFlagName)
@@ -154,13 +158,20 @@ func newPredictCmd() *cobra.Command {
 			"Select an installed panel with --species (and optionally --panel), or use a " +
 			"custom panel built by 'mykrobe2 index' with --index.",
 		Example: "  mykrobe2 predict --sample SAMPLE --species tb --seq reads.fastq.gz --output result.json\n" +
+			"  mykrobe2 predict --sample SAMPLE --species tb --seq reads_1.fastq.gz --seq reads_2.fastq.gz --output result.json\n" +
 			"  mykrobe2 predict --sample SAMPLE --index custom.panelindex --seq reads.fastq.gz --output result.json",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				return fmt.Errorf("predict does not accept positional arguments: %q; for multiple sequence files, repeat --seq for each file", args)
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runPredict(opts)
 		},
 	}
 	cmd.Flags().StringVarP(&opts.sample, "sample", "s", "sample", "Sample identifier")
-	cmd.Flags().StringSliceVarP(&opts.seqPaths, "seq", "i", nil, "Sequence file(s) in FASTA, FASTQ, or BAM format (required)")
+	cmd.Flags().StringArrayVarP(&opts.seqPaths, "seq", "i", nil, "Sequence file in FASTA, FASTQ, or BAM format; repeat --seq for multiple files (required)")
 	cmd.Flags().StringVar(&opts.indexPath, "index", "", "Custom bundled panel index from 'mykrobe2 index'")
 	cmd.Flags().StringVar(&opts.panelArg, "panel", "", "Panel name for the selected species (defaults to that species' default panel)")
 	cmd.Flags().StringVar(&opts.mapPath, "variant-to-resistance-json", "", "Override the installed panel's variant-to-resistance JSON file")
@@ -201,11 +212,12 @@ func newIndexCmd() *cobra.Command {
 		Long: "Build a self-contained custom panel index from one or more probe FASTA " +
 			"files, with optional resistance and lineage metadata.",
 		Example: "  mykrobe2 index --fasta probes.fa --variant-to-resistance-json amr.json --output custom.panelindex",
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runIndex(opts)
 		},
 	}
-	cmd.Flags().StringSliceVar(&opts.fastaPaths, "fasta", nil, "Probe FASTA file(s) (required)")
+	cmd.Flags().StringArrayVar(&opts.fastaPaths, "fasta", nil, "Probe FASTA file; repeat --fasta for multiple files (required)")
 	cmd.Flags().StringVar(&opts.amrPath, "variant-to-resistance-json", "", "Variant-to-resistance JSON file to embed")
 	cmd.Flags().StringVar(&opts.lineagePath, "lineage-json", "", "Lineage JSON file to embed")
 	cmd.Flags().StringVar(&opts.outputPath, "output", "", "Output .panelindex file (required)")
@@ -218,6 +230,10 @@ func newPanelsCmd() *cobra.Command {
 		Use:   "panels",
 		Short: "Inspect and update installed panels",
 		Long:  "Inspect available panel data, refresh panel metadata, or install and update species panels.",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
+		},
 	}
 	cmd.AddCommand(newPanelsDescribeCmd(), newPanelsUpdateMetadataCmd(), newPanelsUpdateSpeciesCmd())
 	return cmd
@@ -230,6 +246,7 @@ func newPanelsDescribeCmd() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe all known panels",
 		Long:  "Show the available species and panels, their installed versions, and whether updates are available.",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runPanelsDescribe(opts, cmd.OutOrStdout())
 		},
@@ -247,6 +264,7 @@ func newPanelsUpdateMetadataCmd() *cobra.Command {
 		Aliases: []string{"update_metadata"},
 		Short:   "Update metadata about available panels",
 		Long:    "Refresh the metadata that lists available species panels and their latest versions.",
+		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runPanelsUpdateMetadata(opts)
 		},
@@ -292,9 +310,9 @@ func newMakeProbesCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&opts.vcfPath, "vcf", "f", "", "VCF file containing variants")
-	cmd.Flags().StringSliceVar(&opts.backgroundVCF, "background-vcf", nil, "VCF file(s) containing background variants")
+	cmd.Flags().StringArrayVar(&opts.backgroundVCF, "background-vcf", nil, "VCF file containing background variants; repeat --background-vcf for multiple files")
 	cmd.Flags().StringVar(&opts.backgroundList, "background-vcf-list", "", "File containing background VCF filenames, one per line")
-	cmd.Flags().StringSliceVarP(&opts.variants, "variants", "v", nil, "DNA variant(s), for example A1234T")
+	cmd.Flags().StringSliceVarP(&opts.variants, "variants", "v", nil, "DNA variant(s), for example A1234T; repeat --variants or separate variants with commas")
 	cmd.Flags().StringVarP(&opts.textFile, "text-file", "t", "", "Text file containing variants, one per row (for example A1234T)")
 	cmd.Flags().StringVarP(&opts.genbankPath, "genbank", "g", "", "GenBank file containing genes as features")
 	cmd.Flags().IntVarP(&opts.kmer, "kmer", "k", mykrobe.DefaultKmerSize, "K-mer length")

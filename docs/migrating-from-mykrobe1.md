@@ -27,6 +27,38 @@ mykrobe2 predict --sample sample_name --species tb --seq reads.fq.gz --output ou
 Use `mykrobe2 panels describe` to see the species and panel versions available
 in your local panel-data directory.
 
+(multiple-input-files)=
+
+## Multiple input files
+
+Mykrobe 1 accepts multiple space-separated files after one `--seq`:
+
+```bash
+mykrobe predict --sample sample_name --species tb \
+  --seq reads_1.fq.gz reads_2.fq.gz --output out.json
+```
+
+In Mykrobe2, repeat `--seq` for each file:
+
+```bash
+mykrobe2 predict --sample sample_name --species tb \
+  --seq reads_1.fq.gz --seq reads_2.fq.gz --output out.json
+```
+
+Repeated `--seq` works in both versions. The short option `-i` can also be
+repeated. Each value is a literal filename, so commas are preserved:
+`--seq 'sample,1.fq.gz'` refers to one file. Comma-separated file lists are not
+supported.
+
+Mykrobe2 rejects `--seq reads_1.fq.gz reads_2.fq.gz` as an unexpected positional
+argument.
+
+Repeat `index --fasta` and `make-probes --background-vcf` for multiple files
+too; these options also preserve commas in filenames.
+
+`make-probes --variants` accepts repeated flags or comma-separated variant
+identifiers, since its values are not filenames.
+
 ## No more skeleton files
 
 Mykrobe 1 built and reused Cortex `.ctx` "skeleton" files for each panel, by
