@@ -214,7 +214,7 @@ func newIndexCmd() *cobra.Command {
 		Example: "  mykrobe2 index --fasta probes.fa --variant-to-resistance-json amr.json --output custom.panelindex",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runIndex(opts)
+			return runIndex(opts, cmd.ErrOrStderr())
 		},
 	}
 	cmd.Flags().StringArrayVar(&opts.fastaPaths, "fasta", nil, "Probe FASTA file; repeat --fasta for multiple files (required)")

@@ -174,6 +174,83 @@ func TestTBPredictorNamesForAlleleKeepsMutationPrefixesWithHyphens(t *testing.T)
 	}
 }
 
+func TestTBPredictorUsesOriginalProbeNamesForMapping(t *testing.T) {
+	// Python BasePredictor._update_resistance_prediction also resolves names
+	// from call["variant"]. Panels can map a bare mutation, rather than gene_mut.
+	for _, tt := range []struct {
+		name    string
+		variant string
+		mapping string
+		gt      []int
+		want    string
+	}{
+		{"bare mutation alternate", "ref-A10T?gene=geneA&mut=A10T", "A10T", []int{1, 1}, "R"},
+		{"bare mutation reference", "ref-A10T?gene=geneA&mut=A10T", "A10T", []int{0, 0}, "S"},
+		{"gene mutation", "ref-A10T?gene=geneA&mut=A10T", "geneA_A10T", []int{1, 1}, "R"},
+		{"alternate probe", "alt-A10T?gene=geneA&mut=A10T", "A10T", []int{1, 1}, "R"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			refDepth, altDepth := 20.0, 0.0
+			if tt.gt[0] == 1 {
+				refDepth, altDepth = 0, 20
+			}
+			const key = "output-C100T"
+			calls := map[string]Call{key: {
+				Variant:  tt.variant,
+				Genotype: tt.gt,
+				Info: map[string]any{
+					"filter": []string{},
+					"coverage": map[string]any{
+						"reference": map[string]any{"median_depth": refDepth},
+						"alternate": map[string]any{"median_depth": altDepth},
+					},
+				},
+			}}
+			p := NewTBPredictorFromMap(calls, nil, map[string][]string{tt.mapping: {"drug1"}})
+			got := p.Run().Susceptibility["drug1"]
+			if got["predict"] != tt.want {
+				t.Fatalf("prediction = %v, want %s", got, tt.want)
+			}
+			if tt.want == "R" {
+				calledBy, ok := got["called_by"].(map[string]Call)
+				if !ok || calledBy[key].Variant != nil || !calls[key].ForceVariantField {
+					t.Fatalf("resistance call not recorded with null variant: %v", got)
+				}
+			}
+		})
+	}
+}
+
+func TestTBPredictorAppliesUnionOfAliasMappings(t *testing.T) {
+	const key = "geneA_A10T-C100T"
+	calls := map[string]Call{key: {
+		Variant:  "ref-A10T?gene=geneA&mut=A10T",
+		Genotype: []int{1, 1},
+		Info: map[string]any{
+			"filter": []string{},
+			"coverage": map[string]any{
+				"reference": map[string]any{"median_depth": 0.0},
+				"alternate": map[string]any{"median_depth": 20.0},
+			},
+		},
+	}}
+	p := NewTBPredictorFromMap(calls, nil, map[string][]string{
+		"A10T":       {"drug1", "shared"},
+		"geneA_A10T": {"drug2", "shared"},
+	})
+	result := p.Run()
+	for _, drug := range []string{"drug1", "drug2", "shared"} {
+		got := result.Susceptibility[drug]
+		if got["predict"] != "R" {
+			t.Fatalf("%s prediction = %v, want R", drug, got)
+		}
+		calledBy, ok := got["called_by"].(map[string]Call)
+		if !ok || len(calledBy) != 1 || !calledBy[key].ForceVariantField {
+			t.Fatalf("%s should have one supporting call: %v", drug, got)
+		}
+	}
+}
+
 func TestVariantCallJSONKeepsNullVariant(t *testing.T) {
 	data, err := json.Marshal(Call{
 		Class:               "Call.VariantCall",

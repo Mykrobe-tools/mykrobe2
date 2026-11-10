@@ -114,6 +114,13 @@ Repeat `--fasta` for each file. Each value is a literal filename, including any
 commas. Comma-separated lists and space-separated filenames after a single
 `--fasta` are not supported.
 
+When building a custom index, Mykrobe2 warns if aliases for the same probe map
+to different drug sets. The warning identifies the probe, matching mapping
+keys, and drug lists. Check that the combined interpretation is intentional:
+prediction applies all matching rules, as in Mykrobe 1. Construction continues
+and preserves the supplied mappings. Aliases with identical drug sets do not
+trigger a warning.
+
 Run prediction with the resulting self-contained index:
 
 ```bash

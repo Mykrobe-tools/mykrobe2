@@ -267,15 +267,7 @@ func parseSeqRow(set *CoverageSet, allele string, medianDepth, minDepth, percent
 func parseVariantRow(set *CoverageSet, row []string, probe string, medianDepth, minDepth, percentCoverage float64, kCount, kLen int) {
 	params := GetParams(probe)
 	probeType := strings.Split(probe, "-")[0]
-	varName := ""
-	if v, ok := params["var_name"]; ok {
-		varName = params["gene"] + "_" + params["mut"] + "-" + v
-	} else {
-		parts := strings.Split(strings.Split(probe, "?")[0], "-")
-		if len(parts) > 1 {
-			varName = parts[1]
-		}
-	}
+	varName := variantCallName(probe, params)
 	if set.Variant[varName] == nil {
 		set.Variant[varName] = &VariantProbeCoverage{
 			ReferenceCoverages: []ProbeCoverage{},
@@ -299,6 +291,19 @@ func parseVariantRow(set *CoverageSet, row []string, probe string, medianDepth, 
 		set.Variant[varName].AlternateCoverages = append(set.Variant[varName].AlternateCoverages, pc)
 		set.Variant[varName].ChooseBestAlternateCoverage()
 	}
+}
+
+func variantCallName(probe string, params map[string]string) string {
+	varName := ""
+	if v, ok := params["var_name"]; ok {
+		varName = params["gene"] + "_" + params["mut"] + "-" + v
+	} else {
+		parts := strings.Split(strings.Split(probe, "?")[0], "-")
+		if len(parts) > 1 {
+			varName = parts[1]
+		}
+	}
+	return varName
 }
 
 func round2(v float64) float64 {

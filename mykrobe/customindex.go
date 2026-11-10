@@ -35,6 +35,12 @@ type CustomIndexBundle struct {
 }
 
 func BuildCustomIndex(outputPath string, k int, fastaPaths []string, amrPath, lineagePath string) error {
+	return BuildCustomIndexWithWarnings(outputPath, k, fastaPaths, amrPath, lineagePath, nil)
+}
+
+// BuildCustomIndexWithWarnings builds a custom index and optionally reports
+// mapping aliases with different drug sets. Warnings do not alter the bundle.
+func BuildCustomIndexWithWarnings(outputPath string, k int, fastaPaths []string, amrPath, lineagePath string, warn func(MappingAliasWarning)) error {
 	tmpDir := filepath.Dir(outputPath)
 	tmpRuntime, err := os.CreateTemp(tmpDir, "mykrobe2-custom-runtime-*.panelindex")
 	if err != nil {
@@ -76,6 +82,21 @@ func BuildCustomIndex(outputPath string, k int, fastaPaths []string, amrPath, li
 	}
 	if manifest.Lineage, err = appendBlob(lineagePath); err != nil {
 		return err
+	}
+	if warn != nil && manifest.AMR != nil {
+		start := manifest.AMR.Offset - uint64(len(runtimeBytes))
+		var mapping map[string][]string
+		if err := LoadJSONBytes(payload[start:start+manifest.AMR.Length], &mapping); err != nil {
+			return fmt.Errorf("read AMR mapping %s: %w", amrPath, err)
+		}
+		idx, err := mccortex.LoadRuntimeIndexBytes(runtimeBytes)
+		if err != nil {
+			return err
+		}
+		warnMappingAliases(idx, mapping, warn)
+		if err := idx.Close(); err != nil {
+			return err
+		}
 	}
 	manifestBytes, err := json.Marshal(manifest)
 	if err != nil {

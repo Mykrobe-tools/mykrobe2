@@ -125,18 +125,23 @@ func (p *TBPredictor) CoverageGreaterThanThreshold(call Call, names []string) bo
 }
 
 func (p *TBPredictor) DrugsForName(name string) []string {
+	_, drugs, _ := p.mappingForName(name)
+	return drugs
+}
+
+func (p *TBPredictor) mappingForName(name string) (string, []string, bool) {
 	if drugs, ok := p.VariantToResistanceDrug[name]; ok {
-		return drugs
+		return name, drugs, true
 	}
 	if i := strings.IndexByte(name, '-'); i >= 0 {
 		if drugs, ok := p.VariantToResistanceDrug[name[:i]]; ok {
-			return drugs
+			return name[:i], drugs, true
 		}
 	}
 	if name != strings.ToLower(name) {
-		return p.DrugsForName(strings.ToLower(name))
+		return p.mappingForName(strings.ToLower(name))
 	}
-	return nil
+	return "", nil, false
 }
 
 func (p *TBPredictor) ResistancePrediction(call Call, names []string) string {
@@ -179,9 +184,10 @@ func (p *TBPredictor) Run() SusceptibilityResult {
 }
 
 func (p *TBPredictor) updateResistancePrediction(alleleName string, call Call) {
-	for _, name := range p.namesForAllele(alleleName) {
+	names := p.namesForCall(alleleName, call)
+	for _, name := range names {
 		drugs := p.DrugsForName(name)
-		pred := p.ResistancePrediction(call, p.namesForAllele(alleleName))
+		pred := p.ResistancePrediction(call, names)
 		for _, drug := range drugs {
 			current := p.ResistancePredictions[drug]["predict"].(string)
 			switch current {
@@ -222,6 +228,14 @@ func (p *TBPredictor) updateResistancePrediction(alleleName string, call Call) {
 	}
 }
 
+func (p *TBPredictor) namesForCall(alleleName string, call Call) []string {
+	names := p.namesForAllele(alleleName)
+	if variant, ok := call.Variant.(string); ok && variant != "" {
+		names = append(names, p.namesForAllele(variant)...)
+	}
+	return Unique(names)
+}
+
 func (p *TBPredictor) namesForAllele(alleleName string) []string {
 	params := GetParams(alleleName)
 	names := []string{}
@@ -229,7 +243,9 @@ func (p *TBPredictor) namesForAllele(alleleName string) []string {
 		names = append(names, params["gene"]+"_"+params["mut"])
 	}
 	base := strings.Split(alleleName, "?")[0]
-	if i := strings.LastIndexByte(base, '-'); i >= 0 {
+	if strings.HasPrefix(base, "ref-") || strings.HasPrefix(base, "alt-") {
+		base = base[4:]
+	} else if i := strings.LastIndexByte(base, '-'); i >= 0 {
 		base = base[:i]
 	}
 	if base != "" {

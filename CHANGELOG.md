@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Warn during custom index construction when aliases for a probe map to different drug sets, while preserving all matching rules.
+
 ### Changed
 
 - Require repeated `--seq`, `--fasta`, and `--background-vcf` flags for multiple files, preserving commas in filenames.
@@ -16,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Reject unexpected positional arguments instead of silently ignoring them, and report unknown `panels` subcommands as errors.
 - Reject invalid `predict --model`, `--ploidy`, and `--format` values before processing inputs or opening output files.
+- Use original probe identifiers when matching panel prediction rules, fixing missed calls when mappings use bare mutation names.
 
 ## [0.1.0-alpha.3] - 2026-11-06
 
